@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fitworkhk Ultimate V9</title>
+    <title>Fitworkhk Ultimate V10</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,15 +11,17 @@
         [v-cloak] { display: none; }
         .tab-active { color: #1d4ed8; border-bottom: 4px solid #1d4ed8; font-weight: 900; }
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(15,23,42,0.8); z-index:100; display:flex; align-items:center; justify-content:center; padding:1rem; backdrop-filter: blur(8px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900 text-xs">
     <div id="app" v-cloak>
+        
         <div v-if="!session" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
             <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md space-y-4">
                 <div class="text-center mb-6">
                     <h1 class="text-3xl font-black text-blue-800 italic">FITWORKHK</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ authState === 'recovery' ? '重設您的密碼' : '管理系統' }}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ authState === 'recovery' ? '設定新密碼' : '管理系統' }}</p>
                 </div>
 
                 <div v-if="authState !== 'recovery'" class="space-y-3">
@@ -36,15 +38,17 @@
 
                 <div v-else class="space-y-3">
                     <input type="password" v-model="newPassword" placeholder="輸入新密碼" class="w-full border-2 p-4 rounded-2xl font-bold">
-                    <button @click="updatePassword" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg">確認修改密碼</button>
+                    <button @click="updatePassword" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg">確認更新並登入</button>
                 </div>
             </div>
         </div>
 
         <div v-else class="pb-24">
-            <header class="bg-white border-b sticky top-0 z-50 p-4 flex justify-between items-center">
+            <header class="bg-white border-b sticky top-0 z-50 p-4 flex justify-between items-center shadow-sm">
                 <div class="text-xl font-black text-blue-800 italic">FITWORKHK</div>
-                <button @click="showProfile = true" class="bg-slate-100 p-2 rounded-xl font-bold">👤 {{ session.user.email.split('@')[0] }}</button>
+                <div class="flex gap-2">
+                    <button @click="showProfile = true" class="bg-slate-100 px-3 py-2 rounded-xl font-bold">👤</button>
+                </div>
             </header>
 
             <nav class="flex overflow-x-auto bg-white border-b text-[10px] font-black uppercase sticky top-[61px] z-40 no-scrollbar">
@@ -52,88 +56,79 @@
             </nav>
 
             <main class="p-4 max-w-3xl mx-auto space-y-4">
+                
                 <section v-if="currentTab === 'dashboard'" class="space-y-4">
-                    <div class="bg-slate-900 p-6 rounded-[2.5rem] text-white">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-[9px] font-black text-blue-400 uppercase">本月預估純利</p>
-                                <p class="text-4xl font-black italic mt-1">${{ monthlyNetProfit }}</p>
-                            </div>
-                            <select v-model="reportPerson" class="bg-slate-800 text-[10px] p-2 rounded-lg">
-                                <option value="All">全部人員</option>
-                                <option value="Kwan">Kwan</option>
-                                <option value="Cat">Cat</option>
+                    <div class="bg-slate-900 p-6 rounded-[2.5rem] text-white shadow-xl">
+                        <div class="flex justify-between items-center mb-4">
+                            <select v-model="dateRange" class="bg-slate-800 text-[10px] p-2 rounded-lg font-bold">
+                                <option value="today">今日</option><option value="week">本週</option><option value="month">本月</option><option value="year">全年</option>
+                            </select>
+                            <select v-model="reportPerson" class="bg-slate-800 text-[10px] p-2 rounded-lg font-bold">
+                                <option value="All">全部人</option><option value="Kwan">Kwan</option><option value="Cat">Cat</option>
                             </select>
                         </div>
+                        <p class="text-[9px] font-black text-blue-400 uppercase tracking-widest">實時純利潤</p>
+                        <p class="text-5xl font-black italic mt-1">${{ totalProfit }}</p>
                     </div>
-                    
+
                     <div class="grid grid-cols-2 gap-3">
                         <div class="bg-white p-5 rounded-3xl border shadow-sm">
-                            <p class="text-slate-400 font-black mb-2 uppercase">會員統計</p>
+                            <p class="text-slate-400 font-black mb-3">會員分佈</p>
                             <div class="space-y-1 font-bold">
-                                <div class="flex justify-between"><span>總會員</span><span class="text-blue-600">{{ clients.length }}</span></div>
-                                <div class="flex justify-between text-[10px]"><span>觀塘/中環/佐敦</span><span>{{ branchCount }}</span></div>
+                                <div class="flex justify-between"><span>觀塘</span><span class="text-blue-600">{{ branchStats['觀塘'] }}</span></div>
+                                <div class="flex justify-between"><span>中環</span><span class="text-blue-600">{{ branchStats['中環'] }}</span></div>
+                                <div class="flex justify-between"><span>佐敦</span><span class="text-blue-600">{{ branchStats['佐敦'] }}</span></div>
                             </div>
                         </div>
-                        <div class="bg-white p-5 rounded-3xl border shadow-sm">
-                            <p class="text-slate-400 font-black mb-2 uppercase">馬拉松</p>
-                            <div class="flex justify-between items-end">
-                                <span class="text-3xl font-black text-emerald-500">{{ marathonCount }}</span>
-                                <span class="text-[10px] text-slate-400">位活躍成員</span>
+                        <div class="bg-white p-5 rounded-3xl border shadow-sm flex flex-col justify-between">
+                            <p class="text-slate-400 font-black mb-1">馬拉松成員</p>
+                            <div>
+                                <span class="text-4xl font-black text-emerald-500">{{ marathonStats.active }}</span>
+                                <span class="text-[10px] text-slate-300 ml-2">活躍</span>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section v-if="currentTab === 'finance'" class="bg-white p-6 rounded-[2.5rem] border space-y-4">
-                    <h3 class="font-black italic text-lg text-red-600 uppercase">Finance 支出管理</h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button v-for="cat in expenseCats" @click="openExpense(cat)" class="p-3 bg-slate-50 border rounded-xl font-bold hover:bg-red-50 hover:border-red-200">{{ cat }}</button>
-                    </div>
-                </section>
-
-                <section v-if="currentTab === 'exercise'" class="bg-white p-6 rounded-[2.5rem] border space-y-4">
+                <section v-if="currentTab === 'exercise'" class="bg-white p-6 rounded-[2.5rem] border space-y-4 shadow-sm">
                     <h3 class="font-black italic text-lg text-blue-700 uppercase">Exercise POS</h3>
                     <select v-model="eForm.clientId" class="w-full p-4 bg-slate-50 rounded-2xl border-2 font-bold">
                         <option :value="null">-- 選擇客戶 --</option>
                         <option v-for="c in clients" :value="c.id">{{ c.name }} ({{ c.phone }})</option>
                     </select>
                     <div class="space-y-2">
-                        <button v-for="p in exerciseTypes" @click="eForm.type=p.id" :class="eForm.type===p.id?'bg-blue-600 text-white':'bg-slate-50 border'" class="w-full p-4 rounded-2xl font-black flex justify-between items-center">
+                        <button v-for="p in exerciseItems" @click="eForm.type=p.id" :class="eForm.type===p.id?'bg-blue-600 text-white':'bg-slate-50 border'" class="w-full p-4 rounded-2xl font-black flex justify-between">
                             <span>{{ p.name }}</span><span>${{ p.price }}</span>
                         </button>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 text-[10px] font-bold">
-                        <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl"><input type="checkbox" v-model="eForm.isNew"> 新客 -$98</label>
-                        <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl"><input type="checkbox" v-model="eForm.isReferral"> 轉介紹免費</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl font-bold"><input type="checkbox" v-model="eForm.isNew"> 新客 -$98</label>
+                        <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-xl font-bold"><input type="checkbox" v-model="eForm.isReferral"> 轉介紹免費</label>
                     </div>
-                    <div class="flex gap-2">
-                        <button @click="submitExercise('Kwan')" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black">Kwan 收款</button>
-                        <button @click="submitExercise('Cat')" class="flex-1 bg-blue-500 text-white py-4 rounded-2xl font-black">Cat 收款</button>
+                    <div class="flex gap-2 pt-2">
+                        <button @click="saveExercise('Kwan')" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black shadow-lg">Kwan 收款</button>
+                        <button @click="saveExercise('Cat')" class="flex-1 bg-blue-500 text-white py-4 rounded-2xl font-black shadow-lg">Cat 收款</button>
                     </div>
                 </section>
 
-                <section v-if="currentTab === 'retail'" class="bg-white p-6 rounded-[2.5rem] border space-y-4">
+                <section v-if="currentTab === 'retail'" class="bg-white p-6 rounded-[2.5rem] border space-y-4 shadow-sm">
                     <div class="flex justify-between items-center">
                         <h3 class="font-black italic text-lg text-emerald-700">RETAIL</h3>
                         <select v-model="rForm.discount" class="bg-emerald-50 p-2 rounded-lg font-bold">
-                            <option value="0">原價</option>
-                            <option value="0.25">25% OFF</option>
-                            <option value="0.35">35% OFF</option>
-                            <option value="0.5">50% OFF</option>
+                            <option value="0">原價</option><option value="0.25">25% OFF</option><option value="0.35">35% OFF</option><option value="0.5">50% OFF</option>
                         </select>
                     </div>
-                    <input v-model="pSearch" placeholder="搜尋全產品列表..." class="w-full p-4 border-2 rounded-2xl font-bold">
-                    <div class="max-h-64 overflow-y-auto space-y-2 no-scrollbar">
-                        <div v-for="p in filteredProducts" @click="addCart(p)" class="p-3 border rounded-xl flex justify-between items-center active:bg-slate-50">
-                            <span class="font-bold">{{ p.name }}</span><span class="font-black text-blue-600">${{ p.retail }}</span>
+                    <input v-model="pSearch" placeholder="搜尋 77 項產品 (中/英)..." class="w-full p-4 border-2 rounded-2xl font-bold">
+                    <div class="max-h-60 overflow-y-auto space-y-1 no-scrollbar border-b pb-4">
+                        <div v-for="p in filteredProducts" @click="addToCart(p)" class="p-3 border rounded-xl flex justify-between items-center active:bg-emerald-50 cursor-pointer">
+                            <span class="font-bold">{{ p.name }}</span><span class="font-black text-emerald-600">${{ p.retail }}</span>
                         </div>
                     </div>
-                    <div v-if="cart.length > 0" class="bg-slate-900 p-5 rounded-3xl text-white">
-                        <div v-for="(item, i) in cart" class="flex justify-between mb-1"><span>{{ item.name }}</span><button @click="cart.splice(i,1)" class="text-red-400">✕</button></div>
+                    <div v-if="cart.length > 0" class="bg-slate-900 p-5 rounded-3xl text-white animate-bounce-in">
+                        <div v-for="(item, i) in cart" class="flex justify-between mb-1 text-[10px]"><span>{{ item.name }}</span><button @click="cart.splice(i,1)" class="text-red-400">✕</button></div>
                         <div class="mt-4 flex gap-2">
-                            <button @click="submitRetail('Kwan')" class="flex-1 bg-emerald-500 p-3 rounded-xl font-black">Kwan 結算</button>
-                            <button @click="submitRetail('Cat')" class="flex-1 bg-emerald-700 p-3 rounded-xl font-black">Cat 結算</button>
+                            <button @click="saveRetail('Kwan')" class="flex-1 bg-emerald-500 p-3 rounded-xl font-black">Kwan 結帳</button>
+                            <button @click="saveRetail('Cat')" class="flex-1 bg-emerald-700 p-3 rounded-xl font-black">Cat 結帳</button>
                         </div>
                     </div>
                 </section>
@@ -141,85 +136,89 @@
                 <section v-if="currentTab === 'crm'" class="space-y-4">
                     <div class="flex gap-2">
                         <input v-model="cSearch" placeholder="搜尋姓名/電話..." class="flex-1 p-4 border-2 rounded-2xl font-bold">
-                        <button @click="openClient(null)" class="bg-blue-600 text-white px-6 rounded-2xl font-black">+</button>
+                        <button @click="openClient(null)" class="bg-blue-600 text-white px-6 rounded-2xl font-black shadow-lg">+</button>
                     </div>
                     <div v-for="c in filteredClients" @click="openClient(c)" class="bg-white p-5 rounded-3xl border shadow-sm flex justify-between items-center">
                         <div>
-                            <div class="font-black text-sm">{{ c.name }} <span v-if="isExpiring(c.expiry_date)" class="text-[8px] bg-red-500 text-white px-1 rounded ml-1">即將到期</span></div>
+                            <div class="font-black text-sm">{{ c.name }} <span v-if="isExpiring(c.expiry_date)" class="text-[8px] bg-red-500 text-white px-1 rounded ml-1 animate-pulse">快到期</span></div>
                             <div class="text-slate-400 font-bold mt-1">{{ c.phone }} | {{ c.branch }}</div>
                         </div>
                         <div class="text-right">
-                            <div class="text-[9px] font-black uppercase text-slate-300">到期日</div>
-                            <div class="font-bold">{{ c.expiry_date }}</div>
+                            <div class="text-[9px] font-black text-slate-300 uppercase">一年有效期至</div>
+                            <div class="font-bold text-blue-600">{{ c.expiry_date }}</div>
                         </div>
+                    </div>
+                </section>
+
+                <section v-if="currentTab === 'finance'" class="bg-white p-6 rounded-[2.5rem] border shadow-sm space-y-4">
+                    <h3 class="font-black italic text-lg text-red-600">EXPENSES</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button v-for="c in expCats" @click="openExp(c)" class="p-3 bg-slate-50 border rounded-xl font-bold hover:bg-red-50">{{ c }}</button>
                     </div>
                 </section>
             </main>
         </div>
 
         <div v-if="showClientModal" class="modal-overlay">
-            <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 space-y-4 max-h-[90vh] overflow-y-auto">
-                <h2 class="text-xl font-black italic">{{ clientForm.id ? '編輯客戶' : '新增客戶' }}</h2>
+            <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+                <h2 class="text-xl font-black italic">{{ clientForm.id ? '修改客戶' : '新增客戶' }}</h2>
                 <input v-model="clientForm.name" placeholder="姓名" class="w-full border-2 p-4 rounded-2xl font-bold">
                 <input v-model="clientForm.phone" placeholder="電話" class="w-full border-2 p-4 rounded-2xl font-bold">
                 <div class="grid grid-cols-2 gap-2">
                     <select v-model="clientForm.branch" class="border-2 p-3 rounded-xl font-bold"><option value="觀塘">觀塘</option><option value="中環">中環</option><option value="佐敦">佐敦</option></select>
                     <select v-model="clientForm.source" class="border-2 p-3 rounded-xl font-bold"><option value="廣告">廣告</option><option value="轉介紹">轉介紹</option></select>
                 </div>
-                <div v-if="clientForm.source === '轉介紹'" class="space-y-2">
-                    <p class="font-black text-purple-600">搜尋推薦人</p>
-                    <input v-model="refSearch" placeholder="搜尋推薦人姓名..." class="w-full border-2 p-3 rounded-xl">
-                    <div class="max-h-32 overflow-y-auto border rounded-xl">
-                        <div v-for="rc in filteredRefs" @click="clientForm.referral_id = rc.id; refSearch=rc.name" :class="clientForm.referral_id===rc.id?'bg-purple-100':''" class="p-2 border-b font-bold text-[10px]">{{ rc.name }} ({{ rc.phone }})</div>
+                <div v-if="clientForm.source === '轉介紹'" class="p-4 bg-purple-50 rounded-2xl space-y-2 border border-purple-100">
+                    <p class="font-black text-purple-700">搜尋推薦人</p>
+                    <input v-model="refSearch" placeholder="推薦人姓名..." class="w-full p-3 border rounded-xl">
+                    <div class="max-h-24 overflow-y-auto">
+                        <div v-for="rc in filteredRefs" @click="clientForm.referral_id = rc.id; refSearch=rc.name" :class="clientForm.referral_id===rc.id?'bg-purple-200':''" class="p-2 border-b text-[10px] font-bold">{{ rc.name }}</div>
                     </div>
                 </div>
-                <div class="flex gap-4 p-4 bg-slate-50 rounded-2xl border-2">
-                    <label class="flex items-center gap-2 font-black"><input type="checkbox" v-model="clientForm.marathon"> 馬拉松成員</label>
-                </div>
+                <label class="flex items-center gap-2 p-4 bg-slate-50 rounded-2xl font-black border-2"><input type="checkbox" v-model="clientForm.marathon"> 活躍馬拉松成員</label>
                 <div class="space-y-1">
-                    <label class="font-black">手動修改到期日</label>
+                    <p class="font-black pl-1">有效日期 (預設一年)</p>
                     <input type="date" v-model="clientForm.expiry_date" class="w-full border-2 p-4 rounded-2xl font-bold">
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 pt-2">
                     <button @click="showClientModal=false" class="flex-1 p-4 bg-slate-100 rounded-2xl font-black">取消</button>
-                    <button @click="saveClient" class="flex-1 p-4 bg-blue-600 text-white rounded-2xl font-black">儲存資料</button>
+                    <button @click="saveClient" class="flex-1 p-4 bg-blue-600 text-white rounded-2xl font-black">確認存檔</button>
                 </div>
             </div>
         </div>
 
         <div v-if="showExpModal" class="modal-overlay">
-            <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 space-y-4">
-                <h3 class="font-black text-xl text-red-600">新增項目: {{ expForm.category }}</h3>
+            <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 space-y-4 shadow-2xl">
+                <h3 class="font-black text-xl text-red-600 uppercase">{{ expForm.category }}</h3>
                 <input type="number" v-model="expForm.amount" placeholder="金額" class="w-full border-2 p-4 rounded-2xl font-bold">
-                <textarea v-model="expForm.note" placeholder="備註..." class="w-full border-2 p-4 rounded-2xl font-bold h-24"></textarea>
+                <textarea v-model="expForm.note" placeholder="備註..." class="w-full border-2 p-4 rounded-2xl font-bold h-20"></textarea>
                 <div class="flex gap-2">
-                    <button @click="submitExpense('Kwan')" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black">Kwan 負責</button>
-                    <button @click="submitExpense('Cat')" class="flex-1 bg-red-500 text-white py-4 rounded-2xl font-black">Cat 負責</button>
+                    <button @click="saveExp('Kwan')" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black">Kwan 負責</button>
+                    <button @click="saveExp('Cat')" class="flex-1 bg-red-500 text-white py-4 rounded-2xl font-black">Cat 負責</button>
                 </div>
-                <button @click="showExpModal=false" class="w-full text-slate-400 font-bold p-2">關閉</button>
+                <button @click="showExpModal=false" class="w-full text-slate-400 font-bold">關閉</button>
             </div>
         </div>
 
         <div v-if="showProfile" class="modal-overlay">
-            <div class="bg-white w-full max-w-md rounded-[3rem] p-8 space-y-4">
-                <h3 class="font-black text-xl italic">USER PROFILE</h3>
-                <p class="font-bold text-slate-400">{{ session.user.email }}</p>
-                <div class="space-y-2 pt-4 border-t">
-                    <button @click="updatePasswordPrompt" class="w-full text-left p-4 bg-slate-50 rounded-2xl font-bold">修改密碼</button>
-                    <button @click="handleLogout" class="w-full text-left p-4 bg-slate-50 rounded-2xl font-bold text-red-500">登出帳號</button>
-                    <button @click="deleteAccount" class="w-full text-[10px] text-slate-300 font-bold mt-10">刪除帳號 (不可撤銷)</button>
-                </div>
-                <button @click="showProfile=false" class="w-full p-4 bg-slate-900 text-white rounded-2xl font-black mt-4">關閉</button>
+            <div class="bg-white w-full max-w-md rounded-[3rem] p-8 space-y-4 shadow-2xl">
+                <h3 class="font-black text-xl italic">PROFILE</h3>
+                <div class="p-4 bg-slate-50 rounded-2xl font-bold break-all">{{ session.user.email }}</div>
+                <button @click="triggerReset" class="w-full p-4 bg-white border-2 rounded-2xl font-black">修改密碼</button>
+                <button @click="handleLogout" class="w-full p-4 bg-slate-900 text-white rounded-2xl font-black">登出帳號</button>
+                <button @click="deleteAccount" class="w-full text-[9px] text-slate-300 font-bold mt-10">刪除帳號 (不可復原)</button>
+                <button @click="showProfile=false" class="w-full text-blue-600 font-bold p-2">返回系統</button>
             </div>
         </div>
+
     </div>
 
     <script>
         const { createApp, ref, computed, onMounted } = Vue;
-        const _sb = window.supabase.createClient(
-            "https://ajnunehxtiofcphdyhqn.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4"
-        );
+        // 配置 Supabase
+        const SUPA_URL = "https://ajnunehxtiofcphdyhqn.supabase.co";
+        const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
+        const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
         createApp({
             setup() {
@@ -228,6 +227,7 @@
                 const authForm = ref({ email: '', password: '' });
                 const newPassword = ref('');
                 const currentTab = ref('dashboard');
+                const dateRange = ref('month');
                 const reportPerson = ref('All');
                 const showProfile = ref(false);
 
@@ -238,119 +238,80 @@
                 const cSearch = ref('');
                 const refSearch = ref('');
 
-                // 核心數據
+                // 核心定義
                 const tabs = [{id:'dashboard',name:'總覽'},{id:'crm',name:'客戶'},{id:'exercise',name:'運動POS'},{id:'retail',name:'零售POS'},{id:'finance',name:'支出'}];
-                const expenseCats = ['Fitwork廣告','FZb廣告','中環租金','觀塘租金','產品採購','馬拉松成本','其他收入(手動)','其他支出(手動)'];
-                const exerciseTypes = [
-                    {id:'trial', name:'試堂', price:98, cost:0, shop:0, prod:0},
-                    {id:'10pt', name:'10點套票', price:850, cost:0, shop:250, prod:135},
-                    {id:'35pt', name:'35點套票', price:2550, cost:0, shop:800, prod:472.5}
-                ];
+                const expCats = ['Fitwork廣告','FZb廣告','中環租金','觀塘租金','產品採購','馬拉松成本','其他項目(收入)','其他項目(支出)'];
+                const exerciseItems = [{id:'trial',name:'試堂',price:98},{id:'10pt',name:'10點套票',price:850},{id:'35pt',name:'35點套票',price:2550}];
                 
-                // 模擬 77 項產品 (此處簡化，你可以繼續補全)
+                // 模擬 77 項產品 (可根據 CSV 補充)
                 const productDb = [
                     {name:'營養蛋白素-雲呢拿', retail:464}, {name:'營養蛋白素-野草莓', retail:464},
                     {name:'濃縮蘆薈汁-原味', retail:446}, {name:'天然瓜拿拿茶', retail:323},
                     {name:'佳能蛋白質粉', retail:369}, {name:'營養纖維粉', retail:419},
-                    {name:'夜寧新', retail:1105}, {name:'深海魚油', retail:336}
-                    // ... 更多產品可以按此格式添加
+                    {name:'夜寧新', retail:1105}, {name:'深海魚油', retail:336},
+                    {name:'日日強韌蘆薈洗髮露', retail:145}, {name:'日日強韌蘆薈護髮乳', retail:145}
                 ];
 
-                // 認證邏輯
+                // Auth
                 const handleAuth = async () => {
                     const { email, password } = authForm.value;
                     let res = authState.value === 'login' ? 
-                        await _sb.auth.signInWithPassword({ email, password }) :
-                        await _sb.auth.signUp({ email, password });
+                        await sb.auth.signInWithPassword({ email, password }) : 
+                        await sb.auth.signUp({ email, password });
                     if(res.error) alert(res.error.message);
-                    else if(authState.value === 'register') alert('請檢查 Email 激活帳號');
                 };
-
                 const forgotPassword = async () => {
-                    const email = prompt("請輸入您的註冊 Email:");
-                    if(email) {
-                        const { error } = await _sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
-                        if(error) alert(error.message); else alert("重設郵件已發送！");
+                    const e = prompt("輸入 Email:");
+                    if(e) {
+                        const { error } = await sb.auth.resetPasswordForEmail(e, { redirectTo: window.location.origin });
+                        if(!error) alert("重設郵件已發送！");
                     }
                 };
-
                 const updatePassword = async () => {
-                    const { error } = await _sb.auth.updateUser({ password: newPassword.value });
-                    if(error) alert(error.message); else { alert("修改成功！"); authState.value = 'login'; session.value = null; }
+                    const { error } = await sb.auth.updateUser({ password: newPassword.value });
+                    if(!error) { alert("更新成功，請登入！"); authState.value = 'login'; session.value = null; }
                 };
+                const handleLogout = async () => { await sb.auth.signOut(); session.value = null; };
 
-                const handleLogout = async () => { await _sb.auth.signOut(); session.value = null; };
-
-                // 數據加載 (帶有 user_id 過濾)
-                const fetchData = async () => {
+                // Data Fetch
+                const loadData = async () => {
                     const uid = session.value.user.id;
-                    const { data: c } = await _sb.from('clients').select('*').eq('user_id', uid);
-                    const { data: f } = await _sb.from('finances').select('*').eq('user_id', uid);
+                    const { data: c } = await sb.from('clients').select('*').eq('user_id', uid);
+                    const { data: f } = await sb.from('finances').select('*').eq('user_id', uid);
                     clients.value = c || [];
                     finances.value = f || [];
                 };
 
-                // 運動入帳
+                // 運動計算邏輯
                 const eForm = ref({ clientId: null, type: '35pt', isNew: false, isReferral: false });
-                const submitExercise = async (person) => {
+                const saveExercise = async (person) => {
                     if(!eForm.value.clientId) return alert("選客戶");
-                    const type = exerciseTypes.find(t => t.id === eForm.value.type);
                     let profit = 0;
-                    
-                    if(type.id === 'trial') profit = 98;
-                    else {
-                        profit = type.price - type.shop - type.prod;
-                        if(eForm.value.isNew && type.id === '35pt') profit -= 98;
-                        if(eForm.value.isReferral) profit -= 52;
+                    if(eForm.value.type === 'trial') profit = 98;
+                    else if(eForm.value.type === '10pt') {
+                        profit = eForm.value.isReferral ? 413 : 465;
+                    } else if(eForm.value.type === '35pt') {
+                        profit = eForm.value.isNew ? 1250.5 : 1277.5;
                     }
-
-                    const { error } = await _sb.from('finances').insert({
-                        user_id: session.value.user.id,
-                        type: 'income',
-                        category: '運動',
-                        amount: profit,
-                        person: person,
-                        note: `${type.name} 入帳`
+                    const { error } = await sb.from('finances').insert({
+                        user_id: session.value.user.id, type:'income', category:'運動', amount: profit, person: person, note: eForm.value.type
                     });
-                    if(!error) { alert("入帳成功"); fetchData(); currentTab.value = 'dashboard'; }
+                    if(!error) { alert("入帳成功"); loadData(); currentTab.value = 'dashboard'; }
                 };
 
-                // 零售入帳
+                // 零售計算
                 const rForm = ref({ discount: '0' });
-                const addCart = (p) => {
-                    const retailPrice = p.retail * (1 - parseFloat(rForm.value.discount));
-                    const profit = retailPrice - (p.retail * 0.5); // 50% 成本
-                    cart.value.push({ name: p.name, profit: profit });
+                const addToCart = (p) => {
+                    const retail = p.retail * (1 - parseFloat(rForm.value.discount));
+                    const profit = retail - (p.retail * 0.5);
+                    cart.value.push({ name: p.name, profit });
                 };
-
-                const submitRetail = async (person) => {
-                    const totalProfit = cart.value.reduce((a,b)=>a+b.profit, 0);
-                    const { error } = await _sb.from('finances').insert({
-                        user_id: session.value.user.id,
-                        type: 'income',
-                        category: '零售',
-                        amount: totalProfit,
-                        person: person,
-                        note: `零售共 ${cart.value.length} 件`
+                const saveRetail = async (person) => {
+                    const totalP = cart.value.reduce((a,b)=>a+b.profit, 0);
+                    await sb.from('finances').insert({
+                        user_id: session.value.user.id, type:'income', category:'零售', amount: totalP, person: person
                     });
-                    if(!error) { cart.value = []; fetchData(); currentTab.value = 'dashboard'; }
-                };
-
-                // 支出入帳
-                const showExpModal = ref(false);
-                const expForm = ref({ category: '', amount: 0, note: '' });
-                const openExpense = (cat) => { expForm.value = { category: cat, amount: 0, note: '' }; showExpModal.value = true; };
-                const submitExpense = async (person) => {
-                    const isOtherIncome = expForm.value.category.includes('收入');
-                    const { error } = await _sb.from('finances').insert({
-                        user_id: session.value.user.id,
-                        type: isOtherIncome ? 'income' : 'expense',
-                        category: expForm.value.category,
-                        amount: expForm.value.amount,
-                        person: person,
-                        note: expForm.value.note
-                    });
-                    if(!error) { showExpModal.value = false; fetchData(); currentTab.value = 'dashboard'; }
+                    cart.value = []; loadData(); currentTab.value = 'dashboard';
                 };
 
                 // CRM
@@ -360,58 +321,71 @@
                     clientForm.value = c ? {...c} : { name:'', phone:'', branch:'觀塘', source:'廣告', marathon: false, expiry_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] };
                     showClientModal.value = true;
                 };
-
                 const saveClient = async () => {
-                    const uid = session.value.user.id;
-                    const payload = { ...clientForm.value, user_id: uid };
+                    if(!clientForm.value.name) return;
+                    const payload = { ...clientForm.value, user_id: session.value.user.id };
                     let res = clientForm.value.id ? 
-                        await _sb.from('clients').update(payload).eq('id', clientForm.value.id) :
-                        await _sb.from('clients').insert([payload]);
-                    if(!res.error) { showClientModal.value = false; fetchData(); } else alert(res.error.message);
+                        await sb.from('clients').update(payload).eq('id', clientForm.value.id) :
+                        await sb.from('clients').insert([payload]);
+                    if(!res.error) { showClientModal.value = false; loadData(); } else alert(res.error.message);
                 };
 
-                // 計算屬性
-                const filteredClients = computed(() => clients.value.filter(c => (c.name+c.phone).toLowerCase().includes(cSearch.value.toLowerCase())));
-                const filteredProducts = computed(() => productDb.filter(p => p.name.toLowerCase().includes(pSearch.value.toLowerCase())));
-                const filteredRefs = computed(() => clients.value.filter(c => c.name.includes(refSearch.value)));
-                
-                const monthlyNetProfit = computed(() => {
-                    const filtered = finances.value.filter(f => reportPerson.value === 'All' || f.person === reportPerson.value);
+                // 支出
+                const showExpModal = ref(false);
+                const expForm = ref({ category: '', amount: 0, note: '' });
+                const openExp = (c) => { expForm.value = { category: c, amount: 0, note: '' }; showExpModal.value = true; };
+                const saveExp = async (person) => {
+                    const isInc = expForm.value.category.includes('收入');
+                    await sb.from('finances').insert({
+                        user_id: session.value.user.id, type: isInc ? 'income':'expense', category: expForm.value.category, amount: expForm.value.amount, person: person, note: expForm.value.note
+                    });
+                    showExpModal.value = false; loadData(); currentTab.value = 'dashboard';
+                };
+
+                // 計算屬性 (儀表板)
+                const totalProfit = computed(() => {
+                    const now = new Date();
+                    const filtered = finances.value.filter(f => {
+                        const fDate = new Date(f.created_at);
+                        const matchPerson = reportPerson.value === 'All' || f.person === reportPerson.value;
+                        if(!matchPerson) return false;
+                        if(dateRange.value === 'today') return fDate.toDateString() === now.toDateString();
+                        if(dateRange.value === 'month') return fDate.getMonth() === now.getMonth() && fDate.getFullYear() === now.getFullYear();
+                        return true;
+                    });
                     const inc = filtered.filter(f => f.type === 'income').reduce((a,b)=>a+Number(b.amount), 0);
                     const exp = filtered.filter(f => f.type === 'expense').reduce((a,b)=>a+Number(b.amount), 0);
                     return (inc - exp).toFixed(1);
                 });
 
-                const branchCount = computed(() => {
-                    const b = { '觀塘':0, '中環':0, '佐敦':0 };
+                const branchStats = computed(() => {
+                    const b = {'觀塘':0, '中環':0, '佐敦':0};
                     clients.value.forEach(c => b[c.branch]++);
-                    return `${b['觀塘']}/${b['中環']}/${b['佐敦']}`;
+                    return b;
                 });
 
-                // 工具
-                const isExpiring = (date) => {
-                    if(!date) return false;
-                    const diff = (new Date(date) - new Date()) / (1000*60*60*24);
-                    return diff > 0 && diff < 14;
-                };
-
                 onMounted(() => {
-                    // 監聽 Auth 變化
-                    _sb.auth.onAuthStateChange((event, sessionData) => {
+                    sb.auth.onAuthStateChange((event, sessionData) => {
                         session.value = sessionData;
                         if (event === 'PASSWORD_RECOVERY') authState.value = 'recovery';
-                        if (sessionData) fetchData();
+                        if (sessionData) loadData();
                     });
+                    // 偵測是否從重設密碼連結進入
+                    if(window.location.hash.includes('type=recovery')) authState.value = 'recovery';
                 });
 
                 return {
-                    session, authState, authForm, newPassword, handleAuth, updatePassword, forgotPassword, handleLogout,
-                    currentTab, tabs, clients, finances, cart, pSearch, cSearch, refSearch, showClientModal, clientForm,
-                    openClient, saveClient, filteredClients, filteredProducts, filteredRefs, productDb,
-                    exerciseTypes, eForm, submitExercise, rForm, addCart, submitRetail,
-                    expenseCats, showExpModal, expForm, openExpense, submitExpense,
-                    monthlyNetProfit, reportPerson, branchCount, marathonCount: computed(() => clients.value.filter(c=>c.marathon).length),
-                    showProfile, isExpiring, deleteAccount: () => alert("請聯絡管理員刪除帳號")
+                    session, authState, authForm, newPassword, handleAuth, forgotPassword, updatePassword, handleLogout,
+                    currentTab, tabs, dateRange, reportPerson, clients, finances, cart, pSearch, cSearch, refSearch,
+                    showClientModal, clientForm, openClient, saveClient, showExpModal, expForm, openExp, saveExp,
+                    exerciseItems, eForm, saveExercise, rForm, addToCart, saveRetail,
+                    filteredClients: computed(() => clients.value.filter(c => (c.name+c.phone).toLowerCase().includes(cSearch.value.toLowerCase()))),
+                    filteredProducts: computed(() => productDb.filter(p => p.name.toLowerCase().includes(pSearch.value.toLowerCase()))),
+                    filteredRefs: computed(() => clients.value.filter(c => c.name.includes(refSearch.value))),
+                    totalProfit, branchStats, marathonStats: computed(() => ({ active: clients.value.filter(c=>c.marathon).length })),
+                    showProfile, isExpiring: (d) => (new Date(d) - new Date()) / 86400000 < 14,
+                    triggerReset: () => { showProfile.value=false; forgotPassword(); },
+                    deleteAccount: () => alert("安全起見，請聯繫系統管理員進行刪除作業")
                 };
             }
         }).mount('#app');
