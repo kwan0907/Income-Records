@@ -469,7 +469,7 @@ createApp({
       finances.value = [];
     };
 
-    // 客戶操作
+    // 客戶操作 - 優化版（即時顯示）
     const openClientModal = (c) => {
       clientForm.value = c ? { ...c } : { 
         id: null, 
@@ -499,13 +499,22 @@ createApp({
         if (!clientData.id) delete clientData.id;
 
         if (clientForm.value.id) {
+          // 編輯客戶：更新後立即替換列表中的數據
           await sb.from('clients').update(clientData).eq('id', clientForm.value.id);
+          // 即時更新列表
+          const index = clients.value.findIndex(c => c.id === clientForm.value.id);
+          if (index !== -1) {
+            clients.value[index] = { ...clientData, id: clientForm.value.id };
+          }
           alert('客戶資料更新成功');
         } else {
-          await sb.from('clients').insert(clientData);
+          // 新增客戶：獲取返回的數據並立即添加到列表
+          const { data, error } = await sb.from('clients').insert(clientData).select();
+          if (error) throw error;
+          // 即時添加到列表頂部
+          clients.value.unshift(data[0]);
           alert('新客戶新增成功');
         }
-        await loadClients();
         showClientModal.value = false;
       } catch (e) {
         console.error('保存客戶失敗:', e.message);
@@ -553,12 +562,12 @@ createApp({
       return d.toLocaleDateString('zh-HK');
     };
 
-    // 銷售操作
+    // 開卡操作 - 優化版（即時更新統計）
     const saveExerciseSale = async () => {
       if (!eForm.value.clientId) return alert('請選擇客戶');
       try {
         const profit = calculateExerciseProfit(eForm.value);
-        await sb.from('sales').insert({
+        const saleData = {
           user_id: userId.value,
           client_id: eForm.value.clientId,
           cat: 'exercise',
@@ -566,15 +575,21 @@ createApp({
           profit: profit,
           received_by: eForm.value.receivedBy,
           expiry_date: eForm.value.type !== 'trial' ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
-        });
-        await loadSales();
+        };
+        // 新增並獲取返回數據
+        const { data, error } = await sb.from('sales').insert(saleData).select();
+        if (error) throw error;
+        // 即時添加到銷售列表
+        sales.value.push(data[0]);
         alert('開卡記錄保存成功');
+        // 重置表單
         eForm.value = { clientId: null, type: '35pt', isFirstTime: false, isReferralFree: false, receivedBy: 'kwan' };
       } catch (e) {
         alert('保存開卡記錄失敗: ' + e.message);
       }
     };
 
+    // 零售操作 - 優化版（即時更新統計）
     const addProductToCart = (p) => {
       const discount = parseFloat(rForm.value.discount);
       const sellPrice = p.retail * (1 - discount);
@@ -584,27 +599,45 @@ createApp({
 
     const saveRetailSale = async () => {
       if (!rForm.value.clientId) return alert('請選擇客戶');
-      if (cart.length === 0) return alert('請添加產品到購物車');
+      if (cart.value.length === 0) return alert('請添加產品到購物車');
       try {
+        const salePromises = [];
+        const newSales = [];
+        // 批量新增零售記錄
         for (const item of cart.value) {
-          await sb.from('sales').insert({
+          const saleData = {
             user_id: userId.value,
             client_id: rForm.value.clientId,
             cat: 'retail',
             product: item.name,
             profit: item.profit,
             received_by: rForm.value.receivedBy
-          });
+          };
+          // 保存並收集返回數據
+          const promise = sb.from('sales').insert(saleData).select();
+          salePromises.push(promise);
         }
+        // 等待所有新增完成
+        const results = await Promise.all(salePromises);
+        // 收集所有新增的銷售記錄
+        results.forEach(res => {
+          if (res.data && res.data[0]) {
+            newSales.push(res.data[0]);
+          }
+        });
+        // 即時添加到銷售列表
+        sales.value.push(...newSales);
+        // 清空購物車
         cart.value = [];
-        await loadSales();
         alert('零售結算成功');
+        // 重置表單
+        rForm.value = { clientId: null, discount: "0", receivedBy: 'kwan' };
       } catch (e) {
         alert('結算失敗: ' + e.message);
       }
     };
 
-    // 收支操作
+    // 收支操作 - 優化版（即時顯示）
     const openFinanceModal = (f) => {
       financeForm.value = f ? { ...f, date: f.date.split('T')[0] } : { 
         id: null, 
@@ -631,12 +664,22 @@ createApp({
           date: financeForm.value.date,
           description: financeForm.value.description || ''
         };
+
         if (financeForm.value.id) {
+          // 編輯收支：更新後立即替換列表數據
           await sb.from('finances').update(financeData).eq('id', financeForm.value.id);
+          // 即時更新列表
+          const index = finances.value.findIndex(f => f.id === financeForm.value.id);
+          if (index !== -1) {
+            finances.value[index] = { ...financeData, id: financeForm.value.id };
+          }
         } else {
-          await sb.from('finances').insert(financeData);
+          // 新增收支：獲取返回數據並添加到列表頂部
+          const { data, error } = await sb.from('finances').insert(financeData).select();
+          if (error) throw error;
+          // 即時添加到列表頂部
+          finances.value.unshift(data[0]);
         }
-        await loadFinances();
         showFinanceModal.value = false;
         alert('收支記錄保存成功');
       } catch (e) {
@@ -644,7 +687,7 @@ createApp({
       }
     };
 
-    // 儀表板統計
+    // 儀表板統計（響應式，數據變更自動更新）
     const dashboardStats = computed(() => {
       const exerciseProfit = sales.value.filter(s => s.cat === 'exercise').reduce((sum, s) => sum + (s.profit || 0), 0);
       const retailProfit = sales.value.filter(s => s.cat === 'retail').reduce((sum, s) => sum + (s.profit || 0), 0);
