@@ -3,104 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitworkhk Management System V5.5</title>
+    <title>Fitworkhk Management V5.5</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>[v-cloak] { display: none; }</style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900">
+<body class="bg-slate-50">
     <div id="app" v-cloak>
         
         <div v-if="!user" class="min-h-screen flex items-center justify-center p-6 bg-blue-700">
             <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md">
                 <h2 class="text-3xl font-black text-center mb-8 text-blue-700 italic tracking-tighter">FITWORKHK LOGIN</h2>
                 <div class="space-y-4">
-                    <input v-model="email" type="email" placeholder="電子郵件" class="w-full border-2 border-gray-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500">
+                    <input v-model="email" type="email" placeholder="Email" class="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500">
                     <button @click="handleLogin" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
                         {{ loading ? '發送中...' : '獲取登入連結' }}
                     </button>
-                    <p class="text-[10px] text-gray-400 text-center uppercase font-bold italic">Cloud Sync Enabled</p>
                 </div>
             </div>
         </div>
 
-        <div v-else class="min-h-screen pb-24">
+        <div v-else class="min-h-screen">
             <header class="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-50">
                 <div class="text-xl font-black text-blue-800 italic">FITWORKHK V5.5</div>
                 <button @click="logout" class="text-xs font-bold text-red-400">登出</button>
             </header>
-
-            <main class="container mx-auto p-6 max-w-2xl">
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="bg-blue-600 p-6 rounded-[2rem] text-white shadow-lg">
-                        <p class="text-[10px] font-bold opacity-70">總利潤 (35點)</p>
-                        <p class="text-3xl font-black italic">${{ totalProfit }}</p>
-                    </div>
-                    <div class="bg-emerald-500 p-6 rounded-[2rem] text-white shadow-lg">
-                        <p class="text-[10px] font-bold opacity-70">當前用戶</p>
-                        <p class="text-xs font-bold truncate">{{ user.email }}</p>
-                    </div>
+            <main class="p-6">
+                <div class="bg-emerald-500 text-white p-6 rounded-[2rem] shadow-lg">
+                    <p class="text-xs font-bold opacity-70">登入帳號</p>
+                    <p class="text-lg font-black">{{ user.email }}</p>
                 </div>
-
-                <div class="space-y-4">
-                    <h3 class="font-black italic text-slate-400">CLIENT LIST</h3>
-                    <div v-for="c in clients" :key="c.id" class="bg-white p-5 rounded-3xl shadow-sm border-l-8 border-blue-500">
-                        <div class="flex justify-between items-center">
-                            <span class="font-black">{{ c.name }}</span>
-                            <span class="text-emerald-500 font-bold text-sm">+${{ c.isNew ? 1200 : 800 }}</span>
-                        </div>
-                    </div>
+                <div class="mt-6 p-4 bg-blue-50 rounded-2xl border-2 border-blue-100">
+                    <p class="text-blue-700 font-bold">雲端系統已連線，歡迎回來！</p>
                 </div>
             </main>
         </div>
     </div>
 
     <script>
-        const { createApp, ref, onMounted, computed } = Vue;
-
-        // 填入您提供的 Supabase 密鑰
-        const SUPABASE_URL = "https://ajnunehxtiofcphdyhqn.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const { createApp, ref, onMounted } = Vue;
 
         createApp({
             setup() {
                 const user = ref(null);
                 const email = ref('');
                 const loading = ref(false);
-                const clients = ref([
-                    { id: 1, name: '測試客戶 A', plan: '35點套票', isNew: true },
-                    { id: 2, name: '測試客戶 B', plan: '35點套票', isNew: false }
-                ]);
+                
+                // 修正後的 Supabase 初始化
+                const client = supabase.createClient(
+                    "https://ajnunehxtiofcphdyhqn.supabase.co", 
+                    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4"
+                );
 
-                // 利潤計算邏輯
-                const totalProfit = computed(() => {
-                    return clients.value.reduce((sum, c) => sum + (c.isNew ? 1200 : 800), 0);
-                });
-
-                // 登入邏輯
                 const handleLogin = async () => {
+                    if (!email.value) return alert("請輸入 Email");
                     loading.value = true;
-                    const { error } = await supabase.auth.signInWithOtp({ email: email.value });
-                    if (error) alert("錯誤: " + error.message);
-                    else alert("登入連結已發送到您的信箱！");
+                    const { error } = await client.auth.signInWithOtp({ email: email.value });
+                    if (error) alert(error.message);
+                    else alert("登入信件已發送，請檢查您的 Email！");
                     loading.value = false;
                 };
 
                 const logout = async () => {
-                    await supabase.auth.signOut();
+                    await client.auth.signOut();
                     user.value = null;
                 };
 
                 onMounted(() => {
-                    // 監聽登入狀態
-                    supabase.auth.onAuthStateChange((event, session) => {
+                    client.auth.onAuthStateChange((_event, session) => {
                         user.value = session?.user || null;
                     });
                 });
 
-                return { user, email, loading, clients, totalProfit, handleLogin, logout };
+                return { user, email, loading, handleLogin, logout };
             }
         }).mount('#app');
     </script>
