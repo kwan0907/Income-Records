@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitworkhk 客戶管理系統</title>
+    <title>Fitworkhk 雲端管理系統</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,71 +15,61 @@
         <div v-if="!user" class="min-h-screen flex items-center justify-center p-6 bg-blue-900">
             <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md">
                 <h2 class="text-3xl font-black text-center mb-2 text-blue-900">FITWORKHK</h2>
-                <p class="text-center text-gray-400 text-[10px] mb-8 font-bold uppercase tracking-widest">{{ authModeText }}</p>
-
-                <div class="space-y-4">
+                
+                <div v-if="!showOtpInput" class="space-y-4">
+                    <p class="text-center text-gray-400 text-[10px] mb-8 font-bold uppercase tracking-widest">{{ authModeText }}</p>
                     <div>
-                        <label class="text-[10px] font-bold text-gray-400 px-1">管理員/客戶電子郵件</label>
-                        <input v-model="email" type="email" placeholder="email@example.com" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500 transition-all">
+                        <label class="text-[10px] font-bold text-gray-400 px-1">電子郵件</label>
+                        <input v-model="email" type="email" placeholder="example@email.com" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
                     </div>
-
                     <div v-if="authMode !== 'reset'">
-                        <label class="text-[10px] font-bold text-gray-400 px-1">帳戶密碼</label>
-                        <input v-model="password" type="password" placeholder="••••••••" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500 transition-all">
+                        <label class="text-[10px] font-bold text-gray-400 px-1">密碼</label>
+                        <input v-model="password" type="password" placeholder="••••••••" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
                     </div>
-
-                    <button @click="handleAuth" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-100 mt-4 active:scale-95 transition-transform disabled:bg-gray-300">
-                        {{ loading ? '同步處理中...' : authButtonText }}
+                    <button @click="handleAuth" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl mt-4 disabled:bg-gray-300">
+                        {{ loading ? '同步中...' : authButtonText }}
                     </button>
-
                     <div class="flex justify-between px-2 text-xs font-bold mt-4">
-                        <button v-if="authMode === 'login'" @click="authMode = 'signup'" class="text-blue-500">申請新帳號</button>
+                        <button v-if="authMode === 'login'" @click="authMode = 'signup'" class="text-blue-500">註冊新帳號</button>
                         <button v-if="authMode === 'login'" @click="authMode = 'reset'" class="text-gray-400">忘記密碼？</button>
-                        <button v-if="authMode !== 'login'" @click="authMode = 'login'" class="text-blue-500 w-full text-center">返回登入畫面</button>
+                        <button v-if="authMode !== 'login'" @click="authMode = 'login'" class="text-blue-500 w-full text-center">返回登入</button>
                     </div>
+                </div>
+
+                <div v-else class="space-y-6 text-center">
+                    <div class="bg-blue-50 p-4 rounded-2xl">
+                        <p class="text-blue-600 font-bold text-sm">驗證碼已發送至</p>
+                        <p class="text-blue-900 font-black text-xs">{{ email }}</p>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">請輸入 6 位數驗證碼</label>
+                        <input v-model="otpToken" type="text" maxlength="6" placeholder="000000" class="w-full text-center text-4xl font-black tracking-[1rem] border-b-4 border-blue-500 py-4 outline-none bg-transparent">
+                    </div>
+                    <button @click="verifyOtp" :disabled="loading" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl shadow-xl">
+                        {{ loading ? '驗證中...' : '確認驗證並登入' }}
+                    </button>
+                    <button @click="showOtpInput = false" class="text-xs font-bold text-gray-400">返回重新輸入 Email</button>
                 </div>
             </div>
         </div>
 
         <div v-else class="min-h-screen">
             <header class="bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-10">
-                <span class="font-black text-blue-600 text-xl tracking-tighter text-blue-900">FITWORKHK</span>
-                <div class="flex items-center space-x-3">
-                    <span class="text-[10px] bg-blue-50 text-blue-500 px-3 py-1 rounded-full font-bold">{{ user.email }}</span>
-                    <button @click="logout" class="text-xs font-bold text-red-400 hover:text-red-600">登出</button>
-                </div>
+                <span class="font-black text-blue-600 text-xl tracking-tighter">FITWORKHK</span>
+                <button @click="logout" class="text-xs font-bold text-red-400">登出</button>
             </header>
-            
-            <main class="p-6 text-center max-w-md mx-auto">
-                <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100">
-                    <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-3xl text-blue-500">👤</span>
-                    </div>
-                    <h1 class="text-2xl font-black text-blue-900">歡迎回來，管理員</h1>
-                    <p class="text-gray-400 mt-2 text-sm">雲端數據庫連線正常</p>
-                    
-                    <div class="mt-8 pt-8 border-t border-gray-50 text-left">
-                        <p class="text-[10px] font-black text-gray-300 uppercase mb-4">系統狀態</p>
-                        <div class="flex items-center text-green-500 font-bold text-sm mb-2">
-                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></span>
-                            身份驗證：已通過
-                        </div>
-                        <div class="flex items-center text-blue-500 font-bold text-sm">
-                            <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                            權限等級：全域存取
-                        </div>
-                    </div>
+            <main class="p-8 text-center">
+                <div class="bg-green-50 text-green-600 p-4 rounded-2xl font-bold mb-6 text-sm">
+                    ✅ 帳號驗證成功，歡迎進入 Fitworkhk 雲端系統
                 </div>
-            </main>
+                <p class="text-gray-400">當前登入：{{ user.email }}</p>
+                </main>
         </div>
     </div>
 
     <script>
-        // 配置資訊 (自動清理空格)
         const SUPABASE_URL = "https://ajnunehxtiofcphdyhqn.supabase.co".trim();
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4".trim();
-        
-        // 初始化連線
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const { createApp, ref, computed, onMounted } = Vue;
@@ -88,64 +78,78 @@
                 const user = ref(null);
                 const email = ref('');
                 const password = ref('');
+                const otpToken = ref('');
                 const loading = ref(false);
-                const authMode = ref('login');
+                const authMode = ref('login'); // login, signup, reset
+                const showOtpInput = ref(false);
 
                 const authModeText = computed(() => {
-                    if (authMode.value === 'login') return 'Cloud Management Login';
-                    if (authMode.value === 'signup') return 'System Registration';
-                    return 'Password Recovery';
+                    if (authMode.value === 'login') return 'Cloud Login';
+                    if (authMode.value === 'signup') return 'New Registration';
+                    return 'Reset Access';
                 });
 
                 const authButtonText = computed(() => {
-                    if (authMode.value === 'login') return '確認登入系統';
-                    if (authMode.value === 'signup') return '立即建立帳號';
-                    return '發送重設驗證碼';
+                    if (authMode.value === 'login') return '登入系統';
+                    if (authMode.value === 'signup') return '獲取驗證碼';
+                    return '發送重設郵件';
                 });
 
+                // 處理登入、註冊、重設請求
                 const handleAuth = async () => {
-                    if (!email.value) return alert("請填寫電子郵件地址");
-                    if (authMode.value !== 'reset' && !password.value) return alert("請輸入密碼");
-                    
+                    if (!email.value) return alert("請填寫 Email");
                     loading.value = true;
                     try {
                         if (authMode.value === 'login') {
                             const { data, error } = await _supabase.auth.signInWithPassword({ email: email.value, password: password.value });
                             if (error) throw error;
                             user.value = data.user;
-                        } else if (authMode.value === 'signup') {
-                            const { data, error } = await _supabase.auth.signUp({ email: email.value, password: password.value });
+                        } 
+                        else if (authMode.value === 'signup') {
+                            const { error } = await _supabase.auth.signUp({ email: email.value, password: password.value });
                             if (error) throw error;
-                            alert("帳號已提交！\n\n重要：請前往您的郵箱查收【驗證郵件】，點擊連結後才能正式啟動帳號。");
-                            authMode.value = 'login';
-                        } else if (authMode.value === 'reset') {
-                            const { error } = await _supabase.auth.resetPasswordForEmail(email.value, {
-                                redirectTo: window.location.origin, // 自動抓取目前的網址作為跳轉路徑
-                            });
+                            showOtpInput.value = true; // 切換到驗證碼輸入介面
+                        }
+                        else if (authMode.value === 'reset') {
+                            const { error } = await _supabase.auth.resetPasswordForEmail(email.value, { redirectTo: window.location.origin });
                             if (error) throw error;
-                            alert("重設連結已發送！請檢查郵箱。");
-                            authMode.value = 'login';
+                            alert("重設連結已發送！");
                         }
                     } catch (err) {
-                        alert("系統連線異常: " + err.message);
+                        alert("系統提示: " + err.message);
                     } finally {
                         loading.value = false;
                     }
                 };
 
-                const logout = async () => { 
-                    await _supabase.auth.signOut(); 
-                    user.value = null; 
-                    email.value = '';
-                    password.value = '';
+                // 驗證 6 位數 OTP
+                const verifyOtp = async () => {
+                    if (otpToken.value.length !== 6) return alert("請輸入 6 位數字驗證碼");
+                    loading.value = true;
+                    try {
+                        const { data, error } = await _supabase.auth.verifyOtp({
+                            email: email.value,
+                            token: otpToken.value,
+                            type: 'signup'
+                        });
+                        if (error) throw error;
+                        user.value = data.user;
+                        showOtpInput.value = false;
+                    } catch (err) {
+                        alert("驗證失敗: " + err.message);
+                    } finally {
+                        loading.value = false;
+                    }
                 };
+
+                const logout = async () => { await _supabase.auth.signOut(); user.value = null; };
 
                 onMounted(async () => {
                     const { data: { user: _user } } = await _supabase.auth.getUser();
                     if (_user) user.value = _user;
                 });
 
-                return { user, email, password, loading, authMode, authModeText, authButtonText, handleAuth, logout };
+                return { user, email, password, otpToken, loading, authMode, showOtpInput, authModeText, authButtonText, handleAuth, verifyOtp, logout };
             }
         }).mount('#app');
     </script>
