@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitworkhk 雲端管理系統</title>
+    <title>Fitworkhk 管理系統 V5.2</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,66 +12,70 @@
 <body class="bg-slate-50 text-slate-900">
     <div id="app" v-cloak>
         
-        <div v-if="!user" class="min-h-screen flex items-center justify-center p-6 bg-blue-900">
+        <div v-if="showResetPasswordInput" class="min-h-screen flex items-center justify-center p-6 bg-orange-600">
             <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md">
-                <h2 class="text-3xl font-black text-center mb-6 text-blue-900 italic tracking-tighter">FITWORKHK</h2>
+                <h2 class="text-3xl font-black text-center mb-2 text-orange-600 italic tracking-tighter">RESET</h2>
+                <p class="text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-8">Security Update Required</p>
                 
-                <div v-if="showResetPasswordInput" class="space-y-6 text-center">
-                    <div class="bg-orange-50 p-4 rounded-2xl border border-orange-100">
-                        <p class="text-orange-600 font-black text-sm uppercase italic">Step: Reset Password</p>
-                        <p class="text-slate-500 text-xs mt-1">請設置您的新登入密碼</p>
-                    </div>
+                <div class="space-y-6">
                     <div>
+                        <label class="text-[10px] font-bold text-gray-400 px-1 uppercase">New Password</label>
                         <input v-model="newPassword" type="password" placeholder="輸入新密碼 (至少 6 位)" 
-                               class="w-full border-2 border-orange-400 rounded-2xl px-4 py-4 outline-none focus:ring-2 ring-orange-200">
+                               class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-orange-500 transition-all">
                     </div>
                     <button @click="updatePassword" :disabled="loading" 
-                            class="w-full bg-orange-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-transform disabled:bg-gray-300">
-                        {{ loading ? '更新中...' : '確認更新並進入系統' }}
+                            class="w-full bg-orange-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-50">
+                        {{ loading ? '更新中...' : '確認修改並進入系統' }}
                     </button>
-                </div>
-
-                <div v-else-if="showOtpInput" class="space-y-6 text-center">
-                    <div class="bg-blue-50 p-4 rounded-2xl">
-                        <p class="text-blue-600 font-bold text-xs">驗證碼已發送至 {{ email }}</p>
-                    </div>
-                    <input v-model="otpToken" type="text" maxlength="6" placeholder="000000" class="w-full text-center text-5xl font-black tracking-[0.5rem] border-b-4 border-blue-500 py-4 outline-none bg-transparent text-blue-900">
-                    <button @click="verifyOtp" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl shadow-xl">確認驗證</button>
-                </div>
-
-                <div v-else class="space-y-4">
-                    <p class="text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest">{{ authModeText }}</p>
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 px-1 uppercase">Email Address</label>
-                        <input v-model="email" type="email" placeholder="example@email.com" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500 transition-all">
-                    </div>
-                    <div v-if="authMode !== 'reset'">
-                        <label class="text-[10px] font-bold text-gray-400 px-1 uppercase">Password</label>
-                        <input v-model="password" type="password" placeholder="••••••••" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
-                    </div>
-                    <button @click="handleAuth" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl mt-4 active:scale-95 transition-all">
-                        {{ loading ? '處理中...' : authButtonText }}
-                    </button>
-                    <div class="flex justify-between px-2 text-xs font-bold mt-4">
-                        <button v-if="authMode === 'login'" @click="authMode = 'signup'" class="text-blue-500">註冊新帳號</button>
-                        <button v-if="authMode === 'login'" @click="authMode = 'reset'" class="text-gray-400">忘記密碼？</button>
-                        <button v-if="authMode !== 'login'" @click="authMode = 'login'" class="text-blue-500 w-full text-center">返回登入</button>
-                    </div>
+                    <p class="text-center text-[10px] text-gray-400 font-bold">請設置一個包含字母與數字的新密碼</p>
                 </div>
             </div>
         </div>
 
-        <div v-else class="min-h-screen">
+        <div v-else-if="user" class="min-h-screen">
             <header class="bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-10 border-b border-gray-100">
-                <span class="font-black text-blue-600 text-xl tracking-tighter">FITWORKHK</span>
-                <button @click="logout" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-black">登出</button>
+                <span class="font-black text-blue-600 text-xl tracking-tighter italic">FITWORKHK</span>
+                <div class="flex items-center space-x-3">
+                    <span class="text-[10px] font-bold text-gray-300 hidden sm:block uppercase">{{ user.email }}</span>
+                    <button @click="logout" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-500 hover:text-white transition-all">登出</button>
+                </div>
             </header>
-            <main class="p-6 max-w-md mx-auto text-center">
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
-                    <h1 class="text-2xl font-black text-blue-900">登入成功</h1>
-                    <p class="text-gray-400 text-xs mt-2">{{ user.email }}</p>
+            <main class="p-6 max-w-md mx-auto">
+                <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
+                    <div class="w-20 h-20 bg-green-50 rounded-3xl flex items-center justify-center text-green-600 mx-auto mb-6">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <h1 class="text-2xl font-black text-blue-900">管理系統運作中</h1>
+                    <p class="text-gray-400 text-xs mt-2 font-bold uppercase tracking-widest">Session Is Secured</p>
                 </div>
             </main>
+        </div>
+
+        <div v-else class="min-h-screen flex items-center justify-center p-6 bg-blue-900">
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md">
+                <h2 class="text-3xl font-black text-center mb-6 text-blue-900 italic tracking-tighter">FITWORKHK</h2>
+                
+                <div v-if="showOtpInput" class="space-y-6 text-center">
+                    <p class="text-blue-600 font-bold text-sm">請輸入電郵中的 6 位驗證碼</p>
+                    <input v-model="otpToken" type="text" maxlength="6" placeholder="000000" class="w-full text-center text-5xl font-black tracking-[0.5rem] border-b-4 border-blue-500 py-4 outline-none bg-transparent text-blue-900">
+                    <button @click="verifyOtp" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl shadow-xl">完成驗證</button>
+                    <button @click="showOtpInput = false" class="text-xs font-bold text-gray-400">返回</button>
+                </div>
+
+                <div v-else class="space-y-4">
+                    <p class="text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest">{{ authModeText }}</p>
+                    <input v-model="email" type="email" placeholder="Email" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
+                    <input v-if="authMode !== 'reset'" v-model="password" type="password" placeholder="Password" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
+                    <button @click="handleAuth" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl mt-4 active:scale-95 transition-all">
+                        {{ loading ? '請稍候...' : authButtonText }}
+                    </button>
+                    <div class="flex justify-between px-2 text-xs font-bold mt-4">
+                        <button v-if="authMode === 'login'" @click="authMode = 'signup'" class="text-blue-500">註冊新帳號</button>
+                        <button v-if="authMode === 'login'" @click="authMode = 'reset'" class="text-gray-400">忘記密碼？</button>
+                        <button v-if="authMode !== 'login'" @click="authMode = 'login'" class="text-blue-500 w-full text-center">返回登入介面</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -96,9 +100,9 @@
                 const showResetPasswordInput = ref(false);
 
                 const authModeText = computed(() => {
-                    if (authMode.value === 'login') return 'System Access';
-                    if (authMode.value === 'signup') return 'New Member';
-                    return 'Password Recovery';
+                    if (authMode.value === 'login') return 'Authorized Login';
+                    if (authMode.value === 'signup') return 'Member Signup';
+                    return 'Account Recovery';
                 });
 
                 const authButtonText = computed(() => {
@@ -120,10 +124,10 @@
                             showOtpInput.value = true;
                         } else if (authMode.value === 'reset') {
                             const { error } = await _supabase.auth.resetPasswordForEmail(email.value, { 
-                                redirectTo: window.location.origin 
+                                redirectTo: 'https://heroic-malabi-5beebd.netlify.app' 
                             });
                             if (error) throw error;
-                            alert("郵件已發送！請去 Gmail 點擊連結。");
+                            alert("重設郵件已發送，請檢查您的 Inbox (或垃圾郵件箱)。");
                         }
                     } catch (err) { alert(err.message); } finally { loading.value = false; }
                 };
@@ -136,14 +140,14 @@
                 };
 
                 const updatePassword = async () => {
-                    if (newPassword.value.length < 6) return alert("密碼至少 6 位");
+                    if (newPassword.value.length < 6) return alert("密碼長度至少需要 6 位數");
                     loading.value = true;
                     try {
                         const { error } = await _supabase.auth.updateUser({ password: newPassword.value });
                         if (error) throw error;
-                        alert("密碼更換成功！");
+                        alert("密碼更換成功！已為您自動登入。");
                         showResetPasswordInput.value = false;
-                        window.location.hash = ""; // 清理網址
+                        window.location.hash = ""; // 清除 URL 中的 Token
                     } catch (err) { alert(err.message); } finally { loading.value = false; }
                 };
 
@@ -155,29 +159,26 @@
                 };
 
                 onMounted(async () => {
-                    // 1. 先確認是否有現有登入
+                    // 1. 強力偵測網址中的重設訊號
+                    const hash = window.location.hash;
+                    if (hash.includes("type=recovery") || hash.includes("access_token=")) {
+                        showResetPasswordInput.value = true;
+                    }
+
+                    // 2. 恢復現有 Session
                     const { data: { session } } = await _supabase.auth.getSession();
                     if (session) user.value = session.user;
 
-                    // 2. 強力偵測：不管是 Hash 還是事件，只要看到 recovery 就切換
-                    const checkUrl = () => {
-                        const hash = window.location.hash;
-                        // 如果網址包含 recovery 類型或 accessToken，強制顯示修改介面
-                        if (hash.includes("type=recovery") || hash.includes("access_token=")) {
-                            console.log("偵測到重設密碼訊號");
-                            showResetPasswordInput.value = true;
-                        }
-                    };
-
-                    // 延遲 500ms 檢查網址，確保連結完全載入
-                    setTimeout(checkUrl, 500);
-
                     // 3. 監聽狀態改變
                     _supabase.auth.onAuthStateChange((event, session) => {
-                        console.log("Auth Event:", event);
-                        if (event === "PASSWORD_RECOVERY") showResetPasswordInput.value = true;
-                        if (session) user.value = session.user;
-                        else user.value = null;
+                        if (event === "PASSWORD_RECOVERY") {
+                            showResetPasswordInput.value = true;
+                        }
+                        if (session) {
+                            user.value = session.user;
+                        } else {
+                            user.value = null;
+                        }
                     });
                 });
 
