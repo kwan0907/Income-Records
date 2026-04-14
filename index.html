@@ -16,7 +16,30 @@
             <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md">
                 <h2 class="text-3xl font-black text-center mb-6 text-blue-900 italic tracking-tighter">FITWORKHK</h2>
                 
-                <div v-if="!showOtpInput && !showResetPasswordInput" class="space-y-4">
+                <div v-if="showResetPasswordInput" class="space-y-6 text-center">
+                    <div class="bg-orange-50 p-4 rounded-2xl border border-orange-100">
+                        <p class="text-orange-600 font-black text-sm uppercase italic">Step: Reset Password</p>
+                        <p class="text-slate-500 text-xs mt-1">請設置您的新登入密碼</p>
+                    </div>
+                    <div>
+                        <input v-model="newPassword" type="password" placeholder="輸入新密碼 (至少 6 位)" 
+                               class="w-full border-2 border-orange-400 rounded-2xl px-4 py-4 outline-none focus:ring-2 ring-orange-200">
+                    </div>
+                    <button @click="updatePassword" :disabled="loading" 
+                            class="w-full bg-orange-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-transform disabled:bg-gray-300">
+                        {{ loading ? '更新中...' : '確認更新並進入系統' }}
+                    </button>
+                </div>
+
+                <div v-else-if="showOtpInput" class="space-y-6 text-center">
+                    <div class="bg-blue-50 p-4 rounded-2xl">
+                        <p class="text-blue-600 font-bold text-xs">驗證碼已發送至 {{ email }}</p>
+                    </div>
+                    <input v-model="otpToken" type="text" maxlength="6" placeholder="000000" class="w-full text-center text-5xl font-black tracking-[0.5rem] border-b-4 border-blue-500 py-4 outline-none bg-transparent text-blue-900">
+                    <button @click="verifyOtp" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl shadow-xl">確認驗證</button>
+                </div>
+
+                <div v-else class="space-y-4">
                     <p class="text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest">{{ authModeText }}</p>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 px-1 uppercase">Email Address</label>
@@ -26,7 +49,7 @@
                         <label class="text-[10px] font-bold text-gray-400 px-1 uppercase">Password</label>
                         <input v-model="password" type="password" placeholder="••••••••" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
                     </div>
-                    <button @click="handleAuth" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl mt-4 active:scale-95 transition-all disabled:bg-gray-300">
+                    <button @click="handleAuth" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl mt-4 active:scale-95 transition-all">
                         {{ loading ? '處理中...' : authButtonText }}
                     </button>
                     <div class="flex justify-between px-2 text-xs font-bold mt-4">
@@ -35,64 +58,24 @@
                         <button v-if="authMode !== 'login'" @click="authMode = 'login'" class="text-blue-500 w-full text-center">返回登入</button>
                     </div>
                 </div>
-
-                <div v-else-if="showOtpInput" class="space-y-6 text-center">
-                    <div class="bg-blue-50 p-4 rounded-2xl">
-                        <p class="text-blue-600 font-bold text-xs">驗證碼已發送至 {{ email }}</p>
-                    </div>
-                    <input v-model="otpToken" type="text" maxlength="6" placeholder="000000" class="w-full text-center text-5xl font-black tracking-[0.5rem] border-b-4 border-blue-500 py-4 outline-none bg-transparent text-blue-900">
-                    <button @click="verifyOtp" :disabled="loading" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-transform">
-                        確認驗證
-                    </button>
-                    <button @click="showOtpInput = false" class="text-xs font-bold text-gray-400">返回修改</button>
-                </div>
-
-                <div v-else-if="showResetPasswordInput" class="space-y-6 text-center">
-                    <div class="bg-orange-50 p-4 rounded-2xl">
-                        <p class="text-orange-600 font-bold text-sm">請設置您的新密碼</p>
-                    </div>
-                    <input v-model="newPassword" type="password" placeholder="新密碼 (至少 6 位)" class="w-full border-2 border-orange-500 rounded-2xl px-4 py-4 outline-none">
-                    <button @click="updatePassword" :disabled="loading" class="w-full bg-orange-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-transform">
-                        更新密碼並進入系統
-                    </button>
-                </div>
             </div>
         </div>
 
         <div v-else class="min-h-screen">
             <header class="bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-10 border-b border-gray-100">
                 <span class="font-black text-blue-600 text-xl tracking-tighter">FITWORKHK</span>
-                <div class="flex items-center space-x-3">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-[10px] font-black text-gray-300 leading-none uppercase tracking-widest">Active User</p>
-                        <p class="text-xs font-bold text-blue-900">{{ user.email }}</p>
-                    </div>
-                    <button @click="logout" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-500 hover:text-white transition-all">登出</button>
-                </div>
+                <button @click="logout" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-black">登出</button>
             </header>
-            
-            <main class="p-6 max-w-md mx-auto">
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
-                    <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center text-blue-600 mx-auto mb-6 rotate-3">
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                    </div>
-                    <h1 class="text-2xl font-black text-blue-900">安全連線中</h1>
-                    <p class="text-gray-400 text-xs mt-2 font-bold uppercase tracking-widest">Fitworkhk Cloud Session Active</p>
-                    
-                    <div class="mt-8 p-4 bg-slate-50 rounded-2xl text-left border border-dashed border-gray-200">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-black text-gray-400 uppercase">持久登入狀態</span>
-                            <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-                        </div>
-                        <p class="text-sm font-bold text-slate-700 mt-1">下次打開網頁將自動登入</p>
-                    </div>
+            <main class="p-6 max-w-md mx-auto text-center">
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+                    <h1 class="text-2xl font-black text-blue-900">登入成功</h1>
+                    <p class="text-gray-400 text-xs mt-2">{{ user.email }}</p>
                 </div>
             </main>
         </div>
     </div>
 
     <script>
-        // 初始化 Supabase
         const SUPABASE_URL = "https://ajnunehxtiofcphdyhqn.supabase.co".trim();
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4".trim();
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -113,14 +96,14 @@
                 const showResetPasswordInput = ref(false);
 
                 const authModeText = computed(() => {
-                    if (authMode.value === 'login') return 'Authorized Access';
-                    if (authMode.value === 'signup') return 'Member Enrollment';
-                    return 'Security Override';
+                    if (authMode.value === 'login') return 'System Access';
+                    if (authMode.value === 'signup') return 'New Member';
+                    return 'Password Recovery';
                 });
 
                 const authButtonText = computed(() => {
-                    if (authMode.value === 'login') return '進入管理系統';
-                    if (authMode.value === 'signup') return '獲取 6 位驗證碼';
+                    if (authMode.value === 'login') return '登入系統';
+                    if (authMode.value === 'signup') return '獲取驗證碼';
                     return '發送重設郵件';
                 });
 
@@ -129,69 +112,72 @@
                     loading.value = true;
                     try {
                         if (authMode.value === 'login') {
-                            const { data, error } = await _supabase.auth.signInWithPassword({ email: email.value, password: password.value });
+                            const { error } = await _supabase.auth.signInWithPassword({ email: email.value, password: password.value });
                             if (error) throw error;
-                            user.value = data.user;
                         } else if (authMode.value === 'signup') {
                             const { error } = await _supabase.auth.signUp({ email: email.value, password: password.value });
                             if (error) throw error;
                             showOtpInput.value = true;
-                            alert("驗證碼已發送至您的郵箱，請輸入 6 位數字。");
                         } else if (authMode.value === 'reset') {
-                            const { error } = await _supabase.auth.resetPasswordForEmail(email.value, { redirectTo: window.location.origin });
+                            const { error } = await _supabase.auth.resetPasswordForEmail(email.value, { 
+                                redirectTo: window.location.origin 
+                            });
                             if (error) throw error;
-                            alert("重設郵件已發出，請點擊郵件中的連結回來修改密碼。");
+                            alert("郵件已發送！請去 Gmail 點擊連結。");
                         }
                     } catch (err) { alert(err.message); } finally { loading.value = false; }
                 };
 
                 const verifyOtp = async () => {
-                    if (otpToken.value.length !== 6) return alert("請輸入 6 位數字");
                     loading.value = true;
-                    const { data, error } = await _supabase.auth.verifyOtp({ email: email.value, token: otpToken.value, type: 'signup' });
-                    if (error) alert(error.message); else user.value = data.user;
+                    const { error } = await _supabase.auth.verifyOtp({ email: email.value, token: otpToken.value, type: 'signup' });
+                    if (error) alert(error.message);
                     loading.value = false;
                 };
 
                 const updatePassword = async () => {
-                    if (newPassword.value.length < 6) return alert("新密碼長度不足 6 位");
+                    if (newPassword.value.length < 6) return alert("密碼至少 6 位");
                     loading.value = true;
-                    const { error } = await _supabase.auth.updateUser({ password: newPassword.value });
-                    if (error) alert(error.message); else {
-                        alert("密碼更新成功！已為您自動登入。");
-                        const { data: { user: _user } } = await _supabase.auth.getUser();
-                        user.value = _user;
+                    try {
+                        const { error } = await _supabase.auth.updateUser({ password: newPassword.value });
+                        if (error) throw error;
+                        alert("密碼更換成功！");
                         showResetPasswordInput.value = false;
                         window.location.hash = ""; // 清理網址
-                    }
-                    loading.value = false;
+                    } catch (err) { alert(err.message); } finally { loading.value = false; }
                 };
 
                 const logout = async () => { 
                     await _supabase.auth.signOut(); 
                     user.value = null; 
-                    window.location.hash = ""; 
-                    location.reload(); // 徹底重整確保 Session 清除
+                    window.location.hash = "";
+                    location.reload();
                 };
 
                 onMounted(async () => {
-                    // 1. 持久登入恢復
+                    // 1. 先確認是否有現有登入
                     const { data: { session } } = await _supabase.auth.getSession();
                     if (session) user.value = session.user;
 
-                    // 2. 強化偵測：檢查網址是否帶有重設密碼訊號
-                    const hash = window.location.hash;
-                    if (hash.includes("type=recovery") || hash.includes("access_token=")) {
-                        showResetPasswordInput.value = true;
-                        authMode.value = 'login';
-                    }
+                    // 2. 強力偵測：不管是 Hash 還是事件，只要看到 recovery 就切換
+                    const checkUrl = () => {
+                        const hash = window.location.hash;
+                        // 如果網址包含 recovery 類型或 accessToken，強制顯示修改介面
+                        if (hash.includes("type=recovery") || hash.includes("access_token=")) {
+                            console.log("偵測到重設密碼訊號");
+                            showResetPasswordInput.value = true;
+                        }
+                    };
+
+                    // 延遲 500ms 檢查網址，確保連結完全載入
+                    setTimeout(checkUrl, 500);
 
                     // 3. 監聽狀態改變
                     _supabase.auth.onAuthStateChange((event, session) => {
-                        console.log("Supabase Auth Event:", event);
+                        console.log("Auth Event:", event);
                         if (event === "PASSWORD_RECOVERY") showResetPasswordInput.value = true;
                         if (session) user.value = session.user;
-                        else if (event === "SIGNED_OUT") user.value = null;
+                        else user.value = null;
                     });
                 });
 
