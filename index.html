@@ -522,16 +522,41 @@ createApp({
       }
     };
 
-    // 過濾計算
-    const filteredClients = computed(() => {
-      const search = cSearch.value.toLowerCase().trim();
-      if (!search) return clients.value;
-      return clients.value.filter(c => 
-        c.name.toLowerCase().includes(search) || 
-        (c.phone && c.phone.includes(search)) || 
-        c.branch.toLowerCase().includes(search)
-      );
-    });
+  // --- 確保替換掉原有的 saveClient ---
+const saveClient = async () => {
+    if (!clientForm.value.name) return alert("姓名為必填！");
+    
+    try {
+        const payload = {
+            name: String(clientForm.value.name).trim(),
+            phone: clientForm.value.phone ? String(clientForm.value.phone).trim() : '',
+            branch: clientForm.value.branch || '觀塘',
+            source: clientForm.value.source || '廣告',
+            marathon: Boolean(clientForm.value.marathon),
+            user_id: userId.value // 綁定當前用戶
+        };
+
+        let result;
+        if (clientForm.value.id) {
+            // 更新並立刻返回最新資料 (.select())
+            result = await sb.from('clients').update(payload).eq('id', clientForm.value.id).select();
+        } else {
+            // 新增並立刻返回最新資料 (.select())
+            result = await sb.from('clients').insert([payload]).select();
+        }
+
+        if (result.error) throw result.error;
+
+        // 如果成功，立刻刷新列表並關閉彈窗
+        await loadClients(); 
+        showClientModal.value = false;
+        
+    } catch (e) {
+        // 如果還是失敗，這裡會明確告訴你是哪個欄位或權限出錯！
+        alert("資料庫錯誤，添加失敗：" + e.message);
+        console.error("Supabase Error:", e);
+    }
+};
 
     const filteredProducts = computed(() => {
       const search = pSearch.value.toLowerCase().trim();
