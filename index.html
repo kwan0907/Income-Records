@@ -1,3 +1,6 @@
+Index · HTML
+Copy
+
 <!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -23,26 +26,60 @@
                     <h1 class="text-3xl font-black text-blue-800 italic">FITWORKHK</h1>
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ authState === 'recovery' ? '設定新密碼' : '管理系統' }}</p>
                 </div>
-
+ 
+                <!-- 正常登入/註冊表單 -->
                 <div v-if="authState !== 'recovery'" class="space-y-3">
-                    <input type="email" v-model="authForm.email" placeholder="Email" class="w-full border-2 p-4 rounded-2xl font-bold">
-                    <input type="password" v-model="authForm.password" placeholder="Password" class="w-full border-2 p-4 rounded-2xl font-bold">
+                    <!--
+                        autocomplete="username" 搭配 autocomplete="current-password"
+                        讓瀏覽器／iOS 可記住密碼，並在支援的裝置上觸發 Face ID / Touch ID 自動填入
+                    -->
+                    <input
+                        type="email"
+                        v-model="authForm.email"
+                        placeholder="Email"
+                        autocomplete="username"
+                        class="w-full border-2 p-4 rounded-2xl font-bold"
+                    >
+                    <input
+                        type="password"
+                        v-model="authForm.password"
+                        placeholder="Password"
+                        :autocomplete="authState === 'login' ? 'current-password' : 'new-password'"
+                        class="w-full border-2 p-4 rounded-2xl font-bold"
+                    >
                     <button @click="handleAuth" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95">
                         {{ authState === 'login' ? '登入' : '註冊' }}
                     </button>
+ 
+                    <!-- Face ID / 生物識別登入按鈕（僅在已綁定且瀏覽器支援時顯示） -->
+                    <button
+                        v-if="authState === 'login' && passkeySupported && passkeyRegistered"
+                        @click="loginWithPasskey"
+                        class="w-full bg-slate-800 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                    >
+                        <span>🔒</span> Face ID / 指紋登入
+                    </button>
+ 
                     <div class="flex justify-between px-2 font-bold text-slate-400">
                         <button @click="authState = (authState === 'login' ? 'register' : 'login')">{{ authState === 'login' ? '註冊帳號' : '返回登入' }}</button>
                         <button @click="forgotPassword">忘記密碼？</button>
                     </div>
                 </div>
-
+ 
+                <!-- 重設密碼表單（從 Email 連結進入時） -->
                 <div v-else class="space-y-3">
-                    <input type="password" v-model="newPassword" placeholder="輸入新密碼" class="w-full border-2 p-4 rounded-2xl font-bold">
+                    <input
+                        type="password"
+                        v-model="newPassword"
+                        placeholder="輸入新密碼"
+                        autocomplete="new-password"
+                        class="w-full border-2 p-4 rounded-2xl font-bold"
+                    >
                     <button @click="updatePassword" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg">確認更新並登入</button>
                 </div>
             </div>
         </div>
-
+ 
         <div v-else class="pb-24">
             <header class="bg-white border-b sticky top-0 z-50 p-4 flex justify-between items-center shadow-sm">
                 <div class="text-xl font-black text-blue-800 italic">FITWORKHK</div>
@@ -50,11 +87,11 @@
                     <button @click="showProfile = true" class="bg-slate-100 px-3 py-2 rounded-xl font-bold">👤</button>
                 </div>
             </header>
-
+ 
             <nav class="flex overflow-x-auto bg-white border-b text-[10px] font-black uppercase sticky top-[61px] z-40 no-scrollbar">
                 <button v-for="t in tabs" @click="currentTab = t.id" :class="{'tab-active': currentTab === t.id}" class="py-4 px-5 flex-1 text-center whitespace-nowrap">{{ t.name }}</button>
             </nav>
-
+ 
             <main class="p-4 max-w-3xl mx-auto space-y-4">
                 
                 <section v-if="currentTab === 'dashboard'" class="space-y-4">
@@ -70,7 +107,7 @@
                         <p class="text-[9px] font-black text-blue-400 uppercase tracking-widest">實時純利潤</p>
                         <p class="text-5xl font-black italic mt-1">${{ totalProfit }}</p>
                     </div>
-
+ 
                     <div class="grid grid-cols-2 gap-3">
                         <div class="bg-white p-5 rounded-3xl border shadow-sm">
                             <p class="text-slate-400 font-black mb-3">會員分佈</p>
@@ -89,7 +126,7 @@
                         </div>
                     </div>
                 </section>
-
+ 
                 <section v-if="currentTab === 'exercise'" class="bg-white p-6 rounded-[2.5rem] border space-y-4 shadow-sm">
                     <h3 class="font-black italic text-lg text-blue-700 uppercase">Exercise POS</h3>
                     <select v-model="eForm.clientId" class="w-full p-4 bg-slate-50 rounded-2xl border-2 font-bold">
@@ -110,7 +147,7 @@
                         <button @click="saveExercise('Cat')" class="flex-1 bg-blue-500 text-white py-4 rounded-2xl font-black shadow-lg">Cat 收款</button>
                     </div>
                 </section>
-
+ 
                 <section v-if="currentTab === 'retail'" class="bg-white p-6 rounded-[2.5rem] border space-y-4 shadow-sm">
                     <div class="flex justify-between items-center">
                         <h3 class="font-black italic text-lg text-emerald-700">RETAIL</h3>
@@ -132,7 +169,7 @@
                         </div>
                     </div>
                 </section>
-
+ 
                 <section v-if="currentTab === 'crm'" class="space-y-4">
                     <div class="flex gap-2">
                         <input v-model="cSearch" placeholder="搜尋姓名/電話..." class="flex-1 p-4 border-2 rounded-2xl font-bold">
@@ -149,7 +186,7 @@
                         </div>
                     </div>
                 </section>
-
+ 
                 <section v-if="currentTab === 'finance'" class="bg-white p-6 rounded-[2.5rem] border shadow-sm space-y-4">
                     <h3 class="font-black italic text-lg text-red-600">EXPENSES</h3>
                     <div class="grid grid-cols-2 gap-2">
@@ -158,7 +195,8 @@
                 </section>
             </main>
         </div>
-
+ 
+        <!-- 客戶 Modal -->
         <div v-if="showClientModal" class="modal-overlay">
             <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
                 <h2 class="text-xl font-black italic">{{ clientForm.id ? '修改客戶' : '新增客戶' }}</h2>
@@ -186,7 +224,8 @@
                 </div>
             </div>
         </div>
-
+ 
+        <!-- 支出 Modal -->
         <div v-if="showExpModal" class="modal-overlay">
             <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 space-y-4 shadow-2xl">
                 <h3 class="font-black text-xl text-red-600 uppercase">{{ expForm.category }}</h3>
@@ -199,27 +238,56 @@
                 <button @click="showExpModal=false" class="w-full text-slate-400 font-bold">關閉</button>
             </div>
         </div>
-
+ 
+        <!-- Profile Modal -->
         <div v-if="showProfile" class="modal-overlay">
             <div class="bg-white w-full max-w-md rounded-[3rem] p-8 space-y-4 shadow-2xl">
                 <h3 class="font-black text-xl italic">PROFILE</h3>
                 <div class="p-4 bg-slate-50 rounded-2xl font-bold break-all">{{ session.user.email }}</div>
-                <button @click="triggerReset" class="w-full p-4 bg-white border-2 rounded-2xl font-black">修改密碼</button>
+                <button @click="triggerReset" class="w-full p-4 bg-white border-2 rounded-2xl font-black">修改密碼（發送郵件）</button>
+ 
+                <!-- 綁定 / 解除 Face ID -->
+                <div v-if="passkeySupported">
+                    <button v-if="!passkeyRegistered" @click="registerPasskey" class="w-full p-4 bg-slate-800 text-white rounded-2xl font-black">
+                        🔒 綁定 Face ID / 指紋登入
+                    </button>
+                    <button v-else @click="removePasskey" class="w-full p-4 bg-white border-2 border-slate-300 rounded-2xl font-black text-slate-500">
+                        移除生物識別登入
+                    </button>
+                </div>
+ 
                 <button @click="handleLogout" class="w-full p-4 bg-slate-900 text-white rounded-2xl font-black">登出帳號</button>
                 <button @click="deleteAccount" class="w-full text-[9px] text-slate-300 font-bold mt-10">刪除帳號 (不可復原)</button>
                 <button @click="showProfile=false" class="w-full text-blue-600 font-bold p-2">返回系統</button>
             </div>
         </div>
-
+ 
     </div>
-
+ 
     <script>
         const { createApp, ref, computed, onMounted } = Vue;
-        // 配置 Supabase
+ 
         const SUPA_URL = "https://ajnunehxtiofcphdyhqn.supabase.co";
         const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
+        // ★ 改成你的 Netlify 網域
+        const SITE_URL = "https://your-site.netlify.app";
         const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-
+ 
+        // ── WebAuthn 工具函數 ──────────────────────────────────────────
+        function base64urlToUint8Array(b64url) {
+            const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+            const bin = atob(b64);
+            return Uint8Array.from(bin, c => c.charCodeAt(0));
+        }
+        function uint8ArrayToBase64url(arr) {
+            let bin = '';
+            arr.forEach(b => bin += String.fromCharCode(b));
+            return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+ 
+        // passkey 資料存在 localStorage（key → user email）
+        function getPasskeyKey(email) { return 'pk_cred_' + email; }
+ 
         createApp({
             setup() {
                 const session = ref(null);
@@ -230,20 +298,22 @@
                 const dateRange = ref('month');
                 const reportPerson = ref('All');
                 const showProfile = ref(false);
-
+ 
                 const clients = ref([]);
                 const finances = ref([]);
                 const cart = ref([]);
                 const pSearch = ref('');
                 const cSearch = ref('');
                 const refSearch = ref('');
-
-                // 核心定義
+ 
+                // WebAuthn 狀態
+                const passkeySupported = ref(false);
+                const passkeyRegistered = ref(false);
+ 
                 const tabs = [{id:'dashboard',name:'總覽'},{id:'crm',name:'客戶'},{id:'exercise',name:'運動POS'},{id:'retail',name:'零售POS'},{id:'finance',name:'支出'}];
                 const expCats = ['Fitwork廣告','FZb廣告','中環租金','觀塘租金','產品採購','馬拉松成本','其他項目(收入)','其他項目(支出)'];
                 const exerciseItems = [{id:'trial',name:'試堂',price:98},{id:'10pt',name:'10點套票',price:850},{id:'35pt',name:'35點套票',price:2550}];
                 
-                // 模擬 77 項產品 (可根據 CSV 補充)
                 const productDb = [
                     {name:'營養蛋白素-雲呢拿', retail:464}, {name:'營養蛋白素-野草莓', retail:464},
                     {name:'濃縮蘆薈汁-原味', retail:446}, {name:'天然瓜拿拿茶', retail:323},
@@ -251,29 +321,126 @@
                     {name:'夜寧新', retail:1105}, {name:'深海魚油', retail:336},
                     {name:'日日強韌蘆薈洗髮露', retail:145}, {name:'日日強韌蘆薈護髮乳', retail:145}
                 ];
-
-                // Auth
+ 
+                // ── Auth ─────────────────────────────────────────────
                 const handleAuth = async () => {
                     const { email, password } = authForm.value;
                     let res = authState.value === 'login' ? 
                         await sb.auth.signInWithPassword({ email, password }) : 
                         await sb.auth.signUp({ email, password });
-                    if(res.error) alert(res.error.message);
+                    if (res.error) alert(res.error.message);
                 };
+ 
+                // 忘記密碼：redirectTo 指向你的 reset-password.html
                 const forgotPassword = async () => {
-                    const e = prompt("輸入 Email:");
-                    if(e) {
-                        const { error } = await sb.auth.resetPasswordForEmail(e, { redirectTo: window.location.origin });
-                        if(!error) alert("重設郵件已發送！");
-                    }
+                    const e = prompt("輸入已註冊的 Email：");
+                    if (!e) return;
+                    const { error } = await sb.auth.resetPasswordForEmail(e, {
+                        redirectTo: SITE_URL + '/reset-password.html'
+                    });
+                    if (!error) alert("重設郵件已發送，請查收信箱！");
+                    else alert(error.message);
                 };
+ 
                 const updatePassword = async () => {
                     const { error } = await sb.auth.updateUser({ password: newPassword.value });
-                    if(!error) { alert("更新成功，請登入！"); authState.value = 'login'; session.value = null; }
+                    if (!error) { alert("密碼更新成功，請重新登入！"); authState.value = 'login'; session.value = null; }
+                    else alert(error.message);
                 };
-                const handleLogout = async () => { await sb.auth.signOut(); session.value = null; };
-
-                // Data Fetch
+ 
+                const handleLogout = async () => { await sb.auth.signOut(); session.value = null; showProfile.value = false; };
+ 
+                // ── WebAuthn / Passkey ────────────────────────────────
+                const checkPasskeySupport = async () => {
+                    if (window.PublicKeyCredential &&
+                        typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
+                        passkeySupported.value = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                    }
+                };
+ 
+                const checkPasskeyRegistered = (email) => {
+                    passkeyRegistered.value = !!localStorage.getItem(getPasskeyKey(email));
+                };
+ 
+                const registerPasskey = async () => {
+                    if (!session.value) return;
+                    const email = session.value.user.email;
+                    const userId = session.value.user.id;
+ 
+                    try {
+                        const challenge = crypto.getRandomValues(new Uint8Array(32));
+                        const credential = await navigator.credentials.create({
+                            publicKey: {
+                                challenge,
+                                rp: { name: "FITWORKHK", id: window.location.hostname },
+                                user: {
+                                    id: base64urlToUint8Array(btoa(userId)),
+                                    name: email,
+                                    displayName: email
+                                },
+                                pubKeyCredParams: [
+                                    { type: "public-key", alg: -7 },   // ES256
+                                    { type: "public-key", alg: -257 }  // RS256
+                                ],
+                                authenticatorSelection: {
+                                    authenticatorAttachment: "platform",
+                                    userVerification: "required"
+                                },
+                                timeout: 60000
+                            }
+                        });
+ 
+                        // 儲存 credentialId 到 localStorage（與 email 綁定）
+                        const credId = uint8ArrayToBase64url(new Uint8Array(credential.rawId));
+                        localStorage.setItem(getPasskeyKey(email), JSON.stringify({
+                            credId,
+                            email
+                        }));
+                        passkeyRegistered.value = true;
+                        alert("✅ 生物識別登入已綁定！下次可直接用 Face ID / 指紋登入。");
+                    } catch (e) {
+                        if (e.name !== 'NotAllowedError') alert("綁定失敗：" + e.message);
+                    }
+                };
+ 
+                const loginWithPasskey = async () => {
+                    // 先讓用戶輸入 email 以找到對應 credential
+                    const email = authForm.value.email || prompt("請輸入你的 Email：");
+                    if (!email) return;
+                    const saved = localStorage.getItem(getPasskeyKey(email));
+                    if (!saved) { alert("此 Email 未綁定生物識別，請先用密碼登入"); return; }
+ 
+                    try {
+                        const { credId } = JSON.parse(saved);
+                        const challenge = crypto.getRandomValues(new Uint8Array(32));
+                        await navigator.credentials.get({
+                            publicKey: {
+                                challenge,
+                                allowCredentials: [{ type: "public-key", id: base64urlToUint8Array(credId) }],
+                                userVerification: "required",
+                                timeout: 60000
+                            }
+                        });
+                        // WebAuthn 驗證通過後，仍需用 Supabase 建立 session
+                        // 實際做法：用儲存的密碼 magic link，或引導輸入密碼一次
+                        // 這裡使用最安全的做法：發送 magic link（無需密碼）
+                        const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+                        if (error) alert("發送 Magic Link 失敗，請改用密碼登入");
+                        else alert("✅ 身份驗證通過！Magic Link 已發送到 " + email + "，請點擊信件中的連結完成登入。");
+                    } catch (e) {
+                        if (e.name !== 'NotAllowedError') alert("驗證失敗：" + e.message);
+                    }
+                };
+ 
+                const removePasskey = () => {
+                    if (!session.value) return;
+                    const key = getPasskeyKey(session.value.user.email);
+                    localStorage.removeItem(key);
+                    passkeyRegistered.value = false;
+                    alert("已移除生物識別登入。");
+                };
+ 
+                // ── Data Fetch ────────────────────────────────────────
                 const loadData = async () => {
                     const uid = session.value.user.id;
                     const { data: c } = await sb.from('clients').select('*').eq('user_id', uid);
@@ -281,25 +448,22 @@
                     clients.value = c || [];
                     finances.value = f || [];
                 };
-
-                // 運動計算邏輯
+ 
+                // ── Exercise POS ──────────────────────────────────────
                 const eForm = ref({ clientId: null, type: '35pt', isNew: false, isReferral: false });
                 const saveExercise = async (person) => {
-                    if(!eForm.value.clientId) return alert("選客戶");
+                    if (!eForm.value.clientId) return alert("選客戶");
                     let profit = 0;
-                    if(eForm.value.type === 'trial') profit = 98;
-                    else if(eForm.value.type === '10pt') {
-                        profit = eForm.value.isReferral ? 413 : 465;
-                    } else if(eForm.value.type === '35pt') {
-                        profit = eForm.value.isNew ? 1250.5 : 1277.5;
-                    }
+                    if (eForm.value.type === 'trial') profit = 98;
+                    else if (eForm.value.type === '10pt') profit = eForm.value.isReferral ? 413 : 465;
+                    else if (eForm.value.type === '35pt') profit = eForm.value.isNew ? 1250.5 : 1277.5;
                     const { error } = await sb.from('finances').insert({
-                        user_id: session.value.user.id, type:'income', category:'運動', amount: profit, person: person, note: eForm.value.type
+                        user_id: session.value.user.id, type:'income', category:'運動', amount: profit, person, note: eForm.value.type
                     });
-                    if(!error) { alert("入帳成功"); loadData(); currentTab.value = 'dashboard'; }
+                    if (!error) { alert("入帳成功"); loadData(); currentTab.value = 'dashboard'; }
                 };
-
-                // 零售計算
+ 
+                // ── Retail POS ────────────────────────────────────────
                 const rForm = ref({ discount: '0' });
                 const addToCart = (p) => {
                     const retail = p.retail * (1 - parseFloat(rForm.value.discount));
@@ -307,84 +471,99 @@
                     cart.value.push({ name: p.name, profit });
                 };
                 const saveRetail = async (person) => {
-                    const totalP = cart.value.reduce((a,b)=>a+b.profit, 0);
+                    const totalP = cart.value.reduce((a,b) => a + b.profit, 0);
                     await sb.from('finances').insert({
-                        user_id: session.value.user.id, type:'income', category:'零售', amount: totalP, person: person
+                        user_id: session.value.user.id, type:'income', category:'零售', amount: totalP, person
                     });
                     cart.value = []; loadData(); currentTab.value = 'dashboard';
                 };
-
-                // CRM
+ 
+                // ── CRM ───────────────────────────────────────────────
                 const showClientModal = ref(false);
                 const clientForm = ref({});
                 const openClient = (c) => {
-                    clientForm.value = c ? {...c} : { name:'', phone:'', branch:'觀塘', source:'廣告', marathon: false, expiry_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] };
+                    clientForm.value = c ? {...c} : {
+                        name:'', phone:'', branch:'觀塘', source:'廣告', marathon: false,
+                        expiry_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+                    };
                     showClientModal.value = true;
                 };
                 const saveClient = async () => {
-                    if(!clientForm.value.name) return;
+                    if (!clientForm.value.name) return;
                     const payload = { ...clientForm.value, user_id: session.value.user.id };
                     let res = clientForm.value.id ? 
                         await sb.from('clients').update(payload).eq('id', clientForm.value.id) :
                         await sb.from('clients').insert([payload]);
-                    if(!res.error) { showClientModal.value = false; loadData(); } else alert(res.error.message);
+                    if (!res.error) { showClientModal.value = false; loadData(); } else alert(res.error.message);
                 };
-
-                // 支出
+ 
+                // ── Finance / Expenses ────────────────────────────────
                 const showExpModal = ref(false);
                 const expForm = ref({ category: '', amount: 0, note: '' });
                 const openExp = (c) => { expForm.value = { category: c, amount: 0, note: '' }; showExpModal.value = true; };
                 const saveExp = async (person) => {
                     const isInc = expForm.value.category.includes('收入');
                     await sb.from('finances').insert({
-                        user_id: session.value.user.id, type: isInc ? 'income':'expense', category: expForm.value.category, amount: expForm.value.amount, person: person, note: expForm.value.note
+                        user_id: session.value.user.id, type: isInc ? 'income':'expense',
+                        category: expForm.value.category, amount: expForm.value.amount, person, note: expForm.value.note
                     });
                     showExpModal.value = false; loadData(); currentTab.value = 'dashboard';
                 };
-
-                // 計算屬性 (儀表板)
+ 
+                // ── Dashboard computed ────────────────────────────────
                 const totalProfit = computed(() => {
                     const now = new Date();
                     const filtered = finances.value.filter(f => {
                         const fDate = new Date(f.created_at);
                         const matchPerson = reportPerson.value === 'All' || f.person === reportPerson.value;
-                        if(!matchPerson) return false;
-                        if(dateRange.value === 'today') return fDate.toDateString() === now.toDateString();
-                        if(dateRange.value === 'month') return fDate.getMonth() === now.getMonth() && fDate.getFullYear() === now.getFullYear();
+                        if (!matchPerson) return false;
+                        if (dateRange.value === 'today') return fDate.toDateString() === now.toDateString();
+                        if (dateRange.value === 'month') return fDate.getMonth() === now.getMonth() && fDate.getFullYear() === now.getFullYear();
                         return true;
                     });
-                    const inc = filtered.filter(f => f.type === 'income').reduce((a,b)=>a+Number(b.amount), 0);
-                    const exp = filtered.filter(f => f.type === 'expense').reduce((a,b)=>a+Number(b.amount), 0);
+                    const inc = filtered.filter(f => f.type === 'income').reduce((a,b) => a + Number(b.amount), 0);
+                    const exp = filtered.filter(f => f.type === 'expense').reduce((a,b) => a + Number(b.amount), 0);
                     return (inc - exp).toFixed(1);
                 });
-
+ 
                 const branchStats = computed(() => {
                     const b = {'觀塘':0, '中環':0, '佐敦':0};
                     clients.value.forEach(c => b[c.branch]++);
                     return b;
                 });
-
-                onMounted(() => {
+ 
+                // ── Lifecycle ─────────────────────────────────────────
+                onMounted(async () => {
+                    await checkPasskeySupport();
+ 
                     sb.auth.onAuthStateChange((event, sessionData) => {
                         session.value = sessionData;
                         if (event === 'PASSWORD_RECOVERY') authState.value = 'recovery';
-                        if (sessionData) loadData();
+                        if (sessionData) {
+                            loadData();
+                            checkPasskeyRegistered(sessionData.user.email);
+                        }
                     });
-                    // 偵測是否從重設密碼連結進入
-                    if(window.location.hash.includes('type=recovery')) authState.value = 'recovery';
+                    if (window.location.hash.includes('type=recovery')) authState.value = 'recovery';
                 });
-
+ 
                 return {
                     session, authState, authForm, newPassword, handleAuth, forgotPassword, updatePassword, handleLogout,
                     currentTab, tabs, dateRange, reportPerson, clients, finances, cart, pSearch, cSearch, refSearch,
-                    showClientModal, clientForm, openClient, saveClient, showExpModal, expForm, openExp, saveExp,
-                    exerciseItems, eForm, saveExercise, rForm, addToCart, saveRetail,
+                    showClientModal, clientForm, openClient, saveClient,
+                    showExpModal, expForm, openExp, saveExp,
+                    exerciseItems, eForm, saveExercise,
+                    rForm, addToCart, saveRetail,
                     filteredClients: computed(() => clients.value.filter(c => (c.name+c.phone).toLowerCase().includes(cSearch.value.toLowerCase()))),
                     filteredProducts: computed(() => productDb.filter(p => p.name.toLowerCase().includes(pSearch.value.toLowerCase()))),
                     filteredRefs: computed(() => clients.value.filter(c => c.name.includes(refSearch.value))),
-                    totalProfit, branchStats, marathonStats: computed(() => ({ active: clients.value.filter(c=>c.marathon).length })),
-                    showProfile, isExpiring: (d) => (new Date(d) - new Date()) / 86400000 < 14,
-                    triggerReset: () => { showProfile.value=false; forgotPassword(); },
+                    totalProfit, branchStats,
+                    marathonStats: computed(() => ({ active: clients.value.filter(c => c.marathon).length })),
+                    showProfile,
+                    passkeySupported, passkeyRegistered,
+                    registerPasskey, loginWithPasskey, removePasskey,
+                    isExpiring: (d) => (new Date(d) - new Date()) / 86400000 < 14,
+                    triggerReset: () => { showProfile.value = false; forgotPassword(); },
                     deleteAccount: () => alert("安全起見，請聯繫系統管理員進行刪除作業")
                 };
             }
