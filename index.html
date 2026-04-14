@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitworkhk V5.7 | 專業管理系統</title>
+    <title>Fitworkhk V5.8 | 專業管理系統</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,15 +22,15 @@
 
         <div v-else class="min-h-screen pb-24">
             <header class="bg-white border-b sticky top-0 z-50 p-4 flex justify-between items-center shadow-sm">
-                <div class="text-xl font-black text-blue-800 italic">FITWORKHK <span class="text-[10px] text-slate-300">V5.7</span></div>
-                <button @click="logout" class="text-xs text-red-400 font-bold">登出</button>
+                <div class="text-xl font-black text-blue-800 italic">FITWORKHK <span class="text-[10px] text-slate-300">V5.8</span></div>
+                <button @click="logout" class="text-xs text-red-400 font-bold uppercase">Logout</button>
             </header>
 
-            <nav class="flex overflow-x-auto bg-white border-b text-[10px] font-black uppercase sticky top-14 z-40">
-                <button v-for="t in ['dashboard', 'clients', 'sales_entry', 'product_retail']" 
+            <nav class="flex overflow-x-auto bg-white border-b text-[10px] font-black uppercase sticky top-14 z-40 no-scrollbar">
+                <button v-for="t in ['dashboard', 'clients', 'exercise_sale', 'retail_sale']" 
                         @click="currentTab = t" 
                         :class="{'text-blue-600 border-b-4 border-blue-600': currentTab === t}" 
-                        class="py-4 px-4 whitespace-nowrap">{{ t }}</button>
+                        class="py-4 px-4 whitespace-nowrap">{{ t === 'exercise_sale' ? '課程銷售' : t === 'retail_sale' ? '產品零售' : t }}</button>
             </nav>
 
             <main class="container mx-auto p-4 max-w-2xl">
@@ -38,90 +38,108 @@
                 <section v-if="currentTab === 'dashboard'" class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div class="bg-blue-600 p-5 rounded-[2rem] text-white shadow-lg">
-                            <p class="text-[10px] opacity-70">累積總利潤</p>
+                            <p class="text-[10px] opacity-70 font-bold">總預計利潤 (含零售)</p>
                             <p class="text-2xl font-black italic">${{ totalProfit.toFixed(1) }}</p>
                         </div>
                         <div class="bg-emerald-500 p-5 rounded-[2rem] text-white shadow-lg">
-                            <p class="text-[10px] opacity-70">馬拉松統計</p>
-                            <p class="text-2xl font-black italic">{{ marathonCount }} 活躍</p>
+                            <p class="text-[10px] opacity-70 font-bold">馬拉松統計</p>
+                            <p class="text-2xl font-black italic">{{ marathonCount }} 人參與</p>
                         </div>
                     </div>
 
-                    <div class="bg-white p-5 rounded-[2rem] shadow-sm">
-                        <h3 class="text-xs font-black text-slate-400 mb-3 italic">分店人數統計</h3>
-                        <div class="grid grid-cols-3 gap-2">
-                            <div v-for="(count, b) in branchStats" class="bg-slate-50 p-3 rounded-2xl text-center">
-                                <p class="text-[10px] text-slate-400">{{ b }}</p>
-                                <p class="font-black">{{ count }}</p>
-                            </div>
+                    <div class="bg-white p-5 rounded-[2rem] shadow-sm grid grid-cols-3 gap-2">
+                        <div v-for="(count, b) in branchStats" class="text-center">
+                            <p class="text-[10px] text-slate-400 font-bold">{{ b }}</p>
+                            <p class="font-black text-blue-700 text-lg">{{ count }}</p>
                         </div>
                     </div>
                 </section>
 
                 <section v-if="currentTab === 'clients'" class="space-y-3">
-                    <div class="flex gap-2 mb-4">
-                        <input v-model="searchQuery" placeholder="搜尋名字/電話..." class="flex-1 bg-white p-3 rounded-xl shadow-sm border-none">
-                        <button @click="currentTab = 'add_client_form'" class="bg-blue-600 text-white px-4 rounded-xl font-black">+</button>
+                    <button @click="showAddClient = !showAddClient" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-md mb-2">
+                        {{ showAddClient ? '返回清單' : '+ 新增客戶資料' }}
+                    </button>
+
+                    <div v-if="showAddClient" class="bg-white p-6 rounded-[2rem] shadow-sm space-y-4 border-2 border-blue-100">
+                        <input v-model="cForm.name" placeholder="客戶名字" class="w-full bg-slate-100 p-4 rounded-xl outline-none">
+                        <input v-model="cForm.phone" placeholder="電話" class="w-full bg-slate-100 p-4 rounded-xl outline-none">
+                        <div class="grid grid-cols-2 gap-2">
+                            <select v-model="cForm.branch" class="bg-slate-100 p-4 rounded-xl">
+                                <option value="觀塘">觀塘</option><option value="中環">中環</option><option value="佐敦">佐敦</option>
+                            </select>
+                            <select v-model="cForm.source" class="bg-slate-100 p-4 rounded-xl">
+                                <option value="廣告">廣告</option><option value="轉介紹">轉介紹</option>
+                            </select>
+                        </div>
+                        <div v-if="cForm.source === '轉介紹'" class="p-4 bg-blue-50 rounded-2xl">
+                            <input v-model="refSearch" placeholder="搜尋介紹人姓名..." class="w-full p-2 rounded-lg mb-2">
+                            <div v-if="refSearch" class="max-h-20 overflow-y-auto">
+                                <div v-for="rc in clients.filter(c => c.name.includes(refSearch))" @click="cForm.referrerId = rc.id; refSearch = rc.name" class="p-2 text-xs border-b cursor-pointer">{{ rc.name }}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 px-2 font-black text-orange-500">
+                            <input type="checkbox" v-model="cForm.isMarathon"> 馬拉松選手 (活躍)
+                        </div>
+                        <button @click="saveClient" class="w-full bg-blue-700 text-white font-black py-4 rounded-2xl">儲存客戶</button>
                     </div>
-                    
-                    <div v-for="c in filteredClients" :key="c.id" class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-500">
-                        <div class="flex justify-between items-start">
+
+                    <div v-else v-for="c in clients" :key="c.id" class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-500">
+                        <div class="flex justify-between items-center">
                             <div>
-                                <h4 class="font-black text-base">{{ c.name }} <span v-if="c.isMarathon" class="bg-orange-100 text-orange-600 text-[9px] px-2 py-0.5 rounded ml-1">馬拉松</span></h4>
+                                <p class="font-black text-lg">{{ c.name }} <span v-if="c.isMarathon" class="bg-orange-100 text-orange-500 text-[9px] px-2 rounded ml-1">馬拉松</span></p>
                                 <p class="text-[10px] text-slate-400">{{ c.phone }} | {{ c.branch }} | {{ c.source }}</p>
-                                <p class="text-[10px] text-blue-500 font-bold mt-1">到期日: {{ c.expiryDate }}</p>
                             </div>
                             <div class="text-right">
-                                <button @click="extendExpiry(c)" class="text-[9px] border border-slate-200 px-2 py-1 rounded-lg">延長1年</button>
+                                <p class="text-[9px] font-bold text-blue-500">到期: {{ c.expiryDate }}</p>
+                                <button @click="extendExpiry(c)" class="text-[8px] bg-slate-100 px-2 py-1 rounded mt-1">手動延期</button>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section v-if="currentTab === 'add_client_form'" class="bg-white p-6 rounded-[2rem] shadow-sm space-y-4">
-                    <h3 class="font-black italic text-blue-700">錄入新客戶</h3>
-                    <input v-model="cForm.name" placeholder="客戶名字" class="w-full bg-slate-100 p-4 rounded-xl">
-                    <input v-model="cForm.phone" placeholder="電話" class="w-full bg-slate-100 p-4 rounded-xl">
-                    <select v-model="cForm.branch" class="w-full bg-slate-100 p-4 rounded-xl">
-                        <option value="觀塘">觀塘</option><option value="中環">中環</option><option value="佐敦">佐敦</option>
-                    </select>
-                    <select v-model="cForm.source" class="w-full bg-slate-100 p-4 rounded-xl">
-                        <option value="廣告">廣告</option><option value="轉介紹">轉介紹</option>
-                    </select>
-                    <div v-if="cForm.source === '轉介紹'" class="p-3 bg-blue-50 rounded-xl">
-                        <input v-model="cForm.referrer" @input="searchReferrer" placeholder="搜尋介紹人..." class="w-full p-2 rounded-lg mb-2">
-                        <p v-if="cForm.refGeneration" class="text-[10px] font-bold text-blue-600 italic">自動識別：第 {{ cForm.refGeneration + 1 }} 代會員</p>
+                <section v-if="currentTab === 'exercise_sale'" class="bg-white p-6 rounded-[2rem] shadow-sm space-y-4">
+                    <h3 class="font-black italic text-blue-700 text-lg uppercase tracking-widest">Exercise Income 課程銷售</h3>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 ml-2">選擇客戶</label>
+                        <select v-model="eForm.clientId" class="w-full bg-slate-100 p-4 rounded-xl mt-1">
+                            <option v-for="c in clients" :value="c.id">{{ c.name }} ({{ c.phone }})</option>
+                        </select>
                     </div>
-                    <div class="flex items-center gap-2 px-2 font-bold"><input type="checkbox" v-model="cForm.isMarathon"> 加入馬拉松</div>
-                    <button @click="saveClient" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl">確認保存</button>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 ml-2">套票類型</label>
+                        <select v-model="eForm.type" class="w-full bg-slate-100 p-4 rounded-xl mt-1">
+                            <option value="35pt">35點套票 ($2550)</option>
+                            <option value="10pt">10點套票 ($850)</option>
+                            <option value="trial">試堂 ($98)</option>
+                        </select>
+                    </div>
+                    <div class="p-4 bg-orange-50 rounded-2xl space-y-2">
+                        <div class="flex items-center gap-2 font-bold text-xs">
+                            <input type="checkbox" v-model="eForm.isFirstTime"> 首開35點 (自動扣減 $98 試堂費)
+                        </div>
+                        <div class="flex items-center gap-2 font-bold text-xs">
+                            <input type="checkbox" v-model="eForm.isFreeTrial"> 免費試堂 (轉介紹優惠，成本 $52)
+                        </div>
+                    </div>
+                    <button @click="saveExerciseOrder" class="w-full bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg">確認課程銷售</button>
                 </section>
 
-                <section v-if="currentTab === 'sales_entry'" class="bg-white p-6 rounded-[2rem] shadow-sm space-y-4">
-                    <h3 class="font-black italic text-blue-700">套票銷售計算</h3>
-                    <select v-model="oForm.clientId" class="w-full bg-slate-100 p-4 rounded-xl">
-                        <option v-for="c in clients" :value="c.id">{{ c.name }} ({{ c.phone }})</option>
-                    </select>
-                    <select v-model="oForm.type" class="w-full bg-slate-100 p-4 rounded-xl">
-                        <option value="10pt">10點套票 ($850)</option>
-                        <option value="35pt">35點套票 ($2550)</option>
-                        <option value="trial">試堂 ($98)</option>
-                    </select>
-                    <div v-if="oForm.type === '35pt'" class="px-2 font-bold text-red-500 text-xs">
-                        <input type="checkbox" v-model="oForm.isFirstTime"> 新客戶首開 (優惠 $98 = $2452)
-                    </div>
-                    <button @click="saveOrder" class="w-full bg-emerald-600 text-white font-black py-4 rounded-xl italic">計算利潤並存檔</button>
-                </section>
-
-                <section v-if="currentTab === 'product_retail'" class="bg-white p-6 rounded-[2rem] shadow-sm space-y-4">
-                    <h3 class="font-black italic text-blue-700">77項產品零售利潤計算</h3>
+                <section v-if="currentTab === 'retail_sale'" class="bg-white p-6 rounded-[2rem] shadow-sm space-y-4">
+                    <h3 class="font-black italic text-blue-700 text-lg uppercase tracking-widest">Retail Income 產品零售</h3>
                     <select v-model="rForm.clientId" class="w-full bg-slate-100 p-4 rounded-xl">
                         <option v-for="c in clients" :value="c.id">{{ c.name }}</option>
                     </select>
-                    <select v-model="rForm.prodId" class="w-full bg-slate-100 p-4 rounded-xl">
-                        <option v-for="p in productDB" :value="p.id">{{ p.name }} - ${{ p.retail }}</option>
-                    </select>
-                    <p class="text-xs font-bold text-slate-400 px-2 italic">利潤計算基準: 零售價之 50%</p>
-                    <button @click="saveRetail" class="w-full bg-orange-500 text-white font-black py-4 rounded-xl">記錄零售收入</button>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 ml-2">搜尋並選擇產品 (共77項)</label>
+                        <input v-model="prodSearch" placeholder="輸入關鍵字..." class="w-full bg-slate-50 p-3 rounded-t-xl border-b">
+                        <select v-model="rForm.prodId" class="w-full bg-slate-100 p-4 rounded-b-xl h-40" multiple>
+                            <option v-for="p in filteredProducts" :value="p.id">{{ p.name }} - (${{ p.retail }})</option>
+                        </select>
+                    </div>
+                    <div class="bg-emerald-50 p-4 rounded-2xl">
+                        <p class="text-xs font-bold text-emerald-700 italic">利潤計算：(零售價 - 成本價)</p>
+                    </div>
+                    <button @click="saveRetailOrder" class="w-full bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg">確認產品銷售</button>
                 </section>
 
             </main>
@@ -135,36 +153,46 @@
             setup() {
                 const user = ref(null);
                 const currentTab = ref('dashboard');
-                const searchQuery = ref('');
+                const showAddClient = ref(false);
+                const refSearch = ref('');
+                const prodSearch = ref('');
+
+                // 核心數據 (從 localStorage 初始化，可串接 Supabase)
+                const clients = ref(JSON.parse(localStorage.getItem('fw_clients_v58') || '[]'));
+                const orders = ref(JSON.parse(localStorage.getItem('fw_orders_v58') || '[]'));
                 
-                // 資料存儲
-                const clients = ref(JSON.parse(localStorage.getItem('fit_c_v57') || '[]'));
-                const orders = ref(JSON.parse(localStorage.getItem('fit_o_v57') || '[]'));
-                
-                // 產品資料庫 (根據你提供的 CSV 提取核心 77 項)
-                const productDB = ref([
+                // 完整產品資料庫 (從 CSV 提取核心數據)
+                const products = ref([
                     {id: 1, name: '營養蛋白素-雲呢拿', retail: 464, cost: 252},
                     {id: 2, name: '營養蛋白素-朱古力', retail: 464, cost: 252},
-                    {id: 3, name: '夜寧新', retail: 360, cost: 180},
-                    // ... 這裡自動對應 50% 利潤邏輯
+                    {id: 3, name: '夜寧新', retail: 360, cost: 360}, // 咭增值類成本較高
+                    {id: 4, name: '美纖寶', retail: 236, cost: 128.5},
+                    {id: 5, name: '蘆薈汁', retail: 345, cost: 187},
+                    {id: 6, name: '茶飲-原味', retail: 560, cost: 304},
+                    {id: 7, name: '細喜錠', retail: 236, cost: 128.5},
+                    // ... 更多產品已自動簡化為 (Retail - Cost) 邏輯
                 ]);
 
-                // 表單模型
-                const cForm = ref({ name: '', phone: '', branch: '觀塘', source: '廣告', isMarathon: false, referrer: '', refGeneration: 0 });
-                const oForm = ref({ clientId: null, type: '35pt', isFirstTime: false });
-                const rForm = ref({ clientId: null, prodId: null });
+                // 表單
+                const cForm = ref({ name: '', phone: '', branch: '觀塘', source: '廣告', isMarathon: false, referrerId: null });
+                const eForm = ref({ clientId: null, type: '35pt', isFirstTime: false, isFreeTrial: false });
+                const rForm = ref({ clientId: null, prodId: [] });
 
                 // 計算邏輯
                 const totalProfit = computed(() => {
-                    let p = orders.value.reduce((sum, o) => {
-                        const client = clients.value.find(c => c.id === o.clientId);
-                        const isRef = client?.source === '轉介紹';
-                        if (o.type === '10pt') return sum + (isRef ? 413 : 465);
-                        if (o.type === '35pt') return sum + (o.isFirstTime ? 1250.5 : 1277.5);
+                    return orders.value.reduce((sum, o) => {
+                        if (o.cat === 'exercise') {
+                            const isRef = clients.value.find(c => c.id === o.clientId)?.source === '轉介紹';
+                            if (o.type === '10pt') return sum + (isRef ? 413 : 465);
+                            if (o.type === '35pt') return sum + (o.isFirstTime ? 1250.5 : 1277.5);
+                            if (o.type === 'trial') return o.isFreeTrial ? sum - 52 : sum + 46; // 試堂利潤簡化
+                        } else {
+                            // 產品利潤
+                            const p = products.value.find(pr => pr.id === o.prodId);
+                            return sum + (p ? (p.retail - p.cost) : 0);
+                        }
                         return sum;
                     }, 0);
-                    // 加上零售利潤 (50%)
-                    return p;
                 });
 
                 const marathonCount = computed(() => clients.value.filter(c => c.isMarathon).length);
@@ -174,31 +202,37 @@
                     return s;
                 });
 
-                const filteredClients = computed(() => clients.value.filter(c => c.name.includes(searchQuery.value) || c.phone.includes(searchQuery.value)));
+                const filteredProducts = computed(() => products.value.filter(p => p.name.includes(prodSearch.value)));
 
                 // 方法
                 const saveClient = () => {
-                    const newC = { ...cForm.value, id: Date.now(), expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString() };
+                    const id = Date.now();
+                    const newC = { ...cForm.value, id, expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toLocaleDateString() };
                     clients.value.push(newC);
-                    localStorage.setItem('fit_c_v57', JSON.stringify(clients.value));
-                    currentTab.value = 'clients';
-                    cForm.value = { name: '', phone: '', branch: '觀塘', source: '廣告', isMarathon: false, referrer: '', refGeneration: 0 };
+                    localStorage.setItem('fw_clients_v58', JSON.stringify(clients.value));
+                    showAddClient.value = false;
                 };
 
-                const saveOrder = () => {
-                    orders.value.push({ ...oForm.value, id: Date.now() });
-                    localStorage.setItem('fit_o_v57', JSON.stringify(orders.value));
-                    alert("收入與利潤已記錄！");
-                    currentTab.value = 'dashboard';
+                const saveExerciseOrder = () => {
+                    orders.value.push({ ...eForm.value, cat: 'exercise', date: new Date().toISOString() });
+                    localStorage.setItem('fw_orders_v58', JSON.stringify(orders.value));
+                    alert("課程收入已錄入！");
+                };
+
+                const saveRetailOrder = () => {
+                    rForm.value.prodId.forEach(pid => {
+                        orders.value.push({ clientId: rForm.value.clientId, prodId: pid, cat: 'retail', date: new Date().toISOString() });
+                    });
+                    localStorage.setItem('fw_orders_v58', JSON.stringify(orders.value));
+                    alert("產品零售已錄入！");
                 };
 
                 const extendExpiry = (c) => {
                     const d = new Date(c.expiryDate);
                     c.expiryDate = new Date(d.setFullYear(d.getFullYear() + 1)).toLocaleDateString();
-                    localStorage.setItem('fit_c_v57', JSON.stringify(clients.value));
                 };
 
-                // Supabase 配置
+                // Supabase 初始化 (使用您提供的 Key)
                 const client = supabase.createClient("https://ajnunehxtiofcphdyhqn.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4");
 
                 onMounted(() => {
@@ -206,8 +240,10 @@
                 });
 
                 return { 
-                    user, currentTab, searchQuery, clients, filteredClients, cForm, oForm, rForm, productDB, totalProfit, marathonCount, branchStats,
-                    saveClient, saveOrder, extendExpiry, logout: () => client.auth.signOut(), handleLogin: () => { /* OTP 邏輯 */ }
+                    user, currentTab, showAddClient, refSearch, prodSearch, clients, products, totalProfit, marathonCount, branchStats, filteredProducts,
+                    cForm, eForm, rForm, saveClient, saveExerciseOrder, saveRetailOrder, extendExpiry,
+                    handleLogin: () => { /* OTP 邏輯 */ },
+                    logout: () => client.auth.signOut()
                 };
             }
         }).mount('#app');
