@@ -19,14 +19,14 @@
                 <div v-if="!showOtpInput && !showResetPasswordInput" class="space-y-4">
                     <p class="text-center text-gray-400 text-[10px] mb-8 font-bold uppercase tracking-widest">{{ authModeText }}</p>
                     <div>
-                        <label class="text-[10px] font-bold text-gray-400 px-1">電子郵件</label>
+                        <label class="text-[10px] font-bold text-gray-400 px-1 text-blue-900">電子郵件</label>
                         <input v-model="email" type="email" placeholder="example@email.com" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
                     </div>
                     <div v-if="authMode !== 'reset'">
-                        <label class="text-[10px] font-bold text-gray-400 px-1">密碼</label>
+                        <label class="text-[10px] font-bold text-gray-400 px-1 text-blue-900">密碼</label>
                         <input v-model="password" type="password" placeholder="••••••••" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
                     </div>
-                    <button @click="handleAuth" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl mt-4">
+                    <button @click="handleAuth" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl mt-4 active:scale-95 transition-transform">
                         {{ loading ? '處理中...' : authButtonText }}
                     </button>
                     <div class="flex justify-between px-2 text-xs font-bold mt-4">
@@ -37,36 +37,63 @@
                 </div>
 
                 <div v-else-if="showOtpInput" class="space-y-6 text-center">
-                    <p class="text-blue-600 font-bold text-sm">驗證碼已發送至 {{ email }}</p>
-                    <input v-model="otpToken" type="text" maxlength="6" placeholder="000000" class="w-full text-center text-5xl font-black tracking-[0.5rem] border-b-4 border-blue-500 py-4 outline-none bg-transparent">
+                    <div class="bg-blue-50 p-4 rounded-2xl">
+                        <p class="text-blue-600 font-bold text-xs">驗證碼已發送至 {{ email }}</p>
+                    </div>
+                    <input v-model="otpToken" type="text" maxlength="6" placeholder="000000" class="w-full text-center text-5xl font-black tracking-[0.5rem] border-b-4 border-blue-500 py-4 outline-none bg-transparent text-blue-900">
                     <button @click="verifyOtp" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl shadow-xl">確認驗證</button>
-                    <button @click="showOtpInput = false" class="text-xs font-bold text-gray-400">返回修改</button>
                 </div>
 
                 <div v-else-if="showResetPasswordInput" class="space-y-6 text-center">
-                    <p class="text-blue-600 font-bold text-sm">設置您的新密碼</p>
-                    <input v-model="newPassword" type="password" placeholder="輸入新密碼" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
-                    <button @click="updatePassword" class="w-full bg-orange-500 text-white font-black py-4 rounded-2xl shadow-xl">更新密碼並登入</button>
+                    <p class="text-blue-600 font-bold text-sm underline">設置新密碼</p>
+                    <input v-model="newPassword" type="password" placeholder="請輸入新密碼" class="w-full border-2 border-blue-600 rounded-2xl px-4 py-4 outline-none">
+                    <button @click="updatePassword" class="w-full bg-orange-500 text-white font-black py-4 rounded-2xl shadow-xl">更新並進入系統</button>
                 </div>
             </div>
         </div>
 
         <div v-else class="min-h-screen">
-            <header class="bg-white p-4 shadow-sm flex justify-between items-center">
-                <span class="font-black text-blue-600">FITWORKHK</span>
-                <button @click="logout" class="text-xs font-bold text-red-400">登出</button>
+            <header class="bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-10">
+                <span class="font-black text-blue-600 text-xl tracking-tighter italic">FITWORKHK</span>
+                <div class="flex items-center space-x-2">
+                    <span class="text-[10px] text-gray-400 font-bold">{{ user.email }}</span>
+                    <button @click="logout" class="bg-red-50 text-red-500 px-3 py-1 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition-colors">登出</button>
+                </div>
             </header>
-            <main class="p-8 text-center">
-                <div class="bg-green-100 text-green-700 p-4 rounded-2xl font-bold mb-4">✅ 登入成功</div>
-                <p class="text-gray-500">用戶：{{ user.email }}</p>
+            
+            <main class="p-6 max-w-md mx-auto">
+                <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl">F</div>
+                        <div>
+                            <h3 class="font-black text-blue-900 leading-none">管理系統已啟動</h3>
+                            <p class="text-[10px] text-gray-400 font-bold mt-1">FITWORKHK CLOUD V4.9</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-dashed border-gray-200">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">系統狀態</p>
+                            <p class="text-sm font-bold text-green-500 mt-1 flex items-center">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span> 持續登入中
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     </div>
 
     <script>
+        // 初始化 Supabase
         const SUPABASE_URL = "https://ajnunehxtiofcphdyhqn.supabase.co".trim();
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4".trim();
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: {
+                persistSession: true, // 開啟持久登入功能
+                autoRefreshToken: true // 自動刷新登入憑證
+            }
+        });
 
         const { createApp, ref, computed, onMounted } = Vue;
         createApp({
@@ -82,19 +109,19 @@
                 const showResetPasswordInput = ref(false);
 
                 const authModeText = computed(() => {
-                    if (authMode.value === 'login') return 'System Login';
-                    if (authMode.value === 'signup') return 'Registration';
-                    return 'Reset Password';
+                    if (authMode.value === 'login') return 'Cloud Login';
+                    if (authMode.value === 'signup') return 'Account Signup';
+                    return 'Account Recovery';
                 });
 
                 const authButtonText = computed(() => {
-                    if (authMode.value === 'login') return '進入系統';
-                    if (authMode.value === 'signup') return '獲取驗證碼';
+                    if (authMode.value === 'login') return '立即進入';
+                    if (authMode.value === 'signup') return '發送驗證碼';
                     return '發送重設郵件';
                 });
 
                 const handleAuth = async () => {
-                    if (!email.value) return alert("請輸入 Email");
+                    if (!email.value) return alert("請輸入電子郵件");
                     loading.value = true;
                     try {
                         if (authMode.value === 'login') {
@@ -106,46 +133,53 @@
                             if (error) throw error;
                             showOtpInput.value = true;
                         } else if (authMode.value === 'reset') {
-                            // 發送重設郵件，確保 redirectTo 指向你的網站網址
-                            const { error } = await _supabase.auth.resetPasswordForEmail(email.value, { 
-                                redirectTo: window.location.origin 
-                            });
+                            const { error } = await _supabase.auth.resetPasswordForEmail(email.value, { redirectTo: window.location.origin });
                             if (error) throw error;
-                            alert("請檢查郵箱，點擊郵件中的連結來重設密碼。");
+                            alert("郵件已發送，請檢查郵箱！");
                         }
                     } catch (err) { alert(err.message); } finally { loading.value = false; }
                 };
 
                 const verifyOtp = async () => {
+                    loading.value = true;
                     const { data, error } = await _supabase.auth.verifyOtp({ email: email.value, token: otpToken.value, type: 'signup' });
                     if (error) alert(error.message); else user.value = data.user;
+                    loading.value = false;
                 };
 
-                // 更新新密碼的功能
                 const updatePassword = async () => {
                     if (!newPassword.value) return alert("請輸入新密碼");
                     loading.value = true;
-                    try {
-                        const { error } = await _supabase.auth.updateUser({ password: newPassword.value });
-                        if (error) throw error;
-                        alert("密碼更新成功！已為您自動登入。");
+                    const { error } = await _supabase.auth.updateUser({ password: newPassword.value });
+                    if (error) alert(error.message); else {
+                        alert("密碼已更新！");
                         const { data: { user: _user } } = await _supabase.auth.getUser();
                         user.value = _user;
                         showResetPasswordInput.value = false;
-                    } catch (err) { alert(err.message); } finally { loading.value = false; }
+                    }
+                    loading.value = false;
                 };
 
-                const logout = async () => { await _supabase.auth.signOut(); user.value = null; window.location.hash = ""; };
+                const logout = async () => { 
+                    await _supabase.auth.signOut(); 
+                    user.value = null; 
+                    window.location.hash = ""; // 清除網址 hash 防止重複觸發
+                };
 
                 onMounted(async () => {
-                    // 1. 檢查是否已經登入
-                    const { data: { user: _user } } = await _supabase.auth.getUser();
-                    if (_user) { user.value = _user; }
+                    // 自動恢復 Session (持久登入核心)
+                    const { data: { session } } = await _supabase.auth.getSession();
+                    if (session) {
+                        user.value = session.user;
+                    }
 
-                    // 2. 監聽網址 Hash (如果是從重設密碼郵件跳轉回來的)
+                    // 監聽重設密碼狀態
                     _supabase.auth.onAuthStateChange((event, session) => {
                         if (event === "PASSWORD_RECOVERY") {
                             showResetPasswordInput.value = true;
+                        }
+                        if (session) {
+                            user.value = session.user;
                         }
                     });
                 });
