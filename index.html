@@ -3,156 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitworkhk 雲端管理系統 V4</title>
+    <title>Fitworkhk 專業管理系統 V4.3</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        [v-cloak] { display: none; }
-        .tab-active { border-bottom: 4px solid #1d4ed8; color: #1d4ed8; font-weight: 800; }
-    </style>
+    <style>[v-cloak] { display: none; }</style>
 </head>
-<body class="bg-gray-50 text-gray-900">
-    <div id="app" v-cloak class="min-h-screen">
-        
+<body class="bg-slate-50">
+    <div id="app" v-cloak>
         <div v-if="!user" class="min-h-screen flex items-center justify-center p-6 bg-blue-900">
-            <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-md">
-                <h2 class="text-3xl font-black text-center mb-6 text-blue-900">FITWORKHK</h2>
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md">
+                <h2 class="text-3xl font-black text-center mb-2 text-blue-900">FITWORKHK</h2>
+                <p class="text-center text-gray-400 text-sm mb-8 font-bold uppercase">Cloud Management</p>
                 <div class="space-y-4">
-                    <input v-model="auth.email" type="email" placeholder="管理員郵箱" class="w-full border-2 border-gray-100 rounded-xl px-4 py-3">
-                    <input v-model="auth.password" type="password" placeholder="密碼" class="w-full border-2 border-gray-100 rounded-xl px-4 py-3">
-                    <div class="flex space-x-2">
-                        <button @click="handleLogin" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl">登入</button>
-                        <button @click="handleSignUp" class="flex-1 bg-gray-100 text-gray-500 font-bold py-3 rounded-xl">註冊</button>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 px-1">管理員帳號</label>
+                        <input v-model="email" type="email" placeholder="email@example.com" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 focus:border-blue-500 outline-none">
                     </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 px-1">登入密碼</label>
+                        <input v-model="password" type="password" placeholder="••••••••" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 focus:border-blue-500 outline-none">
+                    </div>
+                    <button @click="login" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-100 mt-4 disabled:bg-gray-300">
+                        {{ loading ? '連線同步中...' : '確認登入' }}
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div v-else>
-            <header class="bg-white shadow-md sticky top-0 z-50">
-                <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-                    <div class="text-xl font-black text-blue-700">FITWORKHK <span class="text-xs font-normal text-gray-400">CLOUD</span></div>
-                    <nav class="flex space-x-1 text-sm">
-                        <button @click="currentTab = 'dashboard'" :class="{'tab-active': currentTab === 'dashboard'}" class="px-2 py-2">儀表板</button>
-                        <button @click="currentTab = 'clients'" :class="{'tab-active': currentTab === 'clients'}" class="px-2 py-2">客戶表</button>
-                        <button @click="currentTab = 'income'" :class="{'tab-active': currentTab === 'income'}" class="px-2 py-2">收入</button>
-                        <button @click="handleLogout" class="px-2 py-2 text-red-500 font-bold">登出</button>
-                    </nav>
+        <div v-else class="min-h-screen">
+            <header class="bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-10">
+                <span class="font-black text-blue-600 tracking-tighter text-xl">FITWORKHK</span>
+                <div class="flex items-center space-x-3">
+                    <span class="text-[10px] bg-blue-50 text-blue-500 px-2 py-1 rounded-full font-bold">{{ user.email }}</span>
+                    <button @click="logout" class="text-xs font-bold text-red-400">登出</button>
                 </div>
             </header>
 
-            <main class="container mx-auto px-4 py-6 max-w-4xl">
-                <div v-if="currentTab === 'dashboard'" class="grid grid-cols-2 gap-4">
-                    <div class="bg-white p-5 rounded-3xl shadow-sm border-b-4 border-blue-500">
-                        <p class="text-xs text-gray-400 font-bold mb-1">營業額</p>
-                        <p class="text-2xl font-black text-blue-600">${{ stats.revenue }}</p>
+            <main class="p-4 max-w-lg mx-auto">
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-5 rounded-[2rem] shadow-sm border-b-4 border-blue-500">
+                        <p class="text-[10px] font-black text-gray-400 uppercase">總客戶數</p>
+                        <p class="text-3xl font-black text-blue-900">{{ clients.length }}</p>
                     </div>
-                    <div class="bg-white p-5 rounded-3xl shadow-sm border-b-4 border-green-500">
-                        <p class="text-xs text-gray-400 font-bold mb-1">總客戶數</p>
-                        <p class="text-2xl font-black text-green-600">{{ clients.length }}</p>
-                    </div>
-                    <div class="col-span-2 text-center py-10 text-gray-400" v-if="loading">雲端同步中...</div>
+                    <button @click="showAddModal = true" class="bg-blue-600 text-white rounded-[2rem] font-black shadow-lg shadow-blue-100 hover:scale-95 transition-transform">
+                        + 新增客戶
+                    </button>
                 </div>
 
-                <div v-if="currentTab === 'clients'" class="space-y-4">
-                    <div class="flex space-x-2">
-                        <input v-model="clientSearch" placeholder="搜尋..." class="flex-1 bg-white border-0 shadow-sm rounded-2xl px-4 py-3">
-                        <button @click="openClientModal()" class="bg-blue-600 text-white px-4 py-3 rounded-2xl font-bold">+</button>
+                <div class="mb-4">
+                    <input v-model="search" placeholder="🔍 搜尋客戶姓名或電話..." class="w-full px-6 py-4 rounded-2xl border-0 shadow-sm text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div class="space-y-3">
+                    <div v-if="loading" class="text-center py-10 text-gray-400 font-bold">資料同步中...</div>
+                    <div v-for="c in filteredClients" :key="c.id" class="bg-white p-5 rounded-[2rem] shadow-sm flex justify-between items-center border border-transparent hover:border-blue-100">
+                        <div>
+                            <div class="font-black text-gray-800 text-lg">{{ c.name }}</div>
+                            <div class="text-xs font-bold text-gray-400 tracking-widest">{{ c.phone }}</div>
+                        </div>
+                        <div class="text-right flex flex-col items-end">
+                            <span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black mb-1">{{ c.branch }}</span>
+                            <span class="text-blue-600 font-black text-sm">已續約 {{ c.renewal_count || 0 }} 次</span>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
-                        <table class="w-full text-left text-sm">
-                            <tbody class="divide-y">
-                                <tr v-for="c in filteredClients" :key="c.id">
-                                    <td class="px-6 py-4">
-                                        <div class="font-bold">{{ c.name }}</div>
-                                        <div class="text-xs text-gray-400">{{ c.phone }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="text-xs font-bold text-blue-500">{{ c.branch }}</div>
-                                        <div class="text-[10px] text-gray-300">續卡 {{ c.renewal_count }} 次</div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div v-if="!loading && filteredClients.length === 0" class="text-center py-10 text-gray-300">
+                        暫無相關客戶資料
                     </div>
                 </div>
-                
-                </main>
+            </main>
         </div>
 
+        <div v-if="showAddModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+            <div class="bg-white w-full rounded-[2.5rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-black text-blue-900">新客戶入網</h3>
+                    <button @click="showAddModal = false" class="text-gray-300">✕</button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 px-1">客戶姓名</label>
+                        <input v-model="newClient.name" class="w-full border-2 border-gray-50 rounded-xl px-4 py-3 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 px-1">聯絡電話</label>
+                        <input v-model="newClient.phone" class="w-full border-2 border-gray-50 rounded-xl px-4 py-3 focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 px-1">所屬分店</label>
+                        <select v-model="newClient.branch" class="w-full border-2 border-gray-50 rounded-xl px-4 py-3 focus:border-blue-500 outline-none">
+                            <option value="觀塘">觀塘分店</option>
+                            <option value="中環">中環分店</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-3 pt-6">
+                        <button @click="showAddModal = false" class="flex-1 py-4 font-bold text-gray-400">取消返回</button>
+                        <button @click="saveClient" :disabled="loading" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-blue-100">
+                            {{ loading ? '儲存中...' : '確認儲存' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
 
     <script>
-        // --- 請填入你的 Supabase 資訊 ---
+        // --- 已自動帶入你的 Supabase 資訊 ---
         const SUPABASE_URL = "https://ajnunehxtiofcphdyhqn.supabase.co";
-        const SUPABASE_ANON_KEY = "https://ajnunehxtiofcphdyhqn.supabase.co";
-        const supabase = Object.assign(supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY));
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
+        
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const { createApp, ref, computed, onMounted } = Vue;
-
+        const { createApp, ref, onMounted, computed } = Vue;
         createApp({
             setup() {
                 const user = ref(null);
-                const currentTab = ref('dashboard');
+                const email = ref('');
+                const password = ref('');
                 const loading = ref(false);
-                const auth = ref({ email: '', password: '' });
                 const clients = ref([]);
-                const stats = ref({ revenue: 0 });
-                const clientSearch = ref('');
+                const search = ref('');
+                const showAddModal = ref(false);
+                const newClient = ref({ name: '', phone: '', branch: '觀塘' });
 
-                // --- 身份驗證 ---
-                const handleSignUp = async () => {
-                    const { data, error } = await supabase.auth.signUp(auth.value);
-                    if (error) alert(error.message);
-                    else alert('請檢查郵箱確認信！');
+                // 登入
+                const login = async () => {
+                    if(!email.value || !password.value) return alert("請輸入完整帳號密碼");
+                    loading.value = true;
+                    const { data, error } = await _supabase.auth.signInWithPassword({ 
+                        email: email.value, 
+                        password: password.value 
+                    });
+                    if (error) alert("登入失敗: " + error.message);
+                    else { user.value = data.user; fetchClients(); }
+                    loading.value = false;
                 };
 
-                const handleLogin = async () => {
-                    const { data, error } = await supabase.auth.signInWithPassword(auth.value);
-                    if (error) alert(error.message);
-                    else {
-                        user.value = data.user;
-                        fetchData();
+                // 抓取客戶 (根據你建立的表格大小寫，優先嘗試大寫 Clients)
+                const fetchClients = async () => {
+                    loading.value = true;
+                    const { data, error } = await _supabase.from('Clients').select('*').order('created_at', { ascending: false });
+                    if (error) {
+                        // 如果大寫失敗，嘗試小寫
+                        const { data: dataLow } = await _supabase.from('clients').select('*').order('created_at', { ascending: false });
+                        if(dataLow) clients.value = dataLow;
+                    } else if (data) {
+                        clients.value = data;
                     }
+                    loading.value = false;
                 };
 
-                const handleLogout = async () => {
-                    await supabase.auth.signOut();
-                    user.value = null;
+                // 新增客戶
+                const saveClient = async () => {
+                    if(!newClient.value.name) return alert("請輸入姓名");
+                    loading.value = true;
+                    const table = 'Clients'; // 根據你 SQL 的結果自動選擇
+                    const { error } = await _supabase.from(table).insert([{
+                        ...newClient.value,
+                        user_id: user.value.id
+                    }]);
+                    
+                    if (error) {
+                        // 備援小寫嘗試
+                        await _supabase.from('clients').insert([{...newClient.value, user_id: user.value.id}]);
+                    }
+                    
+                    showAddModal.value = false;
+                    newClient.value = { name: '', phone: '', branch: '觀塘' };
+                    await fetchClients();
+                    loading.value = false;
                 };
 
-                // --- 資料同步 ---
-                const fetchData = async () => {
-                    loading.ref = true;
-                    // 抓取客戶
-                    const { data: clientsData } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
-                    clients.value = clientsData || [];
-                    
-                    // 抓取營業額
-                    const { data: incomeData } = await supabase.from('incomes').select('revenue');
-                    stats.value.revenue = (incomeData || []).reduce((s, i) => s + i.revenue, 0);
-                    
-                    loading.ref = false;
-                };
+                const logout = async () => { await _supabase.auth.signOut(); user.value = null; };
 
                 const filteredClients = computed(() => {
-                    if (!clientSearch.value) return clients.value;
-                    return clients.value.filter(c => c.name.includes(clientSearch.value));
+                    return clients.value.filter(c => 
+                        c.name.includes(search.value) || (c.phone && c.phone.includes(search.value))
+                    );
                 });
 
                 onMounted(async () => {
-                    const { data } = await supabase.auth.getUser();
-                    if (data.user) {
-                        user.value = data.user;
-                        fetchData();
-                    }
+                    const { data: { user: _user } } = await _supabase.auth.getUser();
+                    if (_user) { user.value = _user; fetchClients(); }
                 });
 
-                return {
-                    user, currentTab, auth, handleLogin, handleSignUp, handleLogout,
-                    clients, stats, loading, clientSearch, filteredClients
-                }
+                return { user, email, password, loading, login, logout, clients, search, filteredClients, showAddModal, newClient, saveClient };
             }
         }).mount('#app');
     </script>
