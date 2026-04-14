@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fitworkhk 完整穩定版</title>
+    <title>Fitworkhk 最終穩定版</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,6 +17,7 @@
 <body class="bg-slate-50 font-sans text-slate-900 text-sm">
 <div id="app" v-cloak class="min-h-screen">
 
+  <!-- 登入/註冊/重置密碼 -->
   <div v-if="authState !== 'app'" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-900 to-slate-900">
     <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-md space-y-6">
       <div class="text-center">
@@ -26,19 +27,13 @@
         </p>
       </div>
       <div class="space-y-4">
-        <!-- 忘記密碼表單 -->
-        <div v-if="authState === 'forgot'">
-          <input type="email" v-model="authForm.email" placeholder="輸入註冊的Email" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold">
-        </div>
-        <!-- 重置密碼表單 -->
         <div v-if="authState === 'reset'">
           <input type="password" v-model="resetForm.password" placeholder="新密碼" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold">
           <input type="password" v-model="resetForm.confirmPassword" placeholder="確認新密碼" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold">
         </div>
-        <!-- 登入/註冊表單 -->
         <div v-else>
           <input type="email" v-model="authForm.email" placeholder="Email" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold">
-          <input type="password" v-model="authForm.password" placeholder="密碼" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold">
+          <input type="password" v-model="authForm.password" placeholder="密碼" class="w-full border-2 border-slate-200 p-4 rounded-xl font-bold" v-if="authState !== 'forgot'">
         </div>
         <button @click="handleAuth" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl">
           {{ authState === 'login' ? '登入' : authState === 'register' ? '註冊' : authState === 'reset' ? '確認重置' : '發送重設郵件' }}
@@ -52,6 +47,7 @@
     </div>
   </div>
 
+  <!-- 主程式 -->
   <div v-else class="pb-24">
     <header class="bg-white border-b sticky top-0 z-50 p-4 flex justify-between items-center">
       <div class="text-xl font-black text-blue-800">FITWORKHK</div>
@@ -67,6 +63,7 @@
 
     <main class="container mx-auto p-4 max-w-3xl space-y-4">
 
+      <!-- 儀表板 -->
       <section v-if="currentTab === 'dashboard'" class="space-y-4">
         <div class="bg-white p-3 rounded-2xl shadow-sm border flex gap-2 overflow-x-auto">
           <button v-for="r in ranges" @click="reportRange = r.id" :class="reportRange === r.id ? 'bg-blue-600 text-white' : 'bg-slate-100'" class="px-4 py-2 rounded-xl whitespace-nowrap">{{ r.name }}</button>
@@ -93,16 +90,16 @@
         </div>
       </section>
 
+      <!-- 客戶管理 -->
       <section v-if="currentTab === 'clients'" class="space-y-4">
         <div class="flex gap-2">
-          <input v-model="cSearch" placeholder="搜尋客戶" class="flex-1 bg-white p-4 rounded-2xl shadow-sm border-2 font-bold">
+          <input v-model="cSearch" placeholder="搜尋客戶姓名/電話/分店" class="flex-1 bg-white p-4 rounded-2xl shadow-sm border-2 font-bold">
           <button @click="openClientModal(null)" class="bg-blue-600 text-white px-6 rounded-2xl font-black shadow-md text-lg">+</button>
         </div>
         
-        <!-- 顯示客戶列表，無數據時提示 -->
         <div v-if="filteredClients.length === 0" class="bg-white p-8 rounded-2xl shadow-sm border text-center">
           <p class="text-slate-500 font-bold">暫無客戶數據</p>
-          <p class="text-xs text-slate-400 mt-2">點擊右上角 + 按鈕新增客戶</p>
+          <p class="text-xs text-slate-400 mt-2">點擊 + 按鈕新增客戶</p>
         </div>
         
         <div v-else class="space-y-3">
@@ -110,79 +107,114 @@
             <div>
               <div class="font-black text-sm">{{ c.name }}</div>
               <div class="text-xs text-slate-500 mt-1">{{ c.phone || '無電話' }} | {{ c.branch }}</div>
+              <div v-if="c.marathon" class="text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full inline-block mt-1">馬拉松參與者</div>
             </div>
             <span class="text-blue-500 text-xs font-black bg-blue-50 px-3 py-2 rounded-lg">編輯</span>
           </div>
         </div>
       </section>
 
+      <!-- 開卡 POS -->
       <section v-if="currentTab === 'exercise'" class="bg-white p-6 rounded-2xl shadow-sm border space-y-5">
         <h3 class="font-black text-blue-700 text-lg border-b pb-3">開卡 POS</h3>
         <div>
-          <label class="text-xs font-bold text-slate-500">客戶</label>
+          <label class="text-xs font-bold text-slate-500">選擇客戶</label>
           <select v-model="eForm.clientId" class="w-full bg-slate-50 p-4 rounded-xl border-2 font-bold">
-            <option :value="null">-- 選擇客戶 --</option>
+            <option :value="null">-- 請選擇客戶 --</option>
             <option v-for="c in clients" :value="c.id">{{ c.name }} ({{ c.phone || '無電話' }})</option>
           </select>
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <button @click="eForm.type='35pt'" :class="eForm.type==='35pt'?'bg-blue-600 text-white':'bg-white border'">35點 $2550</button>
-          <button @click="eForm.type='10pt'" :class="eForm.type==='10pt'?'bg-blue-600 text-white':'bg-white border'">10點 $850</button>
-          <button @click="eForm.type='trial'" :class="eForm.type==='trial'?'bg-blue-600 text-white':'bg-white border'" class="col-span-2">試堂 $98</button>
+          <button @click="eForm.type='35pt'" :class="eForm.type==='35pt'?'bg-blue-600 text-white border-blue-600':'bg-slate-50 border-slate-200 text-slate-600'" class="p-4 rounded-xl font-black border-2">
+            35點套票<span class="text-[10px] block mt-1 opacity-80">$2550</span>
+          </button>
+          <button @click="eForm.type='10pt'" :class="eForm.type==='10pt'?'bg-blue-600 text-white border-blue-600':'bg-slate-50 border-slate-200 text-slate-600'" class="p-4 rounded-xl font-black border-2">
+            10點套票<span class="text-[10px] block mt-1 opacity-80">$850</span>
+          </button>
+          <button @click="eForm.type='trial'" :class="eForm.type==='trial'?'bg-blue-600 text-white border-blue-600':'bg-slate-50 border-slate-200 text-slate-600'" class="p-4 rounded-xl font-black border-2 col-span-2">
+            單堂試堂 ($98)
+          </button>
         </div>
         <div class="bg-slate-50 p-4 rounded-xl border-2">
-          <label class="text-xs font-bold">收款歸屬</label>
+          <label class="text-xs font-bold text-slate-500 uppercase">收款歸屬</label>
           <div class="flex gap-2 mt-2">
-            <button @click="eForm.receivedBy='kwan'" :class="eForm.receivedBy==='kwan'?'bg-blue-600 text-white':'bg-white border'">Kwan</button>
-            <button @click="eForm.receivedBy='Cat'" :class="eForm.receivedBy==='Cat'?'bg-blue-600 text-white':'bg-white border'">Cat</button>
+            <button @click="eForm.receivedBy='kwan'" :class="eForm.receivedBy==='kwan'?'bg-blue-600 text-white':'bg-white text-slate-700 border-2'" class="flex-1 p-3 rounded-xl font-bold">Kwan</button>
+            <button @click="eForm.receivedBy='Cat'" :class="eForm.receivedBy==='Cat'?'bg-blue-600 text-white':'bg-white text-slate-700 border-2'" class="flex-1 p-3 rounded-xl font-bold">Cat</button>
           </div>
         </div>
-        <div class="bg-blue-50 p-4 rounded-xl flex justify-between items-center">
-          <span class="font-bold text-sm">利潤</span>
-          <span class="text-xl font-black text-blue-600">${{ calculateExerciseProfit(eForm).toFixed(1) }}</span>
+        <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl flex justify-between items-center">
+          <span class="font-bold text-xs text-blue-800">預計利潤</span>
+          <span class="text-xl font-black text-blue-600 italic">${{ calculateExerciseProfit(eForm).toFixed(1) }}</span>
         </div>
-        <button @click="saveExerciseSale" class="w-full bg-slate-900 text-white font-black py-4 rounded-xl">確認開卡</button>
+        <button @click="saveExerciseSale" class="w-full bg-slate-900 text-white font-black py-4 rounded-xl shadow-lg hover:bg-black transition-colors">
+          確認寫入系統
+        </button>
       </section>
 
+      <!-- 零售 POS -->
       <section v-if="currentTab === 'retail'" class="space-y-4">
         <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
           <h3 class="font-black text-emerald-700 text-lg border-b pb-3">零售 POS</h3>
           <select v-model="rForm.clientId" class="w-full bg-slate-50 p-4 rounded-xl border-2 font-bold">
-            <option :value="null">-- 購買客戶 --</option>
+            <option :value="null">-- 選擇購買客戶 --</option>
             <option v-for="c in clients" :value="c.id">{{ c.name }}</option>
           </select>
           <div class="bg-slate-50 p-4 rounded-xl border-2">
-            <label class="text-xs font-bold">收款歸屬</label>
+            <label class="text-xs font-bold text-slate-500 uppercase">收款歸屬</label>
             <div class="flex gap-2 mt-2">
-              <button @click="rForm.receivedBy='kwan'" :class="rForm.receivedBy==='kwan'?'bg-emerald-600 text-white':'bg-white border'">Kwan</button>
-              <button @click="rForm.receivedBy='Cat'" :class="rForm.receivedBy==='Cat'?'bg-emerald-600 text-white':'bg-white border'">Cat</button>
+              <button @click="rForm.receivedBy='kwan'" :class="rForm.receivedBy==='kwan'?'bg-emerald-600 text-white':'bg-white text-slate-700 border-2'" class="flex-1 p-3 rounded-xl font-bold">Kwan</button>
+              <button @click="rForm.receivedBy='Cat'" :class="rForm.receivedBy==='Cat'?'bg-emerald-600 text-white':'bg-white text-slate-700 border-2'" class="flex-1 p-3 rounded-xl font-bold">Cat</button>
             </div>
           </div>
-          <input v-model="pSearch" placeholder="搜尋產品" class="w-full bg-white p-4 rounded-xl border-2 font-bold">
+          <input v-model="pSearch" placeholder="搜尋產品名稱" class="w-full bg-white p-4 rounded-xl border-2 font-bold">
           <div v-for="p in filteredProducts" @click="addProductToCart(p)" class="p-3 border-b hover:bg-emerald-50 cursor-pointer">
             <div class="font-bold text-xs">{{ p.name }}</div>
-            <div class="text-xs text-slate-500">售價 ${{ p.retail }}</div>
+            <div class="text-xs text-slate-500">售價 ${{ p.retail }} | 成本 ${{ p.cost }}</div>
           </div>
-          <div v-if="cart.length > 0" class="bg-slate-50 p-4 rounded-xl border-2">
-            <div v-for="(item, idx) in cart" class="flex justify-between items-center bg-white p-3 rounded-lg">
-              <div class="text-xs font-bold">{{ item.name }}</div>
-              <button @click="cart.splice(idx,1)" class="text-red-500">×</button>
+          <div v-if="cart.length > 0" class="bg-slate-50 p-4 rounded-xl border-2 mt-4">
+            <div class="font-black text-xs text-slate-500 uppercase border-b pb-2 mb-2 flex justify-between">
+              <span>購物車 ({{ cart.length }} 件)</span>
+              <span class="text-emerald-600">總利潤: ${{ cartProfit.toFixed(1) }}</span>
             </div>
-            <button @click="saveRetailSale" class="w-full bg-emerald-600 text-white font-black py-3 rounded-xl mt-3">結算</button>
+            <div v-for="(item, idx) in cart" class="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm border mb-2">
+              <div class="font-bold text-xs">{{ item.name }}</div>
+              <div class="text-xs text-emerald-600 font-black">利潤 ${{ item.profit.toFixed(1) }}</div>
+              <button @click="cart.splice(idx,1)" class="text-red-400 font-black text-xl px-2">&times;</button>
+            </div>
+            <button @click="saveRetailSale" class="w-full bg-emerald-600 text-white font-black py-4 rounded-xl shadow-lg hover:bg-emerald-700 transition-colors">
+              結算入帳
+            </button>
           </div>
         </div>
       </section>
 
+      <!-- 收支管理 -->
       <section v-if="currentTab === 'finance'" class="space-y-4">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border">
-          <button @click="openFinanceModal(null)" class="w-full bg-purple-600 text-white font-black py-3 rounded-xl">新增收支</button>
-          <div class="space-y-2 mt-4 max-h-96 overflow-y-auto">
-            <div v-for="f in filteredFinances" :key="f.id" class="bg-white p-4 rounded-xl border-l-4" :class="f.type==='income'?'border-green-500':'border-red-500'">
-              <div class="flex justify-between">
-                <div class="text-xs font-bold">{{ f.category || '未分類' }}</div>
-                <div class="text-xs font-bold" :class="f.type==='income'?'text-green-600':'text-red-600'">${{ f.amount }}</div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-5">
+          <h3 class="font-black text-purple-700 text-lg border-b pb-3">收支管理</h3>
+          <button @click="openFinanceModal(null)" class="w-full bg-purple-600 text-white font-black py-3 rounded-xl shadow-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            新增收支記錄
+          </button>
+          <div class="space-y-2 max-h-96 overflow-y-auto no-scrollbar">
+            <div v-for="f in filteredFinances" :key="f.id" class="bg-white p-4 rounded-xl shadow-sm border-l-4" :class="f.type === 'income' ? 'border-green-500' : 'border-red-500'">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-black text-sm">{{ f.category }}</div>
+                  <div class="text-[10px] text-slate-500 mt-1">{{ f.person }} | {{ formatDate(f.date) }}</div>
+                </div>
+                <div class="text-right">
+                  <div class="font-black text-lg" :class="f.type === 'income' ? 'text-green-600' : 'text-red-600'">
+                    {{ f.type === 'income' ? '+' : '-' }}${{ f.amount.toFixed(1) }}
+                  </div>
+                  <button @click="openFinanceModal(f)" class="text-[10px] text-purple-500 font-bold mt-1">編輯</button>
+                </div>
               </div>
-              <div class="text-xs text-slate-500">{{ f.person }} | {{ f.date }}</div>
+            </div>
+            <div v-if="filteredFinances.length === 0" class="text-center py-8 text-xs text-slate-400 font-bold">
+              暫無收支記錄
             </div>
           </div>
         </div>
@@ -191,39 +223,65 @@
     </main>
   </div>
 
+  <!-- 客戶彈窗 -->
   <div v-if="showClientModal" class="modal-overlay">
     <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
-      <h3 class="font-black text-xl border-b pb-2">{{ clientForm.id ? '編輯客戶' : '新增客戶' }}</h3>
-      <input v-model="clientForm.name" placeholder="姓名" class="w-full border-2 p-3 rounded-xl font-bold">
-      <input v-model="clientForm.phone" placeholder="電話" class="w-full border-2 p-3 rounded-xl font-bold">
+      <h3 class="font-black text-xl border-b pb-2">{{ clientForm.id ? '編輯客戶資料' : '新增客戶資料' }}</h3>
+      <input v-model="clientForm.name" placeholder="客戶姓名 (必填)" class="w-full border-2 p-3 rounded-xl font-bold">
+      <input v-model="clientForm.phone" placeholder="聯絡電話 (選填)" class="w-full border-2 p-3 rounded-xl font-bold">
       <select v-model="clientForm.branch" class="w-full border-2 p-3 rounded-xl font-bold">
-        <option value="觀塘">觀塘</option>
-        <option value="中環">中環</option>
-        <option value="佐敦">佐敦</option>
+        <option value="觀塘">觀塘分店</option>
+        <option value="中環">中環分店</option>
+        <option value="佐敦">佐敦分店</option>
       </select>
-      <div class="flex gap-3">
-        <button @click="showClientModal = false" class="flex-1 bg-slate-200 p-3 rounded-xl font-bold">取消</button>
-        <button @click="saveClient" class="flex-1 bg-blue-600 text-white p-3 rounded-xl font-bold">儲存</button>
+      <select v-model="clientForm.source" class="w-full border-2 p-3 rounded-xl font-bold">
+        <option value="廣告">來源：廣告</option>
+        <option value="轉介紹">來源：轉介紹</option>
+      </select>
+      <label class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl font-bold text-sm border-2 cursor-pointer">
+        <input type="checkbox" v-model="clientForm.marathon" class="w-5 h-5 rounded text-emerald-600">
+        <span>是否參加馬拉松挑戰</span>
+      </label>
+      <div class="flex gap-3 mt-6">
+        <button @click="showClientModal = false" class="flex-1 bg-slate-200 p-4 rounded-xl font-bold">取消</button>
+        <button @click="saveClient" class="flex-1 bg-blue-600 text-white p-4 rounded-xl font-black shadow-md">儲存資料</button>
       </div>
     </div>
   </div>
 
+  <!-- 收支彈窗 -->
   <div v-if="showFinanceModal" class="modal-overlay">
     <div class="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
-      <h3 class="font-black text-xl border-b pb-2">收支記錄</h3>
+      <h3 class="font-black text-xl border-b pb-2">{{ financeForm.id ? '編輯收支記錄' : '新增收支記錄' }}</h3>
       <select v-model="financeForm.type" class="w-full border-2 p-3 rounded-xl font-bold">
         <option value="income">收入</option>
         <option value="expense">支出</option>
       </select>
-      <input type="number" v-model="financeForm.amount" placeholder="金額" class="w-full border-2 p-3 rounded-xl font-bold">
+      <select v-model="financeForm.category" class="w-full border-2 p-3 rounded-xl font-bold">
+        <optgroup label="收入分類">
+          <option value="手動新增收入">手動新增收入</option>
+          <option value="運動課堂收入">運動課堂收入</option>
+          <option value="產品零售收入">產品零售收入</option>
+        </optgroup>
+        <optgroup label="支出分類">
+          <option value="Fitwork廣告">Fitwork廣告</option>
+          <option value="FZb廣告">FZb廣告</option>
+          <option value="中環交租">中環交租</option>
+          <option value="觀塘交租">觀塘交租</option>
+          <option value="購買產品">購買產品</option>
+          <option value="馬拉松成本">馬拉松成本</option>
+          <option value="手動新增支出">手動新增支出</option>
+        </optgroup>
+      </select>
       <select v-model="financeForm.person" class="w-full border-2 p-3 rounded-xl font-bold">
         <option value="kwan">Kwan</option>
         <option value="Cat">Cat</option>
       </select>
-      <input v-model="financeForm.category" placeholder="分類 (例如: 租金/水電)" class="w-full border-2 p-3 rounded-xl font-bold">
-      <div class="flex gap-3">
-        <button @click="showFinanceModal = false" class="flex-1 bg-slate-200 p-3 rounded-xl font-bold">取消</button>
-        <button @click="saveFinance" class="flex-1 bg-purple-600 text-white p-3 rounded-xl font-bold">儲存</button>
+      <input type="number" v-model="financeForm.amount" placeholder="金額 (數字)" step="0.1" class="w-full border-2 p-3 rounded-xl font-bold">
+      <input type="date" v-model="financeForm.date" class="w-full border-2 p-3 rounded-xl font-bold">
+      <div class="flex gap-3 mt-6">
+        <button @click="showFinanceModal = false" class="flex-1 bg-slate-200 p-4 rounded-xl font-bold">取消</button>
+        <button @click="saveFinance" class="flex-1 bg-purple-600 text-white p-4 rounded-xl font-black shadow-md">儲存記錄</button>
       </div>
     </div>
   </div>
@@ -241,13 +299,13 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 createApp({
   setup() {
     // 認證相關
-    const authState = ref('login'); // login/register/forgot/reset/app
+    const authState = ref('login');
     const authForm = ref({ email: '', password: '' });
     const resetForm = ref({ password: '', confirmPassword: '' });
     const currentUser = ref('');
     const userId = ref('');
 
-    // 頁籤管理
+    // 頁籤
     const currentTab = ref('dashboard');
     const tabs = [
       { id: 'dashboard', name: '儀表板' },
@@ -274,228 +332,215 @@ createApp({
     // 客戶管理
     const showClientModal = ref(false);
     const cSearch = ref('');
-    const clientForm = ref({ id: null, name: '', phone: '', branch: '觀塘', source: '廣告', marathon: false, generation: 0 });
+    const clientForm = ref({ 
+      id: null, 
+      name: '', 
+      phone: '', 
+      branch: '觀塘', 
+      source: '廣告', 
+      marathon: false, 
+      generation: 0,
+      referrer_id: null,
+      renewal_count: 0
+    });
 
     // 收支管理
     const showFinanceModal = ref(false);
-    const financeForm = ref({ id: null, type: 'income', category: '', person: 'kwan', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
+    const financeForm = ref({ 
+      id: null, 
+      type: 'income', 
+      category: '', 
+      person: 'kwan', 
+      amount: '', 
+      date: new Date().toISOString().split('T')[0], 
+      description: '' 
+    });
     const financeFilter = ref({ type: 'all', person: 'all', start: '', end: '' });
 
     // 開卡POS
-    const eForm = ref({ clientId: null, type: '35pt', isFirstTime: false, isReferralFree: false, receivedBy: 'kwan' });
-    
+    const eForm = ref({ 
+      clientId: null, 
+      type: '35pt', 
+      isFirstTime: false, 
+      isReferralFree: false, 
+      receivedBy: 'kwan' 
+    });
+
     // 零售POS
-    const rForm = ref({ clientId: null, discount: "0", receivedBy: 'kwan' });
+    const rForm = ref({ 
+      clientId: null, 
+      discount: "0", 
+      receivedBy: 'kwan' 
+    });
     const pSearch = ref('');
     const cart = ref([]);
-
-    // 產品數據
     const productDb = [
       {id:1,name:'營養蛋白素-雲呢拿',retail:464,cost:252},
       {id:2,name:'營養蛋白素-野草莓',retail:464,cost:252},
       {id:3,name:'營養蛋白素-朱古力',retail:464,cost:252},
-      {id:4,name:'濃縮蘆薈汁',retail:446,cost:242},
-      {id:5,name:'即溶草本飲品',retail:379,cost:206},
+      {id:4,name:'濃縮蘆薈汁-原味',retail:446,cost:242},
+      {id:5,name:'即溶草本飲品-桃味',retail:379,cost:206},
+      {id:6,name:'慢跑計畫套裝',retail:1369,cost:815.5},
+      {id:7,name:'快跑計畫套裝',retail:2177,cost:1248},
     ];
 
-    // 過濾產品
-    const filteredProducts = computed(() => {
-      return productDb.filter(p => 
-        p.name.toLowerCase().includes(pSearch.value.toLowerCase())
-      );
-    });
-
-    // 加載客戶（增強版，帶錯誤處理和強制刷新）
+    // 加載數據
     const loadClients = async () => {
       try {
-        console.log('加載客戶數據...');
-        // 查詢當前用戶的所有客戶，按名稱排序
-        const { data, error } = await sb.from('clients')
-          .select('*')
-          .order('name', { ascending: true });
-        
+        const { data, error } = await sb.from('clients').select('*').order('name');
         if (error) throw error;
-        
         clients.value = data || [];
-        console.log('客戶數據加載完成:', clients.value.length, '條記錄');
       } catch (e) {
-        console.error('加載客戶出錯:', e.message);
-        alert('加載客戶數據失敗: ' + e.message);
-        clients.value = [];
+        console.error('加載客戶失敗:', e.message);
+        alert('加載客戶數據出錯: ' + e.message);
       }
     };
 
-    // 加載銷售記錄
     const loadSales = async () => {
       try {
         const { data, error } = await sb.from('sales').select('*');
         if (error) throw error;
         sales.value = data || [];
       } catch (e) {
-        console.error('加載銷售記錄出錯:', e.message);
-        sales.value = [];
+        console.error('加載銷售記錄失敗:', e.message);
       }
     };
 
-    // 加載收支記錄
     const loadFinances = async () => {
       try {
         const { data, error } = await sb.from('finances').select('*').order('date', { ascending: false });
         if (error) throw error;
         finances.value = data || [];
       } catch (e) {
-        console.error('加載收支記錄出錯:', e.message);
-        finances.value = [];
+        console.error('加載收支記錄失敗:', e.message);
       }
     };
 
-    // 認證處理（完整流程）
+    // 認證處理
     const handleAuth = async () => {
       try {
-        // 登入
         if (authState.value === 'login') {
           const { data, error } = await sb.auth.signInWithPassword({ 
             email: authForm.value.email, 
             password: authForm.value.password 
           });
           if (error) throw error;
-          
           currentUser.value = data.user.email;
           userId.value = data.user.id;
           authState.value = 'app';
-          
-          // 加載所有數據
           await Promise.all([loadClients(), loadSales(), loadFinances()]);
-        }
-        
-        // 註冊
-        else if (authState.value === 'register') {
+        } else if (authState.value === 'register') {
           const { error } = await sb.auth.signUp({ 
             email: authForm.value.email, 
             password: authForm.value.password 
           });
           if (error) throw error;
-          
-          alert('註冊成功，請驗證您的電子郵件後登入');
+          alert('註冊成功，請驗證郵箱後登入');
           authState.value = 'login';
-          authForm.value = { email: '', password: '' };
-        }
-        
-        // 忘記密碼
-        else if (authState.value === 'forgot') {
+        } else if (authState.value === 'forgot') {
           const { error } = await sb.auth.resetPasswordForEmail(authForm.value.email, {
             redirectTo: window.location.origin
           });
           if (error) throw error;
-          
-          alert('重設密碼的郵件已發送，請檢查您的信箱');
+          alert('重設密碼郵件已發送，請查收');
           authState.value = 'login';
-          authForm.value = { email: '', password: '' };
-        }
-        
-        // 重置密碼
-        else if (authState.value === 'reset') {
+        } else if (authState.value === 'reset') {
           if (resetForm.value.password !== resetForm.value.confirmPassword) {
-            alert('兩次輸入的密碼不一致');
+            alert('兩次密碼不一致');
             return;
           }
-          
-          const { error } = await sb.auth.updateUser({
-            password: resetForm.value.password
-          });
+          const { error } = await sb.auth.updateUser({ password: resetForm.value.password });
           if (error) throw error;
-          
           alert('密碼重置成功，請重新登入');
           authState.value = 'login';
-          resetForm.value = { password: '', confirmPassword: '' };
         }
       } catch (e) {
         alert('操作失敗: ' + e.message);
-        console.error('認證錯誤:', e);
       }
     };
 
-    // 登出
     const logout = async () => {
-      try {
-        await sb.auth.signOut();
-        authState.value = 'login';
-        currentUser.value = ''; 
-        userId.value = '';
-        clients.value = []; 
-        sales.value = []; 
-        finances.value = [];
-      } catch (e) {
-        alert('登出失敗: ' + e.message);
-      }
+      await sb.auth.signOut();
+      authState.value = 'login';
+      currentUser.value = '';
+      userId.value = '';
+      clients.value = [];
+      sales.value = [];
+      finances.value = [];
     };
 
-    // 打開客戶模態框
+    // 客戶操作
     const openClientModal = (c) => {
-      clientForm.value = c ? {...c} : { 
+      clientForm.value = c ? { ...c } : { 
         id: null, 
         name: '', 
         phone: '', 
         branch: '觀塘', 
         source: '廣告', 
         marathon: false, 
-        generation: 0 
+        generation: 0,
+        referrer_id: null,
+        renewal_count: 0
       };
       showClientModal.value = true;
     };
 
-    // 保存客戶（強化版）
     const saveClient = async () => {
       if (!clientForm.value.name.trim()) {
         return alert('請填寫客戶姓名');
       }
-      
       try {
         const clientData = { 
           ...clientForm.value, 
-          user_id: userId.value,
           name: clientForm.value.name.trim(),
           phone: clientForm.value.phone.trim()
         };
+        // 刪除 id 屬性（由 Supabase 自動生成）
+        if (!clientData.id) delete clientData.id;
 
-        // 更新或新增
         if (clientForm.value.id) {
-          const { error } = await sb.from('clients')
-            .update(clientData)
-            .eq('id', clientForm.value.id);
-          if (error) throw error;
+          await sb.from('clients').update(clientData).eq('id', clientForm.value.id);
           alert('客戶資料更新成功');
         } else {
-          const { error } = await sb.from('clients').insert(clientData);
-          if (error) throw error;
+          await sb.from('clients').insert(clientData);
           alert('新客戶新增成功');
         }
-        
-        // 強制重新加載客戶列表
         await loadClients();
         showClientModal.value = false;
-        
       } catch (e) {
-        console.error('保存客戶出錯:', e.message);
+        console.error('保存客戶失敗:', e.message);
         alert('保存客戶失敗: ' + e.message);
       }
     };
 
-    // 過濾客戶
+    // 過濾計算
     const filteredClients = computed(() => {
-      if (!cSearch.value.trim()) {
-        return clients.value;
-      }
-      
-      const searchTerm = cSearch.value.toLowerCase().trim();
+      const search = cSearch.value.toLowerCase().trim();
+      if (!search) return clients.value;
       return clients.value.filter(c => 
-        c.name.toLowerCase().includes(searchTerm) || 
-        (c.phone && c.phone.includes(searchTerm)) ||
-        c.branch.toLowerCase().includes(searchTerm)
+        c.name.toLowerCase().includes(search) || 
+        (c.phone && c.phone.includes(search)) || 
+        c.branch.toLowerCase().includes(search)
       );
     });
 
-    // 計算開卡利潤
+    const filteredProducts = computed(() => {
+      const search = pSearch.value.toLowerCase().trim();
+      if (!search) return productDb;
+      return productDb.filter(p => p.name.toLowerCase().includes(search));
+    });
+
+    const cartProfit = computed(() => cart.value.reduce((sum, item) => sum + item.profit, 0));
+
+    const filteredFinances = computed(() => {
+      let res = finances.value;
+      if (financeFilter.type !== 'all') res = res.filter(f => f.type === financeFilter.type);
+      if (financeFilter.person !== 'all') res = res.filter(f => f.person === financeFilter.person);
+      if (financeFilter.start) res = res.filter(f => new Date(f.date) >= new Date(financeFilter.start));
+      if (financeFilter.end) res = res.filter(f => new Date(f.date) <= new Date(financeFilter.end));
+      return res;
+    });
+
     const calculateExerciseProfit = (form) => {
       if (form.type === 'trial') return 98;
       if (form.type === '10pt') return 465;
@@ -503,10 +548,14 @@ createApp({
       return 0;
     };
 
-    // 保存開卡銷售
+    const formatDate = (dateStr) => {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('zh-HK');
+    };
+
+    // 銷售操作
     const saveExerciseSale = async () => {
       if (!eForm.value.clientId) return alert('請選擇客戶');
-      
       try {
         const profit = calculateExerciseProfit(eForm.value);
         await sb.from('sales').insert({
@@ -516,59 +565,48 @@ createApp({
           type: eForm.value.type,
           profit: profit,
           received_by: eForm.value.receivedBy,
-          created_at: new Date().toISOString()
+          expiry_date: eForm.value.type !== 'trial' ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
         });
-        
         await loadSales();
-        alert('開卡成功');
+        alert('開卡記錄保存成功');
         eForm.value = { clientId: null, type: '35pt', isFirstTime: false, isReferralFree: false, receivedBy: 'kwan' };
       } catch (e) {
-        alert('開卡失敗: ' + e.message);
+        alert('保存開卡記錄失敗: ' + e.message);
       }
     };
 
-    // 添加產品到購物車
     const addProductToCart = (p) => {
-      const sell = p.retail * (1 - Number(rForm.value.discount));
-      const profit = sell - p.cost;
-      cart.value.push({ 
-        id: Date.now(), 
-        name: p.name, 
-        sellPrice: sell, 
-        profit: profit,
-        cost: p.cost
-      });
+      const discount = parseFloat(rForm.value.discount);
+      const sellPrice = p.retail * (1 - discount);
+      const profit = sellPrice - p.cost;
+      cart.value.push({ id: Date.now(), name: p.name, sellPrice, profit, cost: p.cost });
     };
 
-    // 保存零售銷售
     const saveRetailSale = async () => {
       if (!rForm.value.clientId) return alert('請選擇客戶');
-      if (cart.value.length === 0) return alert('請添加產品到購物車');
-      
+      if (cart.length === 0) return alert('請添加產品到購物車');
       try {
-        for (let item of cart.value) {
+        for (const item of cart.value) {
           await sb.from('sales').insert({
             user_id: userId.value,
             client_id: rForm.value.clientId,
             cat: 'retail',
             product: item.name,
             profit: item.profit,
-            received_by: rForm.value.receivedBy,
-            created_at: new Date().toISOString()
+            received_by: rForm.value.receivedBy
           });
         }
-        
         cart.value = [];
         await loadSales();
-        alert('結算成功');
+        alert('零售結算成功');
       } catch (e) {
         alert('結算失敗: ' + e.message);
       }
     };
 
-    // 打開收支模態框
+    // 收支操作
     const openFinanceModal = (f) => {
-      financeForm.value = f ? {...f} : { 
+      financeForm.value = f ? { ...f, date: f.date.split('T')[0] } : { 
         id: null, 
         type: 'income', 
         category: '', 
@@ -580,25 +618,24 @@ createApp({
       showFinanceModal.value = true;
     };
 
-    // 保存收支記錄
     const saveFinance = async () => {
-      if (!financeForm.value.amount || Number(financeForm.value.amount) <= 0) {
-        return alert('請輸入有效的金額');
-      }
-      
+      if (!financeForm.value.category) return alert('請選擇收支分類');
+      if (!financeForm.value.amount || parseFloat(financeForm.value.amount) <= 0) return alert('請輸入有效金額');
       try {
-        const data = { 
-          ...financeForm.value, 
-          user_id: userId.value, 
-          amount: Number(financeForm.value.amount) 
+        const financeData = {
+          user_id: userId.value,
+          type: financeForm.value.type,
+          category: financeForm.value.category,
+          person: financeForm.value.person,
+          amount: parseFloat(financeForm.value.amount),
+          date: financeForm.value.date,
+          description: financeForm.value.description || ''
         };
-        
         if (financeForm.value.id) {
-          await sb.from('finances').update(data).eq('id', financeForm.value.id);
+          await sb.from('finances').update(financeData).eq('id', financeForm.value.id);
         } else {
-          await sb.from('finances').insert(data);
+          await sb.from('finances').insert(financeData);
         }
-        
         await loadFinances();
         showFinanceModal.value = false;
         alert('收支記錄保存成功');
@@ -607,72 +644,44 @@ createApp({
       }
     };
 
-    // 過濾收支記錄
-    const filteredFinances = computed(() => {
-      return finances.value;
-    });
-
-    // 日期範圍判斷
-    const isDateInRange = (d) => true;
-    
     // 儀表板統計
     const dashboardStats = computed(() => {
-      const valid = sales.value;
-      return {
-        exerciseProfit: valid.filter(s=>s.cat==='exercise').reduce((s,v)=>s+v.profit,0),
-        retailProfit: valid.filter(s=>s.cat==='retail').reduce((s,v)=>s+v.profit,0)
-      };
+      const exerciseProfit = sales.value.filter(s => s.cat === 'exercise').reduce((sum, s) => sum + (s.profit || 0), 0);
+      const retailProfit = sales.value.filter(s => s.cat === 'retail').reduce((sum, s) => sum + (s.profit || 0), 0);
+      return { exerciseProfit, retailProfit };
     });
 
-    // 財務統計
     const financialStats = computed(() => {
-      const saleTotal = dashboardStats.value.exerciseProfit + dashboardStats.value.retailProfit;
-      const inc = finances.value.filter(f=>f.type==='income').reduce((s,v)=>s+v.amount,0);
-      const exp = finances.value.filter(f=>f.type==='expense').reduce((s,v)=>s+v.amount,0);
-      
-      return {
-        totalIncome: saleTotal + inc,
-        totalExpense: exp,
-        netProfit: saleTotal + inc - exp,
-        kwanProfit: (saleTotal/2) + inc - exp,
-        catProfit: (saleTotal/2)
-      };
+      const totalIncome = dashboardStats.value.exerciseProfit + dashboardStats.value.retailProfit + finances.value.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
+      const totalExpense = finances.value.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
+      const netProfit = totalIncome - totalExpense;
+      const kwanProfit = (dashboardStats.value.exerciseProfit + dashboardStats.value.retailProfit) / 2 + finances.value.filter(f => f.type === 'income' && f.person === 'kwan').reduce((sum, f) => sum + f.amount, 0) - finances.value.filter(f => f.type === 'expense' && f.person === 'kwan').reduce((sum, f) => sum + f.amount, 0);
+      const catProfit = (dashboardStats.value.exerciseProfit + dashboardStats.value.retailProfit) / 2 + finances.value.filter(f => f.type === 'income' && f.person === 'Cat').reduce((sum, f) => sum + f.amount, 0) - finances.value.filter(f => f.type === 'expense' && f.person === 'Cat').reduce((sum, f) => sum + f.amount, 0);
+      return { totalIncome, totalExpense, netProfit, kwanProfit, catProfit };
     });
 
     // 初始化
     onMounted(async () => {
-      try {
-        // 檢查是否已有登入會話
-        const { data } = await sb.auth.getSession();
-        if (data.session) {
-          currentUser.value = data.session.user.email;
-          userId.value = data.session.user.id;
-          authState.value = 'app';
-          
-          // 加載所有數據
-          await Promise.all([loadClients(), loadSales(), loadFinances()]);
-        }
-        
-        // 處理重置密碼的回調
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('reset_password') === 'true') {
-          authState.value = 'reset';
-        }
-      } catch (e) {
-        console.error('初始化出錯:', e.message);
+      const { data } = await sb.auth.getSession();
+      if (data.session) {
+        currentUser.value = data.session.user.email;
+        userId.value = data.session.user.id;
+        authState.value = 'app';
+        await Promise.all([loadClients(), loadSales(), loadFinances()]);
       }
+      if (window.location.hash === '#reset') authState.value = 'reset';
     });
 
     return {
       authState, authForm, resetForm, currentUser, handleAuth, logout,
       currentTab, tabs,
-      clients, sales, finances, loadClients, loadSales, loadFinances,
+      clients, sales, finances,
       reportRange, ranges,
       showClientModal, cSearch, clientForm, openClientModal, saveClient, filteredClients,
-      showFinanceModal, financeForm, openFinanceModal, saveFinance, financeFilter, filteredFinances,
+      showFinanceModal, financeForm, financeFilter, openFinanceModal, saveFinance, filteredFinances, formatDate,
       eForm, calculateExerciseProfit, saveExerciseSale,
-      rForm, pSearch, cart, productDb, filteredProducts, addProductToCart, saveRetailSale,
-      dashboardStats, financialStats, isDateInRange
+      rForm, pSearch, cart, productDb, filteredProducts, cartProfit, addProductToCart, saveRetailSale,
+      dashboardStats, financialStats
     };
   }
 }).mount('#app');
