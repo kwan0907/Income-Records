@@ -7,68 +7,133 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>[v-cloak] { display: none; }</style>
+    <style>
+        [v-cloak] { display: none; }
+        .tab-active { color: #1d4ed8; border-bottom: 4px solid #1d4ed8; font-weight: 900; }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+    </style>
 </head>
-<body class="bg-slate-50">
+<body class="bg-slate-50 font-sans text-slate-900">
     <div id="app" v-cloak>
         
         <div v-if="!user" class="min-h-screen flex items-center justify-center p-6 bg-blue-700">
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md">
-                <h2 class="text-3xl font-black text-center mb-8 text-blue-700 italic tracking-tighter">FITWORKHK LOGIN</h2>
-                <div class="space-y-4">
-                    <input v-model="email" type="email" placeholder="Email" class="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500">
-                    <button @click="handleLogin" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
-                        {{ loading ? '發送中...' : '獲取登入連結' }}
-                    </button>
-                </div>
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md text-center">
+                <h2 class="text-3xl font-black mb-8 text-blue-700 italic tracking-tighter">FITWORKHK LOGIN</h2>
+                <input v-model="email" type="email" placeholder="輸入 Email" class="w-full border-2 border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 mb-4">
+                <button @click="handleLogin" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl hover:scale-[1.02] transition-all">
+                    {{ loading ? '發送中...' : '獲取登入連結' }}
+                </button>
             </div>
         </div>
 
-        <div v-else class="min-h-screen">
-            <header class="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-50">
-                <div class="text-xl font-black text-blue-800 italic">FITWORKHK V5.5</div>
-                <button @click="logout" class="text-xs font-bold text-red-400">登出</button>
+        <div v-else class="min-h-screen pb-24">
+            <header class="bg-white border-b sticky top-0 z-50 backdrop-blur-md bg-white/90">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <div class="text-xl font-black text-blue-800 italic">FITWORKHK <span class="text-xs bg-blue-100 px-2 py-0.5 rounded text-blue-600 ml-1">V5.5</span></div>
+                    <button @click="logout" class="text-xs font-bold text-red-400">登出</button>
+                </div>
+                <nav class="flex justify-around text-[10px] font-black uppercase tracking-widest border-t border-slate-50">
+                    <button v-for="t in ['dashboard', 'clients', 'finance']" @click="currentTab = t" :class="{'tab-active': currentTab === t}" class="py-4 px-4">{{ t }}</button>
+                </nav>
             </header>
-            <main class="p-6">
-                <div class="bg-emerald-500 text-white p-6 rounded-[2rem] shadow-lg">
-                    <p class="text-xs font-bold opacity-70">登入帳號</p>
-                    <p class="text-lg font-black">{{ user.email }}</p>
-                </div>
-                <div class="mt-6 p-4 bg-blue-50 rounded-2xl border-2 border-blue-100">
-                    <p class="text-blue-700 font-bold">雲端系統已連線，歡迎回來！</p>
-                </div>
+
+            <main class="container mx-auto p-6 max-w-2xl">
+                <section v-if="currentTab === 'dashboard'" class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-600 p-6 rounded-[2rem] text-white shadow-lg">
+                            <p class="text-[10px] font-bold opacity-70 uppercase mb-1">預計總利潤</p>
+                            <p class="text-3xl font-black italic">${{ totalProfit }}</p>
+                        </div>
+                        <div class="bg-emerald-500 p-6 rounded-[2rem] text-white shadow-lg">
+                            <p class="text-[10px] font-bold opacity-70 uppercase mb-1">本月結餘</p>
+                            <p class="text-3xl font-black italic">$0</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-[2rem] card-shadow">
+                        <h3 class="font-black text-xs text-slate-400 italic mb-4 uppercase tracking-widest">Branch Performance</h3>
+                        <div class="space-y-4">
+                            <div v-for="(val, branch) in branchStats" :key="branch" class="flex justify-between items-end border-b border-slate-50 pb-2">
+                                <span class="font-bold text-slate-600">{{ branch }}</span>
+                                <span class="font-black text-blue-600">${{ val }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section v-if="currentTab === 'clients'" class="space-y-4">
+                    <div class="flex gap-2">
+                        <input v-model="search" placeholder="搜尋客戶姓名..." class="flex-1 bg-white border-none rounded-2xl px-5 py-3 shadow-sm outline-none">
+                        <button class="bg-blue-600 text-white px-6 rounded-2xl font-black">+</button>
+                    </div>
+                    
+                    <div v-for="c in filteredClients" :key="c.id" class="bg-white p-5 rounded-[1.5rem] card-shadow border-l-8 border-blue-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-black text-lg">{{ c.name }}</h4>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">{{ c.branch }} | {{ c.plan }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-bold text-emerald-500">利潤: ${{ c.isNew ? 1200 : 800 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </main>
         </div>
     </div>
 
     <script>
-        const { createApp, ref, onMounted } = Vue;
+        const { createApp, ref, onMounted, computed } = Vue;
 
         createApp({
             setup() {
                 const user = ref(null);
                 const email = ref('');
                 const loading = ref(false);
-                
-                // 修正後的 Supabase 初始化
+                const currentTab = ref('dashboard');
+                const search = ref('');
+
+                // 核心資料庫 (V3 邏輯數據)
+                const clients = ref([
+                    { id: 1, name: '陳小明', branch: '中環', plan: '35點套票', isNew: true },
+                    { id: 2, name: '林大華', branch: '觀塘', plan: '35點套票', isNew: false },
+                    { id: 3, name: '張小芬', branch: '中環', plan: '35點套票', isNew: true }
+                ]);
+
+                // 初始化 Supabase
                 const client = supabase.createClient(
                     "https://ajnunehxtiofcphdyhqn.supabase.co", 
                     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4"
                 );
+
+                // 計算邏輯
+                const totalProfit = computed(() => {
+                    return clients.value.reduce((sum, c) => sum + (c.isNew ? 1200 : 800), 0);
+                });
+
+                const branchStats = computed(() => {
+                    const stats = { '中環': 0, '觀塘': 0 };
+                    clients.value.forEach(c => {
+                        if (stats[c.branch] !== undefined) stats[c.branch] += (c.isNew ? 1200 : 800);
+                    });
+                    return stats;
+                });
+
+                const filteredClients = computed(() => {
+                    return clients.value.filter(c => c.name.includes(search.value));
+                });
 
                 const handleLogin = async () => {
                     if (!email.value) return alert("請輸入 Email");
                     loading.value = true;
                     const { error } = await client.auth.signInWithOtp({ email: email.value });
                     if (error) alert(error.message);
-                    else alert("登入信件已發送，請檢查您的 Email！");
+                    else alert("登入信件已發送！");
                     loading.value = false;
                 };
 
-                const logout = async () => {
-                    await client.auth.signOut();
-                    user.value = null;
-                };
+                const logout = async () => { await client.auth.signOut(); user.value = null; };
 
                 onMounted(() => {
                     client.auth.onAuthStateChange((_event, session) => {
@@ -76,7 +141,7 @@
                     });
                 });
 
-                return { user, email, loading, handleLogin, logout };
+                return { user, email, loading, currentTab, search, clients, totalProfit, branchStats, filteredClients, handleLogin, logout };
             }
         }).mount('#app');
     </script>
