@@ -3,11 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitworkhk 管理系統 V5.2</title>
+    <title>Fitworkhk 專業管理系統 V5.5</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>[v-cloak] { display: none; }</style>
+    <style>
+        [v-cloak] { display: none; }
+        .tab-active { border-bottom: 4px solid #1d4ed8; color: #1d4ed8; font-weight: 800; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
     <div id="app" v-cloak>
@@ -15,174 +20,99 @@
         <div v-if="showResetPasswordInput" class="min-h-screen flex items-center justify-center p-6 bg-orange-600">
             <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md">
                 <h2 class="text-3xl font-black text-center mb-2 text-orange-600 italic tracking-tighter">RESET</h2>
-                <p class="text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-8">Security Update Required</p>
-                
                 <div class="space-y-6">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 px-1 uppercase">New Password</label>
-                        <input v-model="newPassword" type="password" placeholder="輸入新密碼 (至少 6 位)" 
-                               class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-orange-500 transition-all">
-                    </div>
-                    <button @click="updatePassword" :disabled="loading" 
-                            class="w-full bg-orange-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-50">
-                        {{ loading ? '更新中...' : '確認修改並進入系統' }}
-                    </button>
-                    <p class="text-center text-[10px] text-gray-400 font-bold">請設置一個包含字母與數字的新密碼</p>
+                    <input v-model="newPassword" type="password" placeholder="輸入新密碼" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-orange-500">
+                    <button @click="updatePassword" :disabled="loading" class="w-full bg-orange-600 text-white font-black py-4 rounded-2xl shadow-xl hover:scale-[1.02] transition-all">確認修改</button>
                 </div>
             </div>
         </div>
 
-        <div v-else-if="user" class="min-h-screen">
-            <header class="bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-10 border-b border-gray-100">
-                <span class="font-black text-blue-600 text-xl tracking-tighter italic">FITWORKHK</span>
-                <div class="flex items-center space-x-3">
-                    <span class="text-[10px] font-bold text-gray-300 hidden sm:block uppercase">{{ user.email }}</span>
-                    <button @click="logout" class="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-500 hover:text-white transition-all">登出</button>
+        <div v-else-if="user" class="min-h-screen pb-20">
+            <header class="bg-white shadow-sm sticky top-0 z-50">
+                <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                    <div class="text-xl font-black text-blue-700 italic tracking-tighter">FITWORKHK <span class="text-[10px] font-bold text-gray-300">V5.5</span></div>
+                    <nav class="flex space-x-1 text-xs font-bold">
+                        <button v-for="t in ['dashboard', 'clients', 'income', 'expense']" :key="t" 
+                                @click="currentTab = t" :class="{'tab-active': currentTab === t}" class="px-3 py-2 uppercase tracking-tighter">
+                            {{ {dashboard:'儀表板', clients:'客戶表', income:'收入', expense:'支出'}[t] }}
+                        </button>
+                        <button @click="logout" class="ml-2 text-red-400">登出</button>
+                    </nav>
                 </div>
             </header>
-            <main class="p-6 max-w-md mx-auto">
-                <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 text-center">
-                    <div class="w-20 h-20 bg-green-50 rounded-3xl flex items-center justify-center text-green-600 mx-auto mb-6">
-                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+
+            <main class="container mx-auto px-4 py-6 max-w-4xl">
+                <div v-if="currentTab === 'dashboard'" class="space-y-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white p-5 rounded-3xl shadow-sm border-b-4 border-blue-500">
+                            <p class="text-[10px] text-gray-400 font-bold uppercase">總收入</p>
+                            <p class="text-2xl font-black text-blue-600">${{ totalIncome }}</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-3xl shadow-sm border-b-4 border-emerald-500">
+                            <p class="text-[10px] text-gray-400 font-bold uppercase">預估利潤</p>
+                            <p class="text-2xl font-black text-emerald-600">${{ estimatedProfit }}</p>
+                        </div>
                     </div>
-                    <h1 class="text-2xl font-black text-blue-900">管理系統運作中</h1>
-                    <p class="text-gray-400 text-xs mt-2 font-bold uppercase tracking-widest">Session Is Secured</p>
+                    </div>
+
+                <div v-if="currentTab === 'clients'" class="space-y-4">
+                    <button @click="openClientModal()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg">+ 新增客戶</button>
+                    <div v-for="client in filteredClients" :key="client.id" class="bg-white p-4 rounded-2xl shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-lg">{{ client.name }}</h3>
+                                <p class="text-xs text-gray-400">類別: {{ client.type }} | 來源: {{ client.branch }}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-1 rounded-md font-bold">{{ client.plan }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
 
-        <div v-else class="min-h-screen flex items-center justify-center p-6 bg-blue-900">
-            <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-md">
-                <h2 class="text-3xl font-black text-center mb-6 text-blue-900 italic tracking-tighter">FITWORKHK</h2>
-                
-                <div v-if="showOtpInput" class="space-y-6 text-center">
-                    <p class="text-blue-600 font-bold text-sm">請輸入電郵中的 6 位驗證碼</p>
-                    <input v-model="otpToken" type="text" maxlength="6" placeholder="000000" class="w-full text-center text-5xl font-black tracking-[0.5rem] border-b-4 border-blue-500 py-4 outline-none bg-transparent text-blue-900">
-                    <button @click="verifyOtp" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl shadow-xl">完成驗證</button>
-                    <button @click="showOtpInput = false" class="text-xs font-bold text-gray-400">返回</button>
-                </div>
-
-                <div v-else class="space-y-4">
-                    <p class="text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest">{{ authModeText }}</p>
-                    <input v-model="email" type="email" placeholder="Email" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
-                    <input v-if="authMode !== 'reset'" v-model="password" type="password" placeholder="Password" class="w-full border-2 border-gray-100 rounded-2xl px-4 py-4 outline-none focus:border-blue-500">
-                    <button @click="handleAuth" :disabled="loading" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl mt-4 active:scale-95 transition-all">
-                        {{ loading ? '請稍候...' : authButtonText }}
-                    </button>
-                    <div class="flex justify-between px-2 text-xs font-bold mt-4">
-                        <button v-if="authMode === 'login'" @click="authMode = 'signup'" class="text-blue-500">註冊新帳號</button>
-                        <button v-if="authMode === 'login'" @click="authMode = 'reset'" class="text-gray-400">忘記密碼？</button>
-                        <button v-if="authMode !== 'login'" @click="authMode = 'login'" class="text-blue-500 w-full text-center">返回登入介面</button>
-                    </div>
-                </div>
+        <div v-else class="min-h-screen flex items-center justify-center p-6 bg-blue-700">
             </div>
-        </div>
     </div>
 
     <script>
-        const SUPABASE_URL = "https://ajnunehxtiofcphdyhqn.supabase.co".trim();
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4".trim();
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: { persistSession: true, autoRefreshToken: true }
-        });
-
         const { createApp, ref, computed, onMounted } = Vue;
+        // Supabase 配置需在此填入您的 URL 與 Key
+        const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+
         createApp({
             setup() {
                 const user = ref(null);
-                const email = ref('');
-                const password = ref('');
-                const newPassword = ref('');
-                const otpToken = ref('');
-                const loading = ref(false);
-                const authMode = ref('login');
-                const showOtpInput = ref(false);
-                const showResetPasswordInput = ref(false);
-
-                const authModeText = computed(() => {
-                    if (authMode.value === 'login') return 'Authorized Login';
-                    if (authMode.value === 'signup') return 'Member Signup';
-                    return 'Account Recovery';
-                });
-
-                const authButtonText = computed(() => {
-                    if (authMode.value === 'login') return '登入系統';
-                    if (authMode.value === 'signup') return '獲取驗證碼';
-                    return '發送重設郵件';
-                });
-
-                const handleAuth = async () => {
-                    if (!email.value) return alert("請輸入 Email");
-                    loading.value = true;
-                    try {
-                        if (authMode.value === 'login') {
-                            const { error } = await _supabase.auth.signInWithPassword({ email: email.value, password: password.value });
-                            if (error) throw error;
-                        } else if (authMode.value === 'signup') {
-                            const { error } = await _supabase.auth.signUp({ email: email.value, password: password.value });
-                            if (error) throw error;
-                            showOtpInput.value = true;
-                        } else if (authMode.value === 'reset') {
-                            const { error } = await _supabase.auth.resetPasswordForEmail(email.value, { 
-                                redirectTo: 'https://heroic-malabi-5beebd.netlify.app' 
-                            });
-                            if (error) throw error;
-                            alert("重設郵件已發送，請檢查您的 Inbox (或垃圾郵件箱)。");
-                        }
-                    } catch (err) { alert(err.message); } finally { loading.value = false; }
-                };
-
-                const verifyOtp = async () => {
-                    loading.value = true;
-                    const { error } = await _supabase.auth.verifyOtp({ email: email.value, token: otpToken.value, type: 'signup' });
-                    if (error) alert(error.message);
-                    loading.value = false;
-                };
-
-                const updatePassword = async () => {
-                    if (newPassword.value.length < 6) return alert("密碼長度至少需要 6 位數");
-                    loading.value = true;
-                    try {
-                        const { error } = await _supabase.auth.updateUser({ password: newPassword.value });
-                        if (error) throw error;
-                        alert("密碼更換成功！已為您自動登入。");
-                        showResetPasswordInput.value = false;
-                        window.location.hash = ""; // 清除 URL 中的 Token
-                    } catch (err) { alert(err.message); } finally { loading.value = false; }
-                };
-
-                const logout = async () => { 
-                    await _supabase.auth.signOut(); 
-                    user.value = null; 
-                    window.location.hash = "";
-                    location.reload();
-                };
-
-                onMounted(async () => {
-                    // 1. 強力偵測網址中的重設訊號
-                    const hash = window.location.hash;
-                    if (hash.includes("type=recovery") || hash.includes("access_token=")) {
-                        showResetPasswordInput.value = true;
+                const currentTab = ref('dashboard');
+                const clients = ref(JSON.parse(localStorage.getItem('fitwork_clients') || '[]'));
+                
+                // 核心利潤邏輯 (整合 V3)
+                const calculateProfit = (client) => {
+                    let profit = 0;
+                    if (client.plan === '35點套票') {
+                        // 根據新舊客區分利潤邏輯
+                        profit = client.isNew ? 1200 : 800; 
                     }
+                    return profit;
+                };
 
-                    // 2. 恢復現有 Session
-                    const { data: { session } } = await _supabase.auth.getSession();
-                    if (session) user.value = session.user;
+                const totalIncome = computed(() => {
+                    return clients.value.reduce((sum, c) => sum + (Number(c.price) || 0), 0);
+                });
 
-                    // 3. 監聽狀態改變
-                    _supabase.auth.onAuthStateChange((event, session) => {
-                        if (event === "PASSWORD_RECOVERY") {
-                            showResetPasswordInput.value = true;
-                        }
-                        if (session) {
-                            user.value = session.user;
-                        } else {
-                            user.value = null;
-                        }
+                // 身份驗證與初始化邏輯
+                onMounted(() => {
+                    supabase.auth.getSession().then(({ data }) => {
+                        user.value = data.session?.user || null;
                     });
                 });
 
-                return { user, email, password, newPassword, otpToken, loading, authMode, showOtpInput, showResetPasswordInput, authModeText, authButtonText, handleAuth, verifyOtp, updatePassword, logout };
+                return {
+                    user, currentTab, clients, totalIncome,
+                    logout: () => supabase.auth.signOut(),
+                    // 其他方法...
+                };
             }
         }).mount('#app');
     </script>
