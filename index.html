@@ -99,8 +99,8 @@
                         <div class="space-y-2 max-h-48 overflow-y-auto no-scrollbar">
                             <div v-for="s in expiringSales" class="bg-white p-3 rounded-xl shadow-sm flex justify-between items-center border border-red-100">
                                 <div>
-                                    <div class="font-bold text-xs">{{ getClientName(s.clientId) }} <span class="text-[10px] text-slate-500">({{ s.type }})</span></div>
-                                    <div class="text-[10px] text-red-500 font-bold mt-0.5">到期: {{ s.expiryDate }}</div>
+                                    <div class="font-bold text-xs">{{ getClientName(s.client_id) }} <span class="text-[10px] text-slate-500">({{ s.type }})</span></div>
+                                    <div class="text-[10px] text-red-500 font-bold mt-0.5">到期: {{ s.expiry_date }}</div>
                                 </div>
                                 <button @click="extendExpiry(s)" class="text-[10px] bg-red-500 text-white px-3 py-1.5 rounded-lg font-black shadow-sm active:scale-95 transition-transform">延長</button>
                             </div>
@@ -270,7 +270,7 @@
 
                     <div v-if="clientForm.source === '轉介紹'" class="space-y-2 p-3 bg-purple-50 rounded-xl border border-purple-100">
                         <label class="text-[10px] font-black text-purple-800 uppercase">搜尋並選擇推薦人 (自動計代數)</label>
-                        <select v-model="clientForm.referrerId" class="w-full border p-2 rounded-lg text-sm bg-white font-bold outline-none">
+                        <select v-model="clientForm.referrer_id" class="w-full border p-2 rounded-lg text-sm bg-white font-bold outline-none">
                             <option :value="null">-- 請選擇推薦人 --</option>
                             <option v-for="c in clients" :value="c.id" v-show="c.id !== clientForm.id">{{ c.name }} ({{ c.phone }})</option>
                         </select>
@@ -292,21 +292,19 @@
     </div>
 
     <script>
-        const { createApp, ref, computed, watch, onMounted } = Vue;
+        const { createApp, ref, computed, onMounted } = Vue;
 
-        // ✅ 真實 Supabase 初始化
         const SUPABASE_URL = "https://ajnunehxtiofcphdyhqn.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         createApp({
             setup() {
-                // Auth
                 const authState = ref('login');
                 const authForm = ref({ email: '', password: '' });
                 const currentUser = ref('');
+                const userId = ref('');
 
-                // Navigation
                 const currentTab = ref('dashboard');
                 const tabs = [
                     { id: 'dashboard', name: '儀表板' },
@@ -315,57 +313,40 @@
                     { id: 'retail', name: '產品 POS' }
                 ];
 
-                // Data
                 const clients = ref([]);
                 const sales = ref([]);
 
-                // Load/Save
-                const loadUserData = () => {
-                    const email = currentUser.value;
-                    const data = JSON.parse(localStorage.getItem(`fw8_data_${email}`) || '{"clients":[], "sales":[]}');
-                    clients.value = data.clients || [];
-                    sales.value = data.sales || [];
+                const loadClients = async () => {
+                    const { data } = await sb.from('clients').select('*').order('name');
+                    clients.value = data || [];
                 };
 
-                const saveUserData = () => {
-                    const email = currentUser.value;
-                    localStorage.setItem(`fw8_data_${email}`, JSON.stringify({ clients: clients.value, sales: sales.value }));
+                const loadSales = async () => {
+                    const { data } = await sb.from('sales').select('*');
+                    sales.value = data || [];
                 };
 
-                // ✅ 真實 Supabase 驗證（登入/註冊/重設密碼）
                 const handleAuth = async () => {
                     if (!authForm.value.email) return alert("請輸入 Email");
-                    
                     try {
                         if (authState.value === 'register') {
                             if (!authForm.value.password) return alert("請輸入密碼");
-                            const { error } = await sb.auth.signUp({
-                                email: authForm.value.email,
-                                password: authForm.value.password,
-                                options: { emailRedirectTo: window.location.origin }
-                            });
+                            const { error } = await sb.auth.signUp({ email: authForm.value.email, password: authForm.value.password, options: { emailRedirectTo: 'https://heroic-malabi-5beebd.netlify.app/' } });
                             if (error) throw error;
-                            alert("註冊成功！請檢查郵件驗證，然後登入。");
+                            alert("註冊成功！請驗證郵件後登入");
                             authState.value = 'login';
-                        }
-
-                        else if (authState.value === 'login') {
-                            const { data, error } = await sb.auth.signInWithPassword({
-                                email: authForm.value.email,
-                                password: authForm.value.password
-                            });
+                        } else if (authState.value === 'login') {
+                            const { data, error } = await sb.auth.signInWithPassword({ email: authForm.value.email, password: authForm.value.password });
                             if (error) throw error;
                             currentUser.value = data.user.email;
+                            userId.value = data.user.id;
                             authState.value = 'app';
-                            loadUserData();
-                        }
-
-                        else if (authState.value === 'forgot') {
-                            const { error } = await sb.auth.resetPasswordForEmail(authForm.value.email, {
-                                redirectTo: window.location.origin
-                            });
+                            await loadClients();
+                            await loadSales();
+                        } else if (authState.value === 'forgot') {
+                            const { error } = await sb.auth.resetPasswordForEmail(authForm.value.email, { redirectTo: 'https://heroic-malabi-5beebd.netlify.app/' });
                             if (error) throw error;
-                            alert("重設密碼郵件已發送！請檢查信箱。");
+                            alert("重設郵件已發送！");
                             authState.value = 'login';
                         }
                     } catch (err) {
@@ -373,37 +354,27 @@
                     }
                 };
 
-                // 登出
                 const logout = async () => {
                     await sb.auth.signOut();
                     currentUser.value = '';
+                    userId.value = '';
                     authForm.value = { email: '', password: '' };
                     authState.value = 'login';
                     clients.value = [];
                     sales.value = [];
                 };
 
-                // 監聽密碼重置回調
                 onMounted(async () => {
                     const { data } = await sb.auth.getSession();
                     if (data.session) {
                         currentUser.value = data.session.user.email;
+                        userId.value = data.session.user.id;
                         authState.value = 'app';
-                        loadUserData();
+                        await loadClients();
+                        await loadSales();
                     }
-
-                    // 處理重置密碼跳轉
-                    window.addEventListener('hashchange', async () => {
-                        const { data } = await sb.auth.getSession();
-                        if (data.session) {
-                            currentUser.value = data.session.user.email;
-                            authState.value = 'app';
-                            loadUserData();
-                        }
-                    });
                 });
 
-                // Report
                 const reportRange = ref('month');
                 const customStart = ref('');
                 const customEnd = ref('');
@@ -412,152 +383,138 @@
                     { id: 'month', name: '本月' }, { id: 'year', name: '今年' }, { id: 'custom', name: '自訂' }
                 ];
 
-                // CRM
                 const showClientModal = ref(false);
                 const cSearch = ref('');
-                const clientForm = ref({ id: null, name: '', phone: '', branch: '觀塘', source: '廣告', referrerId: null, marathon: false, generation: 0 });
+                const clientForm = ref({ id: null, name: '', phone: '', branch: '觀塘', source: '廣告', referrer_id: null, marathon: false, generation: 0 });
 
-                // Exercise
+                const openClientModal = (client) => {
+                    clientForm.value = client ? { ...client } : { id: null, name: '', phone: '', branch: '觀塘', source: '廣告', referrer_id: null, marathon: false, generation: 0 };
+                    showClientModal.value = true;
+                };
+
+                const calcGeneration = (referrerId, currentGen = 1) => {
+                    if (!referrerId) return 0;
+                    const ref = clients.value.find(c => c.id === referrerId);
+                    if (!ref || !ref.referrer_id) return currentGen;
+                    return calcGeneration(ref.referrer_id, currentGen + 1);
+                };
+
+                const saveClient = async () => {
+                    if (!clientForm.value.name) return alert("請填寫姓名");
+                    if (clientForm.value.source === '轉介紹' && clientForm.value.referrer_id) {
+                        clientForm.value.generation = calcGeneration(clientForm.value.referrer_id);
+                    } else {
+                        clientForm.value.generation = 0;
+                        clientForm.value.referrer_id = null;
+                    }
+                    if (clientForm.value.id) {
+                        await sb.from('clients').update(clientForm.value).eq('id', clientForm.value.id);
+                    } else {
+                        await sb.from('clients').insert({ ...clientForm.value, user_id: userId.value });
+                    }
+                    await loadClients();
+                    showClientModal.value = false;
+                };
+
                 const eForm = ref({ clientId: null, type: '35pt', isFirstTime: false, isReferralFree: false });
+                const calculateExerciseProfit = (form) => {
+                    if (form.type === 'trial') return 98;
+                    if (form.type === '10pt') { let profit = 465; if (form.isReferralFree) profit = 413; return profit; }
+                    if (form.type === '35pt') { let profit = 1277.5; if (form.isFirstTime) profit = 1250.5; if (form.isReferralFree) profit -= 52; return profit; }
+                    return 0;
+                };
 
-                // Retail
+                const saveExerciseSale = async () => {
+                    if (!eForm.value.clientId) return alert("請選擇客戶！");
+                    const profit = calculateExerciseProfit(eForm.value);
+                    let expiry = null;
+                    if (eForm.value.type !== 'trial') {
+                        const d = new Date();
+                        d.setFullYear(d.getFullYear() + 1);
+                        expiry = d.toISOString().split('T')[0];
+                    }
+                    await sb.from('sales').insert({
+                        user_id: userId.value,
+                        client_id: eForm.value.clientId,
+                        cat: 'exercise',
+                        type: eForm.value.type,
+                        profit: profit,
+                        expiry_date: expiry
+                    });
+                    await loadSales();
+                    alert("✅ 儲存成功！");
+                    eForm.value = { clientId: null, type: '35pt', isFirstTime: false, isReferralFree: false };
+                    currentTab.value = 'dashboard';
+                };
+
                 const rForm = ref({ clientId: null, discount: "0" });
                 const pSearch = ref('');
                 const cart = ref([]);
-
                 const packages = [
                     { id: 'PKG1', name: '慢跑計畫', price: 1369, profit: 553.5 },
                     { id: 'PKG2', name: '快跑計畫', price: 2177, profit: 929.0 },
                     { id: 'PKG3', name: '運動VIP計畫', price: 6996, profit: 2338.0 },
                     { id: 'PKG4', name: '運動VVIP計畫', price: 9998, profit: 3188.0 }
                 ];
-
                 const productDb = [
-                    {id:1, name:'營養蛋白素-雲呢拿', en:'F1 Shake - Vanilla', retail:464, cost:252},
-                    {id:2, name:'營養蛋白素-野草莓', en:'F1 Shake - Wild Berry', retail:464, cost:252},
-                    {id:3, name:'營養蛋白素-朱古力', en:'F1 Shake - Dutch Chocolate', retail:464, cost:252},
-                    {id:4, name:'營養蛋白素-曲奇妙趣', en:'F1 Shake - Cookies & Cream', retail:464, cost:252},
-                    {id:5, name:'營養蛋白素-薄荷朱古力', en:'F1 Shake - Mint Chocolate', retail:464, cost:252},
-                    {id:6, name:'營養蛋白素-鮮奶咖啡', en:'F1 Shake - Cafe Latte', retail:464, cost:252},
-                    {id:7, name:'營養蛋白素-紅豆薏仁', en:'F1 Shake - Red Bean & Coix Seed', retail:464, cost:252},
-                    {id:8, name:'濃縮蘆薈汁-原味', en:'Herbal Aloe Concentrate - Original', retail:446, cost:242},
-                    {id:9, name:'濃縮蘆薈汁-柑橘味', en:'Herbal Aloe Concentrate - Mandarin', retail:446, cost:242},
-                    {id:10, name:'濃縮蘆薈汁-葡萄味', en:'Herbal Aloe Concentrate - Mango', retail:446, cost:242},
-                    {id:11, name:'天然瓜拿拿茶', en:'N-R-G Tea', retail:323, cost:175.5},
-                    {id:12, name:'即溶草本飲品50克-桃味', en:'Herbal Tea Concentrate 50g - Peach', retail:379, cost:206},
-                    {id:13, name:'即溶草本飲品50克-原味', en:'Herbal Tea Concentrate 50g - Original', retail:379, cost:206},
-                    {id:14, name:'即溶草本飲品102克', en:'Herbal Tea Concentrate 102g', retail:670, cost:364},
-                    {id:15, name:'佳能蛋白質粉', en:'Personalized Protein Powder', retail:369, cost:200.5},
-                    {id:16, name:'營養纖維粉(蘋果味)', en:'Active Fiber Complex - Apple', retail:419, cost:227.5},
-                    {id:17, name:'夜寧新營養飲品', en:'Niteworks', retail:1654, cost:898},
-                    {id:18, name:'膠原蛋白美肌飲料', en:'Collagen Plus Powder', retail:960, cost:521.5},
-                    {id:19, name:'BC30 益生菌', en:'Simply Probiotic', retail:309, cost:168.5},
-                    {id:20, name:'美纖寶', en:'Cell-U-Loss', retail:236, cost:128.5},
-                    {id:21, name:'消脂片', en:'Total Control', retail:415, cost:225.5},
-                    {id:22, name:'抗脂片', en:'Chitosan Plus', retail:343, cost:186},
-                    {id:23, name:'深海魚油膠囊', en:'Herbalifeline', retail:512, cost:278},
-                    {id:24, name:'強骨配方', en:'Xtra-Cal', retail:220, cost:119},
-                    {id:25, name:'護衛複合維生素', en:'Formula 2 Multivitamin', retail:285, cost:154.5},
-                    {id:26, name:'細胞營養素', en:'Cell Activator', retail:388, cost:210.5},
-                    {id:27, name:'早餐咭增值', en:'Nutrition Meal Stamp', retail:280, cost:280},
-                    {id:28, name:'夜寧新咭增值', en:'Niteworks Stamp', retail:360, cost:360},
-                    {id:29, name:'日日強韌蘆薈洗髮露', en:'Herbal Aloe Shampoo', retail:145, cost:78.5},
-                    {id:30, name:'日日強韌蘆薈護髮乳', en:'Herbal Aloe Conditioner', retail:145, cost:78.5},
-                    {id:31, name:'1公升水樽', en:'1 Liter Bottle', retail:70, cost:70},
-                    {id:32, name:'三天體驗裝', en:'3 - Day Trial Pack', retail:166, cost:91.5},
-                    {id:33, name:'GENE START 基因測試', en:'GENE START DNA TEST', retail:946.7, cost:946.7},
+                    {id:1,name:'營養蛋白素-雲呢拿',en:'F1 Shake - Vanilla',retail:464,cost:252},
+                    {id:2,name:'營養蛋白素-野草莓',en:'F1 Shake - Wild Berry',retail:464,cost:252},
+                    {id:3,name:'營養蛋白素-朱古力',en:'F1 Shake - Dutch Chocolate',retail:464,cost:252},
+                    {id:4,name:'營養蛋白素-曲奇妙趣',en:'F1 Shake - Cookies & Cream',retail:464,cost:252},
+                    {id:5,name:'營養蛋白素-薄荷朱古力',en:'F1 Shake - Mint Chocolate',retail:464,cost:252},
+                    {id:6,name:'營養蛋白素-鮮奶咖啡',en:'F1 Shake - Cafe Latte',retail:464,cost:252},
+                    {id:7,name:'營養蛋白素-紅豆薏仁',en:'F1 Shake - Red Bean & Coix Seed',retail:464,cost:252},
+                    {id:8,name:'濃縮蘆薈汁-原味',en:'Herbal Aloe Concentrate - Original',retail:446,cost:242},
+                    {id:9,name:'濃縮蘆薈汁-柑橘味',en:'Herbal Aloe Concentrate - Mandarin',retail:446,cost:242},
+                    {id:10,name:'濃縮蘆薈汁-葡萄味',en:'Herbal Aloe Concentrate - Mango',retail:446,cost:242},
+                    {id:11,name:'天然瓜拿拿茶',en:'N-R-G Tea',retail:323,cost:175.5},
+                    {id:12,name:'即溶草本飲品50克-桃味',en:'Herbal Tea Concentrate 50g - Peach',retail:379,cost:206},
+                    {id:13,name:'即溶草本飲品50克-原味',en:'Herbal Tea Concentrate 50g - Original',retail:379,cost:206},
+                    {id:14,name:'即溶草本飲品102克',en:'Herbal Tea Concentrate 102g',retail:670,cost:364},
+                    {id:15,name:'佳能蛋白質粉',en:'Personalized Protein Powder',retail:369,cost:200.5},
+                    {id:16,name:'營養纖維粉(蘋果味)',en:'Active Fiber Complex - Apple',retail:419,cost:227.5},
+                    {id:17,name:'夜寧新營養飲品',en:'Niteworks',retail:1654,cost:898},
+                    {id:18,name:'膠原蛋白美肌飲料',en:'Collagen Plus Powder',retail:960,cost:521.5},
+                    {id:19,name:'BC30 益生菌',en:'Simply Probiotic',retail:309,cost:168.5},
+                    {id:20,name:'美纖寶',en:'Cell-U-Loss',retail:236,cost:128.5},
+                    {id:21,name:'消脂片',en:'Total Control',retail:415,cost:225.5},
+                    {id:22,name:'抗脂片',en:'Chitosan Plus',retail:343,cost:186},
+                    {id:23,name:'深海魚油膠囊',en:'Herbalifeline',retail:512,cost:278},
+                    {id:24,name:'強骨配方',en:'Xtra-Cal',retail:220,cost:119},
+                    {id:25,name:'護衛複合維生素',en:'Formula 2 Multivitamin',retail:285,cost:154.5},
+                    {id:26,name:'細胞營養素',en:'Cell Activator',retail:388,cost:210.5},
+                    {id:27,name:'早餐咭增值',en:'Nutrition Meal Stamp',retail:280,cost:280},
+                    {id:28,name:'夜寧新咭增值',en:'Niteworks Stamp',retail:360,cost:360},
+                    {id:29,name:'日日強韌蘆薈洗髮露',en:'Herbal Aloe Shampoo',retail:145,cost:78.5},
+                    {id:30,name:'日日強韌蘆薈護髮乳',en:'Herbal Aloe Conditioner',retail:145,cost:78.5},
+                    {id:31,name:'1公升水樽',en:'1 Liter Bottle',retail:70,cost:70},
+                    {id:32,name:'三天體驗裝',en:'3 - Day Trial Pack',retail:166,cost:91.5},
+                    {id:33,name:'GENE START 基因測試',en:'GENE START DNA TEST',retail:946.7,cost:946.7},
                 ];
-
-                const calcGeneration = (referrerId, currentGen = 1) => {
-                    if (!referrerId) return 0;
-                    const ref = clients.value.find(c => c.id === referrerId);
-                    if (!ref || !ref.referrerId) return currentGen;
-                    return calcGeneration(ref.referrerId, currentGen + 1);
-                };
-
-                const openClientModal = (client) => {
-                    clientForm.value = client ? { ...client } : { id: null, name: '', phone: '', branch: '觀塘', source: '廣告', referrerId: null, marathon: false, generation: 0 };
-                    showClientModal.value = true;
-                };
-
-                const saveClient = () => {
-                    if (!clientForm.value.name) return alert("請填寫姓名");
-                    
-                    if (clientForm.value.source === '轉介紹' && clientForm.value.referrerId) {
-                        clientForm.value.generation = calcGeneration(clientForm.value.referrerId);
-                    } else {
-                        clientForm.value.generation = 0;
-                        clientForm.value.referrerId = null;
-                    }
-
-                    if (clientForm.value.id) {
-                        const idx = clients.value.findIndex(c => c.id === clientForm.value.id);
-                        clients.value[idx] = { ...clientForm.value };
-                    } else {
-                        clients.value.push({ ...clientForm.value, id: Date.now(), joinDate: new Date().toISOString() });
-                    }
-                    saveUserData();
-                    showClientModal.value = false;
-                };
-
-                const calculateExerciseProfit = (form) => {
-                    if (form.type === 'trial') return 98;
-                    if (form.type === '10pt') {
-                        let profit = 465; 
-                        if (form.isReferralFree) profit = 413; 
-                        return profit;
-                    }
-                    if (form.type === '35pt') {
-                        let profit = 1277.5;
-                        if (form.isFirstTime) profit = 1250.5;
-                        if (form.isReferralFree) profit -= 52; 
-                        return profit;
-                    }
-                    return 0;
-                };
-
-                const saveExerciseSale = () => {
-                    if (!eForm.value.clientId) return alert("請選擇客戶！");
-                    const profit = calculateExerciseProfit(eForm.value);
-                    const now = new Date();
-                    let expiryDate = null;
-                    if (eForm.value.type !== 'trial') {
-                        now.setFullYear(now.getFullYear() + 1);
-                        expiryDate = now.toISOString().split('T')[0];
-                    }
-
-                    sales.value.push({
-                        id: Date.now(), clientId: eForm.value.clientId, cat: 'exercise', 
-                        type: eForm.value.type, profit: profit, date: new Date().toISOString(), expiryDate: expiryDate
-                    });
-                    saveUserData();
-                    alert("✅ 運動收入寫入成功！");
-                    eForm.value = { clientId: null, type: '35pt', isFirstTime: false, isReferralFree: false };
-                    currentTab.value = 'dashboard';
-                };
 
                 const addPkgToCart = (pkg) => {
                     cart.value.push({ id: Date.now(), name: pkg.name, sellPrice: pkg.price, profit: pkg.profit });
                 };
-
                 const addProductToCart = (p) => {
-                    const discountRate = parseFloat(rForm.value.discount);
-                    const sellPrice = p.retail * (1 - discountRate);
-                    const profit = sellPrice - p.cost;
-                    cart.value.push({ id: Date.now(), name: p.name, sellPrice: sellPrice, profit: profit });
+                    const rate = parseFloat(rForm.value.discount);
+                    const sell = p.retail * (1 - rate);
+                    const profit = sell - p.cost;
+                    cart.value.push({ id: Date.now(), name: p.name, sellPrice: sell, profit: profit });
                 };
-
-                const saveRetailSale = () => {
+                const saveRetailSale = async () => {
                     if (!rForm.value.clientId) return alert("請選擇客戶！");
-                    cart.value.forEach(item => {
-                        sales.value.push({
-                            id: Date.now() + Math.random(), clientId: rForm.value.clientId, cat: 'retail',
-                            product: item.name, profit: item.profit, date: new Date().toISOString()
+                    for (let item of cart.value) {
+                        await sb.from('sales').insert({
+                            user_id: userId.value,
+                            client_id: rForm.value.clientId,
+                            cat: 'retail',
+                            product: item.name,
+                            profit: item.profit
                         });
-                    });
-                    saveUserData();
+                    }
+                    await loadSales();
                     cart.value = [];
-                    alert("✅ 產品零售寫入成功！");
+                    alert("✅ 結算成功！");
                     currentTab.value = 'dashboard';
                 };
 
@@ -574,50 +531,53 @@
                 };
 
                 const dashboardStats = computed(() => {
-                    const validSales = sales.value.filter(s => isDateInRange(s.date));
+                    const valid = sales.value.filter(s => isDateInRange(s.date));
                     return {
-                        exerciseProfit: validSales.filter(s => s.cat === 'exercise').reduce((sum, s) => sum + s.profit, 0),
-                        retailProfit: validSales.filter(s => s.cat === 'retail').reduce((sum, s) => sum + s.profit, 0)
+                        exerciseProfit: valid.filter(s => s.cat === 'exercise').reduce((sum,s)=>sum+s.profit,0),
+                        retailProfit: valid.filter(s => s.cat === 'retail').reduce((sum,s)=>sum+s.profit,0)
                     };
                 });
 
                 const branchStats = computed(() => {
-                    const stats = {};
-                    clients.value.forEach(c => stats[c.branch] = (stats[c.branch] || 0) + 1);
-                    return stats;
+                    const s = {};
+                    clients.value.forEach(c => s[c.branch] = (s[c.branch]||0)+1);
+                    return s;
                 });
 
-                const marathonStats = computed(() => {
-                    return { active: clients.value.filter(c => c.marathon).length, inactive: clients.value.filter(c => !c.marathon).length };
-                });
+                const marathonStats = computed(() => ({
+                    active: clients.value.filter(c=>c.marathon).length,
+                    inactive: clients.value.filter(c=>!c.marathon).length
+                }));
 
                 const expiringSales = computed(() => {
                     const now = new Date();
-                    const nextMonth = new Date();
-                    nextMonth.setDate(now.getDate() + 30);
+                    const next = new Date();
+                    next.setDate(now.getDate()+30);
                     return sales.value.filter(s => {
-                        if (s.cat !== 'exercise' || !s.expiryDate) return false;
-                        const exp = new Date(s.expiryDate);
-                        return exp >= now && exp <= nextMonth;
+                        if (!s.expiry_date) return false;
+                        const e = new Date(s.expiry_date);
+                        return e >= now && e <= next;
                     });
                 });
 
-                const extendExpiry = (sale) => {
-                    const newDate = prompt("設定新的到期日 (YYYY-MM-DD):", sale.expiryDate);
-                    if (newDate) {
-                        const idx = sales.value.findIndex(s => s.id === sale.id);
-                        if (idx > -1) {
-                            sales.value[idx].expiryDate = newDate;
-                            saveUserData();
-                        }
+                const extendExpiry = async (sale) => {
+                    const val = prompt("新到期日 (YYYY-MM-DD)", sale.expiry_date);
+                    if (val) {
+                        await sb.from('sales').update({ expiry_date: val }).eq('id', sale.id);
+                        await loadSales();
                     }
                 };
 
-                const getClientName = (id) => clients.value.find(c => c.id === id)?.name || '已刪除客戶';
-                const currentRangeName = computed(() => ranges.find(r => r.id === reportRange.value)?.name || '報表');
-                const filteredClients = computed(() => clients.value.filter(c => c.name.toLowerCase().includes(cSearch.value.toLowerCase()) || c.phone.includes(cSearch.value)));
-                const filteredProducts = computed(() => productDb.filter(p => p.name.includes(pSearch.value) || p.en.toLowerCase().includes(pSearch.value.toLowerCase())));
-                const cartProfit = computed(() => cart.value.reduce((sum, i) => sum + i.profit, 0));
+                const getClientName = (id) => clients.value.find(c=>c.id===id)?.name || '客戶';
+                const currentRangeName = computed(() => ranges.find(r=>r.id===reportRange.value)?.name);
+                const filteredClients = computed(() => clients.value.filter(c =>
+                    c.name.toLowerCase().includes(cSearch.value.toLowerCase()) ||
+                    (c.phone && c.phone.includes(cSearch.value))
+                ));
+                const filteredProducts = computed(() => productDb.filter(p =>
+                    p.name.includes(pSearch.value) || p.en.toLowerCase().includes(pSearch.value.toLowerCase())
+                ));
+                const cartProfit = computed(() => cart.value.reduce((sum,i)=>sum+i.profit,0));
 
                 return {
                     authState, authForm, handleAuth, currentUser, logout,
