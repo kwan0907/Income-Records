@@ -40,7 +40,6 @@
                     {{ authState === 'recovery' ? '設定新密碼' : 'Management System' }}
                 </div>
             </div>
-
             <div v-if="authState === 'recovery'" class="bg-white rounded-3xl p-6 shadow-2xl space-y-4">
                 <h2 class="font-black text-lg">設定新密碼</h2>
                 <input type="password" v-model="newPassword" placeholder="輸入新密碼（最少 6 位）"
@@ -51,7 +50,6 @@
                     確認更新密碼
                 </button>
             </div>
-
             <div v-else class="bg-white rounded-3xl p-6 shadow-2xl space-y-3">
                 <input type="email" v-model="authForm.email" placeholder="Email" autocomplete="username"
                     class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none">
@@ -97,7 +95,7 @@
                 <div class="bg-gradient-to-br from-blue-900 via-blue-800 to-slate-800 rounded-3xl p-5 text-white shadow-xl">
                     <div class="flex gap-2 mb-4">
                         <button v-for="r in dateRanges" :key="r.id" @click="dateRange = r.id"
-                            :class="dateRange === r.id ? 'bg-blue-300 text-blue-900' : 'bg-white/10 text-white/60 hover:bg-white/20'"
+                            :class="dateRange === r.id ? 'bg-blue-300 text-blue-900' : 'bg-white/10 text-white/60'"
                             class="px-3 py-1 rounded-full text-xs font-bold transition-colors">
                             {{ r.name }}
                         </button>
@@ -138,6 +136,32 @@
                     </div>
                 </div>
 
+                <!-- ★ Expiring clients alert -->
+                <div v-if="expiringClients.length > 0"
+                    class="bg-white rounded-2xl border-2 border-red-100 shadow-sm overflow-hidden">
+                    <div class="px-4 py-3 bg-red-50 border-b border-red-100 flex justify-between items-center">
+                        <p class="font-black text-sm text-red-600">🔔 即將到期</p>
+                        <span class="text-xs font-bold text-red-500 bg-red-100 px-2.5 py-1 rounded-full">
+                            {{ expiringClients.length }} 位 · 14天內
+                        </span>
+                    </div>
+                    <div v-for="(c, i) in expiringClients" :key="c.id"
+                        @click="openClient(c); currentTab = 'crm'"
+                        :class="i < expiringClients.length - 1 ? 'border-b border-slate-50' : ''"
+                        class="px-4 py-3 flex justify-between items-center cursor-pointer active:bg-red-50 transition-colors">
+                        <div>
+                            <p class="font-bold text-sm">{{ c.name }}</p>
+                            <p class="text-xs text-slate-400 mt-0.5">{{ c.branch }} · {{ c.phone }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-black text-red-500 animate-pulse">
+                                {{ daysUntilExpiry(c.expiry_date) }} 天後到期
+                            </p>
+                            <p class="text-xs text-slate-300 mt-0.5">{{ c.expiry_date }}</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     <div class="px-4 py-3 border-b border-slate-50 flex justify-between items-center">
                         <p class="font-black text-sm">最近交易</p>
@@ -154,12 +178,16 @@
                             <p class="font-bold text-sm">
                                 {{ t.category }}
                                 <span class="text-xs font-normal text-slate-400 ml-1">{{ t.person }}</span>
-                                <span v-if="getClientName(t.client_id)" class="text-xs font-semibold text-blue-400 ml-1">· {{ getClientName(t.client_id) }}</span>
+                                <span v-if="getClientName(t.client_id)" class="text-xs font-semibold text-blue-400 ml-1">
+                                    · {{ getClientName(t.client_id) }}
+                                </span>
                             </p>
-                            <p class="text-xs text-slate-300 mt-0.5">{{ formatDate(t.created_at) }}{{ t.note ? ' · ' + t.note : '' }}</p>
+                            <p class="text-xs text-slate-300 mt-0.5">
+                                {{ formatDate(t.created_at) }}{{ t.note ? ' · ' + t.note : '' }}
+                            </p>
                         </div>
                         <span :class="t.type === 'income' ? 'text-emerald-600' : 'text-red-500'"
-                            class="font-black text-sm">
+                            class="font-black text-sm flex-shrink-0 ml-2">
                             {{ t.type === 'income' ? '+' : '-' }}${{ Number(t.amount).toFixed(2) }}
                         </span>
                     </div>
@@ -179,12 +207,10 @@
                         +
                     </button>
                 </div>
-
                 <div v-if="filteredClients.length === 0" class="text-center py-12 text-slate-300">
                     <p class="text-4xl mb-3">👥</p>
                     <p class="font-semibold">暫無客戶記錄</p>
                 </div>
-
                 <div v-for="c in filteredClients" :key="c.id" @click="openClient(c)"
                     class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer active:bg-slate-50 transition-colors">
                     <div class="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center font-black text-blue-600 text-lg flex-shrink-0">
@@ -217,8 +243,6 @@
                     <h2 class="font-black text-xl text-blue-800">運動 POS</h2>
                     <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">Exercise</span>
                 </div>
-
-                <!-- ★ Client Select with confirmation badge -->
                 <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">
                         選擇客戶 <span class="text-red-400">*</span>
@@ -235,23 +259,19 @@
                         <span class="text-xs text-slate-400 font-semibold">{{ clients.find(c => c.id === eForm.clientId)?.branch }}</span>
                     </div>
                 </div>
-
-                <!-- Service Type -->
                 <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">服務類型</p>
                     <div class="space-y-2">
                         <button v-for="p in exerciseItems" :key="p.id" @click="eForm.type = p.id"
                             :class="eForm.type === p.id
                                 ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-200'"
+                                : 'bg-slate-50 border-slate-200 text-slate-700'"
                             class="w-full p-4 rounded-xl border-2 font-bold flex justify-between items-center transition-colors">
                             <span class="text-sm font-black">{{ p.name }}</span>
                             <span class="text-base font-black">${{ p.price }}</span>
                         </button>
                     </div>
                 </div>
-
-                <!-- Options -->
                 <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">優惠選項</p>
                     <div class="grid grid-cols-2 gap-2">
@@ -273,7 +293,6 @@
                         </label>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <button @click="saveExercise('Kwan')"
                         class="bg-slate-900 text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-transform">
@@ -290,16 +309,23 @@
             <section v-if="currentTab === 'retail'" class="space-y-4">
                 <div class="flex items-center justify-between">
                     <h2 class="font-black text-xl text-emerald-700">零售 POS</h2>
-                    <select v-model="rForm.discount"
-                        class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 rounded-xl font-bold text-xs focus:outline-none">
-                        <option value="0">原價</option>
-                        <option value="0.25">75折</option>
-                        <option value="0.35">65折</option>
-                        <option value="0.5">50折</option>
-                    </select>
+                    <!-- ★ Discount with visual warning -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-400 font-semibold">折扣</span>
+                        <select v-model="rForm.discount"
+                            :class="rForm.discount !== '0'
+                                ? 'border-amber-300 bg-amber-50 text-amber-700 font-black'
+                                : 'border-slate-200 bg-white text-slate-600'"
+                            class="border-2 px-3 py-2 rounded-xl text-sm focus:outline-none transition-colors">
+                            <option value="0">原價</option>
+                            <option value="0.25">75折</option>
+                            <option value="0.35">65折</option>
+                            <option value="0.5">50折</option>
+                        </select>
+                    </div>
                 </div>
 
-                <!-- ★ NEW: Client selector for retail -->
+                <!-- Client selector -->
                 <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇購買客戶</p>
                     <select v-model="rForm.clientId"
@@ -315,27 +341,36 @@
                     </div>
                 </div>
 
+                <!-- Search -->
                 <div class="relative">
-                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-base">🔍</span>
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
                     <input v-model="pSearch" placeholder="搜尋產品..."
                         class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400">
                 </div>
 
-                <!-- ★ Product list with 入貨 button -->
+                <!-- ★ Product list with loss indicator -->
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden max-h-72 overflow-y-auto no-scrollbar">
-                    <div v-if="filteredProducts.length === 0" class="p-6 text-center text-slate-300 text-sm font-semibold">找不到產品</div>
+                    <div v-if="filteredProducts.length === 0"
+                        class="p-6 text-center text-slate-300 text-sm font-semibold">找不到產品</div>
                     <div v-for="(p, i) in filteredProducts" :key="p.name"
                         :class="i < filteredProducts.length - 1 ? 'border-b border-slate-50' : ''"
                         class="flex items-center gap-2 pr-3">
-                        <!-- Left: tap to add to cart -->
                         <div @click="addToCart(p)"
-                            class="flex-1 px-4 py-3 flex justify-between items-center cursor-pointer active:bg-emerald-50 transition-colors">
-                            <span class="font-semibold text-sm">{{ p.name }}</span>
-                            <span class="font-black text-emerald-600 text-sm ml-2 flex-shrink-0">
-                                ${{ (p.retail * (1 - parseFloat(rForm.discount))).toFixed(2) }}
-                            </span>
+                            :class="isLossSale(p) ? 'active:bg-red-50' : 'active:bg-emerald-50'"
+                            class="flex-1 px-4 py-3 flex justify-between items-center cursor-pointer transition-colors">
+                            <span class="font-semibold text-sm truncate flex-1 mr-2">{{ p.name }}</span>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <!-- ★ Loss badge -->
+                                <span v-if="isLossSale(p)"
+                                    class="text-xs font-black text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md">
+                                    虧本
+                                </span>
+                                <span :class="isLossSale(p) ? 'text-red-500' : 'text-emerald-600'"
+                                    class="font-black text-sm">
+                                    ${{ (p.retail * (1 - parseFloat(rForm.discount))).toFixed(2) }}
+                                </span>
+                            </div>
                         </div>
-                        <!-- ★ 入貨 button -->
                         <button @click.stop="openRestock(p)"
                             class="flex-shrink-0 bg-amber-100 text-amber-700 text-xs font-black px-2.5 py-1.5 rounded-lg active:scale-90 transition-transform border border-amber-200">
                             入貨
@@ -343,23 +378,77 @@
                     </div>
                 </div>
 
-                <!-- Cart -->
+                <!-- ★★★ Cart - merged items + qty stepper + correct sign -->
                 <div v-if="cart.length > 0" class="bg-slate-900 rounded-2xl p-5 text-white">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">購物車 · {{ cart.length }} 件</p>
-                    <div v-for="(item, i) in cart" :key="i"
-                        class="flex justify-between items-center py-2.5 border-b border-slate-800 last:border-0">
-                        <span class="text-sm font-semibold text-slate-300 truncate flex-1 mr-3">{{ item.name }}</span>
-                        <div class="flex items-center gap-3">
-                            <span class="text-emerald-400 font-bold text-sm">+${{ item.profit.toFixed(2) }}</span>
-                            <button @click="cart.splice(i,1)" class="text-red-400 font-black text-xl leading-none">×</button>
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                            購物車 · {{ cartItemCount }} 件
+                        </p>
+                        <button @click="cart = []"
+                            class="text-xs text-slate-500 font-semibold active:text-red-400 transition-colors">
+                            清空
+                        </button>
+                    </div>
+
+                    <!-- ★ Loss warning banner -->
+                    <div v-if="cartTotal < 0"
+                        class="mb-3 bg-red-950/60 border border-red-800/60 rounded-xl p-3 flex items-start gap-2">
+                        <span class="text-base flex-shrink-0 mt-0.5">⚠️</span>
+                        <div>
+                            <p class="text-red-300 font-black text-xs">虧本銷售警告</p>
+                            <p class="text-red-400/70 text-xs mt-0.5">部分產品售價低於成本，確認後將記錄虧損</p>
                         </div>
                     </div>
+
+                    <div v-for="(item, i) in cart" :key="i"
+                        class="py-3 border-b border-slate-800 last:border-0">
+                        <div class="flex items-center gap-2">
+                            <!-- Name -->
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-slate-200 truncate">{{ item.name }}</p>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    單件
+                                    <span :class="item.unitProfit >= 0 ? 'text-emerald-400/80' : 'text-red-400/80'" class="font-bold">
+                                        <!-- ★ FIX: correct sign for unit profit -->
+                                        {{ item.unitProfit >= 0 ? '+' : '' }}${{ item.unitProfit.toFixed(2) }}
+                                    </span>
+                                    <span v-if="rForm.discount !== '0'" class="text-slate-600 ml-1">
+                                        ({{ (1 - parseFloat(rForm.discount)) * 10 }}折)
+                                    </span>
+                                </p>
+                            </div>
+                            <!-- ★ Qty stepper -->
+                            <div class="flex items-center bg-slate-800 rounded-xl overflow-hidden flex-shrink-0">
+                                <button @click="decreaseQty(i)"
+                                    class="w-8 h-8 flex items-center justify-center font-black text-slate-300 text-lg active:bg-slate-700 transition-colors select-none">
+                                    −
+                                </button>
+                                <span class="text-sm font-black text-white w-7 text-center select-none">{{ item.qty }}</span>
+                                <button @click="increaseQty(i)"
+                                    class="w-8 h-8 flex items-center justify-center font-black text-slate-300 text-lg active:bg-slate-700 transition-colors select-none">
+                                    +
+                                </button>
+                            </div>
+                            <!-- ★ FIX: item total with correct sign -->
+                            <span :class="(item.unitProfit * item.qty) >= 0 ? 'text-emerald-400' : 'text-red-400'"
+                                class="font-bold text-sm w-20 text-right flex-shrink-0">
+                                {{ (item.unitProfit * item.qty) >= 0 ? '+' : '' }}${{ (item.unitProfit * item.qty).toFixed(2) }}
+                            </span>
+                            <!-- Remove -->
+                            <button @click="cart.splice(i,1)"
+                                class="text-slate-600 hover:text-red-400 font-black text-xl leading-none flex-shrink-0 transition-colors active:scale-90">×</button>
+                        </div>
+                    </div>
+
+                    <!-- ★ Total with correct sign -->
                     <div class="mt-3 pt-3 border-t border-slate-700 flex justify-between items-center">
                         <span class="font-bold text-slate-400 text-sm">總利潤</span>
-                        <span class="font-black text-emerald-400 text-lg">
-                            ${{ cart.reduce((a,b) => a + b.profit, 0).toFixed(2) }}
+                        <span :class="cartTotal >= 0 ? 'text-emerald-400' : 'text-red-400'"
+                            class="font-black text-xl">
+                            {{ cartTotal >= 0 ? '+' : '' }}${{ cartTotal.toFixed(2) }}
                         </span>
                     </div>
+
                     <div class="grid grid-cols-2 gap-2 mt-4">
                         <button @click="saveRetail('Kwan')"
                             class="bg-emerald-500 py-3.5 rounded-xl font-black text-sm active:scale-95 transition-transform">
@@ -371,6 +460,12 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Empty cart placeholder -->
+                <div v-else class="text-center py-8 text-slate-300">
+                    <p class="text-4xl mb-2">🛒</p>
+                    <p class="text-sm font-semibold">點擊產品加入購物車</p>
+                </div>
             </section>
 
             <!-- ── FINANCE ── -->
@@ -380,7 +475,7 @@
                     <button v-for="c in expCats" :key="c" @click="openExp(c)"
                         :class="c.includes('收入')
                             ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                            : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+                            : 'border-slate-200 bg-white text-slate-700'"
                         class="p-4 border-2 rounded-2xl font-bold text-left shadow-sm active:scale-95 transition-all">
                         <span class="text-xl block mb-2">
                             {{ c.includes('廣告') ? '📢' : c.includes('租金') ? '🏢' : c.includes('採購') ? '📦' : c.includes('馬拉松') ? '🏃' : c.includes('收入') ? '💚' : '📌' }}
@@ -488,15 +583,13 @@
         </div>
     </div>
 
-    <!-- ★ NEW ═══ MODAL: Restock 入貨 ═══ -->
+    <!-- ═══ MODAL: Restock ═══ -->
     <div v-if="showRestockModal" class="modal-overlay" @click.self="showRestockModal = false">
         <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4">
             <div class="flex justify-between items-center">
                 <h3 class="font-black text-lg text-amber-700">📦 入貨記錄</h3>
                 <button @click="showRestockModal = false" class="text-slate-300 font-black text-2xl leading-none">×</button>
             </div>
-
-            <!-- Product info -->
             <div class="bg-amber-50 rounded-2xl p-4 border-2 border-amber-100 flex justify-between items-center">
                 <div>
                     <p class="font-black text-amber-800">{{ restockForm.product?.name }}</p>
@@ -506,8 +599,6 @@
                 </div>
                 <span class="text-3xl">📦</span>
             </div>
-
-            <!-- Qty stepper -->
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">入貨數量</p>
                 <div class="flex items-center gap-3">
@@ -523,8 +614,6 @@
                     </button>
                 </div>
             </div>
-
-            <!-- Total cost preview -->
             <div class="bg-red-50 rounded-2xl p-4 border-2 border-red-100 flex justify-between items-center">
                 <div>
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">總成本支出</p>
@@ -534,7 +623,6 @@
                     -${{ ((restockForm.product?.cost || 0) * (restockForm.qty || 0)).toFixed(2) }}
                 </span>
             </div>
-
             <div class="grid grid-cols-2 gap-3">
                 <button @click="saveRestock('Kwan')"
                     class="bg-slate-900 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">
@@ -608,7 +696,6 @@
     createApp({
         setup() {
             const session           = ref(null);
-            const recoverySession   = ref(null);
             const authState         = ref('login');
             const authForm          = ref({ email: '', password: '' });
             const newPassword       = ref('');
@@ -619,14 +706,12 @@
             const clients           = ref([]);
             const finances          = ref([]);
             const products          = ref([]);
-            const cart              = ref([]);
+            const cart              = ref([]); // { name, unitProfit, qty, discountRate }
             const pSearch           = ref('');
             const cSearch           = ref('');
             const refSearch         = ref('');
             const passkeySupported  = ref(false);
             const passkeyRegistered = ref(false);
-
-            // ★ Restock modal state
             const showRestockModal  = ref(false);
             const restockForm       = ref({ product: null, qty: 1 });
 
@@ -658,32 +743,23 @@
                     : await sb.auth.signUp({ email, password });
                 if (res.error) alert(res.error.message);
             };
-
             const forgotPassword = async () => {
                 const e = prompt("輸入已註冊的 Email：");
                 if (!e) return;
-                const { error } = await sb.auth.resetPasswordForEmail(e, {
-                    redirectTo: SITE_URL + 'reset-password.html'
-                });
+                const { error } = await sb.auth.resetPasswordForEmail(e, { redirectTo: SITE_URL + 'reset-password.html' });
                 if (!error) alert("重設郵件已發送，請查收信箱！");
                 else alert(error.message);
             };
-
             const updatePassword = async () => {
-                if (!newPassword.value || newPassword.value.length < 6)
-                    return alert("密碼最少需要 6 個字元");
+                if (!newPassword.value || newPassword.value.length < 6) return alert("密碼最少需要 6 個字元");
                 const { error } = await sb.auth.updateUser({ password: newPassword.value });
                 if (!error) {
                     alert("✅ 密碼更新成功！");
                     await sb.auth.signOut();
                     authState.value = 'login';
                     session.value = null;
-                    recoverySession.value = null;
-                } else {
-                    alert(error.message);
-                }
+                } else alert(error.message);
             };
-
             const handleLogout = async () => {
                 await sb.auth.signOut();
                 session.value = null;
@@ -736,7 +812,7 @@
                         }
                     });
                     const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
-                    if (error) alert("發送 Magic Link 失敗，請改用密碼登入");
+                    if (error) alert("發送 Magic Link 失敗");
                     else alert("✅ Magic Link 已發送至 " + email);
                 } catch(e) {
                     if (e.name !== 'NotAllowedError') alert("驗證失敗：" + e.message);
@@ -753,23 +829,19 @@
             const loadData = async () => {
                 const uid = session.value.user.id;
                 const [
-                    { data: c,     error: ce },
-                    { data: f,     error: fe },
-                    { data: prods, error: pe }
+                    { data: c },
+                    { data: f },
+                    { data: prods }
                 ] = await Promise.all([
                     sb.from('clients').select('*').eq('user_id', uid).order('created_at', { ascending: false }),
                     sb.from('finances').select('*').eq('user_id', uid).order('created_at', { ascending: false }),
                     sb.from('products').select('*').eq('is_active', true).in('category', ['内','外']).order('prod_seq')
                 ]);
-                if (ce) console.error('clients:', ce.message);
-                if (fe) console.error('finances:', fe.message);
-                if (pe) console.error('products:', pe.message);
                 clients.value  = c     || [];
                 finances.value = f     || [];
                 products.value = prods || [];
             };
 
-            // ★ Helper: look up client name from id
             const getClientName = (clientId) => {
                 if (!clientId) return null;
                 return clients.value.find(c => c.id === clientId)?.name || null;
@@ -784,56 +856,79 @@
                 if (type === 'trial')     profit = 98;
                 else if (type === '10pt') profit = isReferral ? 413 : 465;
                 else if (type === '35pt') profit = isNew ? 1250.50 : 1277.50;
-
                 const { error } = await sb.from('finances').insert({
-                    user_id:   session.value.user.id,
-                    type:      'income',
-                    category:  '運動',
-                    amount:    profit,
-                    person,
-                    client_id: clientId,   // ★ 記錄客戶
-                    note:      type
+                    user_id: session.value.user.id, type: 'income', category: '運動',
+                    amount: profit, person, client_id: clientId, note: type
                 });
                 if (!error) {
                     await loadData();
                     alert("✅ 入帳成功 +$" + profit.toFixed(2));
                     eForm.value.clientId = null;
                     currentTab.value = 'dashboard';
-                } else {
-                    alert("錯誤：" + error.message);
-                }
+                } else alert("錯誤：" + error.message);
             };
 
             // ── Retail POS ────────────────────────────────────────────
-            const rForm = ref({ discount: '0', clientId: null }); // ★ added clientId
+            const rForm = ref({ discount: '0', clientId: null });
+
+            // ★★ FIX: merge same product + same discount into one cart item
             const addToCart = (p) => {
-                const retail = p.retail * (1 - parseFloat(rForm.value.discount));
-                const profit = retail - p.cost;
-                cart.value.push({ name: p.name, profit });
+                const discountRate = parseFloat(rForm.value.discount);
+                const retailPrice  = p.retail * (1 - discountRate);
+                const unitProfit   = retailPrice - p.cost;
+                // Find existing item with same name AND same discount
+                const existing = cart.value.find(
+                    item => item.name === p.name && item.discountRate === discountRate
+                );
+                if (existing) {
+                    existing.qty++;
+                } else {
+                    cart.value.push({ name: p.name, unitProfit, qty: 1, discountRate });
+                }
             };
+
+            // ★ Qty controls
+            const increaseQty = (i) => cart.value[i].qty++;
+            const decreaseQty = (i) => {
+                if (cart.value[i].qty <= 1) cart.value.splice(i, 1);
+                else cart.value[i].qty--;
+            };
+
+            // ★ Computed cart values
+            const cartTotal = computed(() =>
+                cart.value.reduce((a, b) => a + b.unitProfit * b.qty, 0)
+            );
+            const cartItemCount = computed(() =>
+                cart.value.reduce((a, b) => a + b.qty, 0)
+            );
+
+            // ★ Is selling at a loss?
+            const isLossSale = (p) =>
+                (p.retail * (1 - parseFloat(rForm.value.discount))) < p.cost;
+
             const saveRetail = async (person) => {
                 if (cart.value.length === 0) return;
-                const totalP = cart.value.reduce((a,b) => a + b.profit, 0);
+                const totalP = cartTotal.value;
+                const note   = cart.value.map(item => `${item.name}×${item.qty}`).join(', ');
                 const { error } = await sb.from('finances').insert({
                     user_id:   session.value.user.id,
                     type:      'income',
                     category:  '零售',
                     amount:    totalP,
                     person,
-                    client_id: rForm.value.clientId  // ★ 記錄客戶
+                    client_id: rForm.value.clientId,
+                    note
                 });
                 if (!error) {
                     cart.value = [];
-                    rForm.value.clientId = null;  // ★ reset after checkout
+                    rForm.value.clientId = null;
                     await loadData();
-                    alert("✅ 結帳成功 +$" + totalP.toFixed(2));
+                    alert("✅ 結帳成功\n" + (totalP >= 0 ? '+' : '') + "$" + totalP.toFixed(2));
                     currentTab.value = 'dashboard';
-                } else {
-                    alert("錯誤：" + error.message);
-                }
+                } else alert("錯誤：" + error.message);
             };
 
-            // ★ Restock (入貨) ─────────────────────────────────────────
+            // ── Restock ───────────────────────────────────────────────
             const openRestock = (p) => {
                 restockForm.value = { product: p, qty: 1 };
                 showRestockModal.value = true;
@@ -853,10 +948,8 @@
                 if (!error) {
                     showRestockModal.value = false;
                     await loadData();
-                    alert(`✅ 入貨已記錄\n${product.name} ×${qty}\n支出 -$${amount.toFixed(2)}`);
-                } else {
-                    alert("錯誤：" + error.message);
-                }
+                    alert(`✅ 入貨記錄完成\n${product.name} ×${qty}  -$${amount.toFixed(2)}`);
+                } else alert("錯誤：" + error.message);
             };
 
             // ── CRM ───────────────────────────────────────────────────
@@ -887,23 +980,20 @@
             const saveExp = async (person) => {
                 const isInc = expForm.value.category.includes('收入');
                 const { error } = await sb.from('finances').insert({
-                    user_id:  session.value.user.id,
-                    type:     isInc ? 'income' : 'expense',
+                    user_id: session.value.user.id,
+                    type: isInc ? 'income' : 'expense',
                     category: expForm.value.category,
-                    amount:   Number(expForm.value.amount),
-                    person,
-                    note:     expForm.value.note
+                    amount: Number(expForm.value.amount),
+                    person, note: expForm.value.note
                 });
                 if (!error) {
                     showExpModal.value = false;
                     await loadData();
                     currentTab.value = 'dashboard';
-                } else {
-                    alert("錯誤：" + error.message);
-                }
+                } else alert("錯誤：" + error.message);
             };
 
-            // ── Computed / Filter ─────────────────────────────────────
+            // ── Dashboard computed ────────────────────────────────────
             const filterByDate = (arr) => {
                 const now = new Date();
                 return arr.filter(f => {
@@ -946,6 +1036,18 @@
             });
             const recentTransactions = computed(() => finances.value.slice(0, 10));
 
+            // ★ Expiring clients (within 14 days)
+            const expiringClients = computed(() =>
+                clients.value
+                    .filter(c => {
+                        const days = (new Date(c.expiry_date) - new Date()) / 86400000;
+                        return days >= 0 && days < 14;
+                    })
+                    .sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date))
+            );
+            const daysUntilExpiry = (date) =>
+                Math.ceil((new Date(date) - new Date()) / 86400000);
+
             const formatDate = (iso) => {
                 const d = new Date(iso);
                 const mo = (d.getMonth()+1).toString().padStart(2,'0');
@@ -960,7 +1062,6 @@
                 await checkPasskeySupport();
                 sb.auth.onAuthStateChange((event, sessionData) => {
                     if (event === 'PASSWORD_RECOVERY') {
-                        recoverySession.value = sessionData;
                         authState.value = 'recovery';
                         session.value = null;
                         return;
@@ -982,9 +1083,10 @@
                 showClientModal, clientForm, openClient, saveClient,
                 showExpModal, expForm, openExp, saveExp,
                 exerciseItems, eForm, saveExercise,
-                rForm, addToCart, saveRetail,
-                showRestockModal, restockForm, openRestock, saveRestock, // ★
-                getClientName,                                            // ★
+                rForm, addToCart, increaseQty, decreaseQty,
+                cartTotal, cartItemCount, isLossSale, saveRetail,
+                showRestockModal, restockForm, openRestock, saveRestock,
+                getClientName, expiringClients, daysUntilExpiry,
                 filteredClients: computed(() =>
                     clients.value.filter(c =>
                         (c.name + c.phone).toLowerCase().includes(cSearch.value.toLowerCase())
