@@ -22,10 +22,17 @@
         input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
         .trial-pulse{animation:trialPulse 2s ease-in-out infinite}
         @keyframes trialPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.3)}50%{box-shadow:0 0 0 8px rgba(99,102,241,0)}}
+        .dropdown-anim{animation:dropAnim .15s ease}
+        @keyframes dropAnim{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 text-sm">
 <div id="app" v-cloak>
+
+<!-- ═══ Dropdown Overlay (closes all dropdowns on outside tap) ═══ -->
+<div v-if="showExClientDropdown || showRtClientDropdown || showReferralDropdown"
+    @click="showExClientDropdown=false; showRtClientDropdown=false; showReferralDropdown=false"
+    class="fixed inset-0 z-30"></div>
 
 <!-- ═══ LOGIN ═══ -->
 <div v-if="!session" class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900">
@@ -128,7 +135,7 @@
                 </div>
             </div>
 
-            <!-- ✨ NEW: 即將試堂 -->
+            <!-- 即將試堂 -->
             <div v-if="upcomingTrials.length > 0"
                 class="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm overflow-hidden trial-pulse">
                 <div class="px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-indigo-100 flex justify-between items-center">
@@ -148,7 +155,10 @@
                         </div>
                         <div class="min-w-0">
                             <p class="font-black text-sm">{{ t.client_name }}</p>
-                            <p class="text-xs text-slate-400 font-semibold mt-0.5">{{ t.person }} · HK${{ t.amount }}</p>
+                            <p class="text-xs text-slate-400 font-semibold mt-0.5">
+                                {{ t.person }} · HK${{ t.amount }}
+                                <span v-if="t.trial_phone" class="ml-1">· {{ t.trial_phone }}</span>
+                            </p>
                         </div>
                     </div>
                     <div class="text-right flex-shrink-0">
@@ -296,18 +306,25 @@
             <div v-if="filteredClients.length === 0" class="text-center py-12 text-slate-300">
                 <p class="text-4xl mb-3">👥</p><p class="font-semibold">暫無客戶記錄</p>
             </div>
+            <!-- ✦ CRM card with generation badge -->
             <div v-for="c in filteredClients" :key="c.id" @click="openClient(c)"
                 class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer active:bg-slate-50 transition-colors card-press">
                 <div class="w-11 h-11 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center font-black text-white text-lg flex-shrink-0 shadow-sm">
                     {{ c.name.charAt(0) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
+                    <div class="flex items-center gap-1.5 flex-wrap">
                         <p class="font-black text-sm">{{ c.name }}</p>
+                        <!-- ✦ Generation badge -->
+                        <span class="text-xs px-1.5 py-0.5 rounded-full font-bold" :class="genLabel(c.id).cls">{{ genLabel(c.id).label }}</span>
                         <span v-if="isExpiring(c.expiry_date)" class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">快到期</span>
-                        <span v-if="c.marathon" class="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">🏃 馬拉松</span>
+                        <span v-if="c.marathon" class="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">🏃</span>
                     </div>
                     <p class="text-xs text-slate-400 font-semibold mt-0.5 truncate">{{ c.phone }}</p>
+                    <!-- ✦ Referral info -->
+                    <p v-if="c.referred_by_id" class="text-xs text-purple-500 font-semibold mt-0.5 truncate">
+                        👤 由 {{ clients.find(r => r.id === c.referred_by_id)?.name || '已刪除' }} 介紹
+                    </p>
                 </div>
                 <div class="text-right flex-shrink-0 flex items-center gap-2">
                     <div>
@@ -326,34 +343,93 @@
                 <h2 class="font-black text-xl text-blue-800">運動 POS</h2>
                 <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">Exercise</span>
             </div>
-            <!-- 選擇客戶 -->
+
+            <!-- 服務類型 (先選，影響下面顯示) -->
             <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">服務類型</p>
+                <div class="space-y-2">
+                    <button v-for="p in exerciseItems" :key="p.id"
+                        @click="eForm.type = p.id; eForm.trialDate=''; eForm.trialName=''; eForm.trialPhone=''; eForm.clientId=null"
+                        :class="eForm.type === p.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 border-slate-200 text-slate-700'"
+                        class="w-full p-4 rounded-xl border-2 font-bold flex justify-between items-center transition-all">
+                        <div class="text-left">
+                            <span class="text-sm font-black block">{{ p.name }}</span>
+                            <span v-if="p.id === 'trial'" class="text-xs opacity-70 font-semibold">不計入客戶名單</span>
+                            <span v-else class="text-xs opacity-70 font-semibold">計入客戶記錄</span>
+                        </div>
+                        <span class="text-base font-black">${{ p.price }}</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ✦ TRIAL: 輸入試堂人資料（不是客戶） -->
+            <div v-if="eForm.type === 'trial'"
+                class="bg-white rounded-2xl p-4 border-2 border-indigo-200 shadow-sm space-y-3">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-base">🧪</span>
+                    <p class="font-black text-sm text-indigo-700">試堂人資料</p>
+                    <span class="ml-auto text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold">不計入客戶</span>
+                </div>
+                <input v-model="eForm.trialName" placeholder="試堂人名字 *"
+                    :class="eForm.trialName ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200 bg-slate-50'"
+                    class="w-full border-2 p-3.5 rounded-xl font-bold text-sm focus:border-indigo-500 outline-none transition-colors">
+                <input v-model="eForm.trialPhone" placeholder="試堂人電話（可選）"
+                    class="w-full border-2 border-slate-200 p-3.5 rounded-xl font-semibold text-sm focus:border-indigo-300 outline-none bg-slate-50">
+                <div class="bg-indigo-50 rounded-xl p-3 border border-indigo-100 flex items-start gap-2">
+                    <span class="text-sm flex-shrink-0">ℹ️</span>
+                    <p class="text-xs text-indigo-500 font-semibold">試堂紀錄只會加入試堂追蹤清單，不會建立客戶檔案</p>
+                </div>
+            </div>
+
+            <!-- ✦ PACKAGE: 搜尋客戶下拉選單 -->
+            <div v-if="eForm.type !== 'trial'" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇客戶 <span class="text-red-400">*</span></p>
-                <select v-model="eForm.clientId"
-                    :class="eForm.clientId ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-slate-50'"
-                    class="w-full p-3 rounded-xl border-2 font-semibold text-sm focus:outline-none transition-colors">
-                    <option :value="null">-- 選擇客戶 --</option>
-                    <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }} ({{ c.phone }})</option>
-                </select>
+                <div class="relative z-40">
+                    <!-- Trigger button -->
+                    <div @click="showExClientDropdown = !showExClientDropdown; exClientSearch = ''"
+                        :class="eForm.clientId ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-slate-50'"
+                        class="w-full p-3.5 rounded-xl border-2 font-semibold text-sm cursor-pointer flex items-center justify-between select-none">
+                        <span :class="eForm.clientId ? 'text-blue-800 font-black' : 'text-slate-400'">
+                            {{ eForm.clientId
+                                ? (clients.find(c=>c.id===eForm.clientId)?.name + ' · ' + clients.find(c=>c.id===eForm.clientId)?.phone)
+                                : '點擊搜尋並選擇客戶...' }}
+                        </span>
+                        <span class="text-slate-400 text-xs ml-2 flex-shrink-0">{{ showExClientDropdown ? '▲' : '▼' }}</span>
+                    </div>
+                    <!-- Dropdown -->
+                    <div v-if="showExClientDropdown"
+                        class="absolute top-full left-0 right-0 bg-white border-2 border-blue-200 rounded-2xl shadow-2xl mt-1.5 overflow-hidden dropdown-anim">
+                        <div class="p-2.5 bg-blue-50 border-b border-blue-100 sticky top-0">
+                            <input v-model="exClientSearch" placeholder="🔍 搜尋姓名 / 電話..."
+                                class="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-blue-400 bg-white"
+                                @click.stop autofocus>
+                        </div>
+                        <div class="max-h-56 overflow-y-auto no-scrollbar">
+                            <div @click="eForm.clientId = null; showExClientDropdown = false"
+                                class="px-4 py-3 active:bg-slate-50 cursor-pointer text-slate-400 text-sm font-semibold border-b border-slate-50">
+                                -- 不選擇 --
+                            </div>
+                            <div v-for="c in exFilteredClients" :key="c.id"
+                                @click="eForm.clientId = c.id; showExClientDropdown = false; exClientSearch = ''"
+                                :class="eForm.clientId === c.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''"
+                                class="px-4 py-3 active:bg-blue-50 cursor-pointer border-b border-slate-50">
+                                <p class="font-black text-sm">{{ c.name }}</p>
+                                <p class="text-xs text-slate-400 mt-0.5">{{ c.phone }} · {{ c.branch }}</p>
+                            </div>
+                            <div v-if="exFilteredClients.length === 0" class="px-4 py-8 text-center text-slate-300 text-sm font-semibold">
+                                找不到客戶
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div v-if="eForm.clientId" class="mt-2 flex items-center gap-1.5">
                     <span class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">✓</span>
                     <span class="text-xs text-blue-600 font-black">{{ clients.find(c=>c.id===eForm.clientId)?.name }}</span>
                     <span class="text-xs text-slate-400 font-semibold">{{ clients.find(c=>c.id===eForm.clientId)?.branch }}</span>
                 </div>
             </div>
-            <!-- 服務類型 -->
-            <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">服務類型</p>
-                <div class="space-y-2">
-                    <button v-for="p in exerciseItems" :key="p.id" @click="eForm.type = p.id; if(p.id !== 'trial') eForm.trialDate = ''"
-                        :class="eForm.type === p.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 border-slate-200 text-slate-700'"
-                        class="w-full p-4 rounded-xl border-2 font-bold flex justify-between items-center transition-all">
-                        <span class="text-sm font-black">{{ p.name }}</span>
-                        <span class="text-base font-black">${{ p.price }}</span>
-                    </button>
-                </div>
-            </div>
-            <!-- ✨ NEW: 試堂日期排期 (只在選擇試堂時顯示) -->
+
+            <!-- 試堂日期排期 (只在試堂時顯示) -->
             <transition name="fade">
                 <div v-if="eForm.type === 'trial'"
                     class="bg-white rounded-2xl p-4 border-2 border-indigo-200 shadow-sm space-y-3">
@@ -362,8 +438,6 @@
                         <p class="font-black text-sm text-indigo-700">試堂日期排期</p>
                         <span class="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold ml-auto">Email 提醒</span>
                     </div>
-
-                    <!-- 收款日（今天，自動） -->
                     <div class="flex items-center justify-between bg-emerald-50 rounded-xl px-4 py-3 border border-emerald-100">
                         <div class="flex items-center gap-2">
                             <span class="text-base">💰</span>
@@ -374,15 +448,11 @@
                         </div>
                         <span class="text-xs bg-emerald-100 text-emerald-600 font-bold px-2.5 py-1 rounded-lg border border-emerald-200">今天 ✅</span>
                     </div>
-
-                    <!-- 試堂日期選擇 -->
                     <div>
                         <p class="text-xs font-bold text-slate-400 mb-1.5 pl-1">試堂日期（選填）</p>
                         <input type="date" v-model="eForm.trialDate" :min="tomorrowDate"
                             class="w-full border-2 border-indigo-200 p-3.5 rounded-xl font-bold text-sm focus:border-indigo-500 outline-none bg-indigo-50 text-indigo-800">
                     </div>
-
-                    <!-- 提醒預覽 -->
                     <div v-if="eForm.trialDate"
                         class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-3.5 border-2 border-indigo-200">
                         <div class="flex items-start gap-2.5">
@@ -425,8 +495,9 @@
                     </div>
                 </div>
             </transition>
-            <!-- 優惠選項 -->
-            <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+
+            <!-- 優惠選項 (只在套票時顯示) -->
+            <div v-if="eForm.type !== 'trial'" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">優惠選項</p>
                 <div class="grid grid-cols-2 gap-2">
                     <label :class="eForm.isNew ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'" class="flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer">
@@ -439,6 +510,7 @@
                     </label>
                 </div>
             </div>
+
             <div class="grid grid-cols-2 gap-3">
                 <button @click="saveExercise('Kwan')" class="bg-slate-900 text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-transform">💰 Kwan 收款</button>
                 <button @click="saveExercise('Cat')" class="bg-blue-600 text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-transform">💰 Cat 收款</button>
@@ -472,15 +544,48 @@
                         <option value="0.5">50折 (廠本)</option>
                     </select>
                 </div>
+
+                <!-- ✦ 搜尋客戶下拉選單 (Retail) -->
                 <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇購買客戶</p>
-                    <select v-model="rForm.clientId"
-                        :class="rForm.clientId ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-slate-50'"
-                        class="w-full p-3 rounded-xl border-2 font-semibold text-sm focus:outline-none transition-colors">
-                        <option :value="null">-- 選擇客戶（可選）--</option>
-                        <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }} ({{ c.phone }})</option>
-                    </select>
+                    <div class="relative z-40">
+                        <div @click="showRtClientDropdown = !showRtClientDropdown; rtClientSearch = ''"
+                            :class="rForm.clientId ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-slate-50'"
+                            class="w-full p-3.5 rounded-xl border-2 font-semibold text-sm cursor-pointer flex items-center justify-between select-none">
+                            <span :class="rForm.clientId ? 'text-emerald-800 font-black' : 'text-slate-400'">
+                                {{ rForm.clientId
+                                    ? (clients.find(c=>c.id===rForm.clientId)?.name + ' · ' + clients.find(c=>c.id===rForm.clientId)?.phone)
+                                    : '點擊搜尋客戶（可選）...' }}
+                            </span>
+                            <span class="text-slate-400 text-xs ml-2 flex-shrink-0">{{ showRtClientDropdown ? '▲' : '▼' }}</span>
+                        </div>
+                        <div v-if="showRtClientDropdown"
+                            class="absolute top-full left-0 right-0 bg-white border-2 border-emerald-200 rounded-2xl shadow-2xl mt-1.5 overflow-hidden dropdown-anim">
+                            <div class="p-2.5 bg-emerald-50 border-b border-emerald-100 sticky top-0">
+                                <input v-model="rtClientSearch" placeholder="🔍 搜尋姓名 / 電話..."
+                                    class="w-full px-3 py-2.5 border border-emerald-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-emerald-400 bg-white"
+                                    @click.stop autofocus>
+                            </div>
+                            <div class="max-h-56 overflow-y-auto no-scrollbar">
+                                <div @click="rForm.clientId = null; showRtClientDropdown = false"
+                                    class="px-4 py-3 active:bg-slate-50 cursor-pointer text-slate-400 text-sm font-semibold border-b border-slate-50">
+                                    -- 不選擇 --
+                                </div>
+                                <div v-for="c in rtFilteredClients" :key="c.id"
+                                    @click="rForm.clientId = c.id; showRtClientDropdown = false; rtClientSearch = ''"
+                                    :class="rForm.clientId === c.id ? 'bg-emerald-50 border-l-4 border-emerald-500' : ''"
+                                    class="px-4 py-3 active:bg-emerald-50 cursor-pointer border-b border-slate-50">
+                                    <p class="font-black text-sm">{{ c.name }}</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">{{ c.phone }} · {{ c.branch }}</p>
+                                </div>
+                                <div v-if="rtFilteredClients.length === 0" class="px-4 py-8 text-center text-slate-300 text-sm font-semibold">
+                                    找不到客戶
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="relative">
                     <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
                     <input v-model="pSearch" placeholder="搜尋產品..." class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400">
@@ -562,6 +667,8 @@
                         <p class="text-xs text-emerald-500 font-semibold mt-0.5">零售值 ${{ totalRetailValue.toFixed(0) }}</p>
                     </div>
                 </div>
+
+                <!-- ✦ 狀態概覽 + 匯出 + 匯入 -->
                 <div class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
                     <div class="flex-shrink-0 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5 text-center min-w-max">
                         <p class="text-xl font-black text-red-600">{{ stockSummary.outOfStock }}</p>
@@ -579,10 +686,27 @@
                         <p class="text-xl font-black text-emerald-600">{{ stockSummary.abundant }}</p>
                         <p class="text-xs text-emerald-600 font-bold mt-0.5">🟢 充足</p>
                     </div>
+                    <!-- ✦ 匯出 -->
                     <button @click="exportStockCSV" class="flex-shrink-0 bg-slate-800 text-white rounded-xl px-3.5 py-2.5 font-black text-xs flex items-center gap-1.5 min-w-max active:scale-95 transition-transform">
-                        📥 匯出 CSV
+                        📥 匯出
                     </button>
+                    <!-- ✦ 匯入 -->
+                    <button @click="triggerImport" class="flex-shrink-0 bg-blue-700 text-white rounded-xl px-3.5 py-2.5 font-black text-xs flex items-center gap-1.5 min-w-max active:scale-95 transition-transform">
+                        📤 匯入
+                    </button>
+                    <input id="stockImportInput" type="file" accept=".csv,.txt" @change="importStockCSV" class="hidden">
                 </div>
+
+                <!-- ✦ 匯入格式說明 -->
+                <div class="bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3 flex items-start gap-2">
+                    <span class="text-base flex-shrink-0">📋</span>
+                    <div>
+                        <p class="text-xs font-black text-blue-700">CSV 匯入格式</p>
+                        <p class="text-xs text-blue-500 font-semibold mt-0.5">每行：<span class="font-mono bg-white px-1 py-0.5 rounded">產品名稱,數量</span>  例如：<span class="font-mono bg-white px-1 py-0.5 rounded">Collagen,10</span></p>
+                        <p class="text-xs text-blue-400 mt-0.5">亦支援直接匯入由本系統匯出的 CSV 格式</p>
+                    </div>
+                </div>
+
                 <div class="relative">
                     <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
                     <input v-model="stockSearch" placeholder="搜尋產品名稱..."
@@ -725,11 +849,11 @@
 </div>
 
 <!-- ═══ MODAL: Client ═══ -->
-<div v-if="showClientModal" class="modal-overlay" @click.self="showClientModal = false">
+<div v-if="showClientModal" class="modal-overlay" @click.self="showClientModal = false; showReferralDropdown = false">
     <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-screen overflow-y-auto no-scrollbar">
         <div class="flex justify-between items-center">
             <h2 class="text-lg font-black">{{ clientForm.id ? '✏️ 修改客戶' : '➕ 新增客戶' }}</h2>
-            <button @click="showClientModal = false" class="text-slate-300 font-black text-2xl">×</button>
+            <button @click="showClientModal = false; showReferralDropdown = false" class="text-slate-300 font-black text-2xl">×</button>
         </div>
         <input v-model="clientForm.name" placeholder="客戶姓名 *" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50">
         <input v-model="clientForm.phone" placeholder="電話號碼" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50">
@@ -744,6 +868,57 @@
                 <option value="轉介紹">轉介紹</option>
             </select>
         </div>
+        <!-- ✦ 介紹人搜尋下拉 -->
+        <div>
+            <p class="text-xs font-bold text-slate-400 mb-1.5 pl-1">介紹人（可選）</p>
+            <div class="relative z-50">
+                <div @click="showReferralDropdown = !showReferralDropdown; referralSearch = ''"
+                    :class="clientForm.referred_by_id ? 'border-purple-400 bg-purple-50' : 'border-slate-200 bg-slate-50'"
+                    class="w-full p-3.5 rounded-xl border-2 font-semibold text-sm cursor-pointer flex items-center justify-between select-none">
+                    <span :class="clientForm.referred_by_id ? 'text-purple-800 font-black' : 'text-slate-400'">
+                        {{ clientForm.referred_by_id
+                            ? (clients.find(c => c.id === clientForm.referred_by_id)?.name || '已刪除客戶')
+                            : '-- 直接（無介紹人）--' }}
+                    </span>
+                    <span class="text-slate-400 text-xs ml-2 flex-shrink-0">{{ showReferralDropdown ? '▲' : '▼' }}</span>
+                </div>
+                <div v-if="showReferralDropdown"
+                    class="absolute top-full left-0 right-0 bg-white border-2 border-purple-200 rounded-2xl shadow-2xl mt-1.5 overflow-hidden dropdown-anim">
+                    <div class="p-2.5 bg-purple-50 border-b border-purple-100 sticky top-0">
+                        <input v-model="referralSearch" placeholder="🔍 搜尋介紹人..."
+                            class="w-full px-3 py-2.5 border border-purple-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-purple-400 bg-white"
+                            @click.stop autofocus>
+                    </div>
+                    <div class="max-h-44 overflow-y-auto no-scrollbar">
+                        <div @click="clientForm.referred_by_id = null; showReferralDropdown = false"
+                            class="px-4 py-3 active:bg-slate-50 cursor-pointer text-slate-400 text-sm font-semibold border-b border-slate-50">
+                            -- 直接（無介紹人）--
+                        </div>
+                        <div v-for="c in referralFilteredClients" :key="c.id"
+                            @click="clientForm.referred_by_id = c.id; showReferralDropdown = false; referralSearch = ''"
+                            :class="clientForm.referred_by_id === c.id ? 'bg-purple-50 border-l-4 border-purple-500' : ''"
+                            class="px-4 py-3 active:bg-purple-50 cursor-pointer border-b border-slate-50">
+                            <div class="flex items-center gap-2">
+                                <p class="font-black text-sm">{{ c.name }}</p>
+                                <span class="text-xs px-1.5 py-0.5 rounded-full font-bold" :class="genLabel(c.id).cls">{{ genLabel(c.id).label }}</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-0.5">{{ c.branch }} · {{ c.phone }}</p>
+                        </div>
+                        <div v-if="referralFilteredClients.length === 0" class="px-4 py-6 text-center text-slate-300 text-sm font-semibold">找不到客戶</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 顯示將會是幾代 -->
+            <div v-if="clientForm.referred_by_id" class="mt-2 flex items-center gap-2 px-1">
+                <span class="text-xs text-purple-600 font-semibold">此客戶將被記為</span>
+                <span class="text-xs font-black px-2 py-0.5 rounded-full"
+                    :class="genLabel(clientForm.id || '').cls === genLabel(clients.find(c=>c.id===clientForm.referred_by_id)?.id||'').cls ? '' : ''">
+                    <span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-black">
+                        {{ (getClientGeneration(clientForm.referred_by_id) + 1) }}代轉介紹
+                    </span>
+                </span>
+            </div>
+        </div>
         <label :class="clientForm.marathon ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 border-slate-200'"
             class="flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-colors">
             <input type="checkbox" v-model="clientForm.marathon" class="w-5 h-5 accent-emerald-500">
@@ -754,7 +929,7 @@
             <input type="date" v-model="clientForm.expiry_date" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50">
         </div>
         <div class="grid grid-cols-2 gap-3 pt-1">
-            <button @click="showClientModal = false" class="py-4 bg-slate-100 rounded-2xl font-black active:scale-95 transition-transform">取消</button>
+            <button @click="showClientModal = false; showReferralDropdown = false" class="py-4 bg-slate-100 rounded-2xl font-black active:scale-95 transition-transform">取消</button>
             <button @click="saveClient" class="py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-transform">確認存檔</button>
         </div>
     </div>
@@ -956,7 +1131,7 @@
 </div>
 
 <script>
-const { createApp, ref, computed, onMounted } = Vue;
+const { createApp, ref, reactive, computed, onMounted } = Vue;
 const SUPA_URL = "https://ajnunehxtiofcphdyhqn.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
 const SITE_URL = "https://incomesapp.netlify.app/";
@@ -985,17 +1160,24 @@ createApp({
         const clients  = ref([]);
         const finances = ref([]);
         const products = ref([]);
-        const trials   = ref([]); // ✨ NEW
+        const trials   = ref([]);
         const cart     = ref([]);
 
         const pSearch         = ref('');
         const cSearch         = ref('');
         const crmBranchFilter = ref('全部');
-        const refSearch       = ref('');
         const stockSearch     = ref('');
         const stockFilter     = ref('all');
         const txSearch        = ref('');
         const txTypeFilter    = ref('all');
+
+        // ✦ Searchable dropdown states
+        const showExClientDropdown  = ref(false);
+        const exClientSearch        = ref('');
+        const showRtClientDropdown  = ref(false);
+        const rtClientSearch        = ref('');
+        const showReferralDropdown  = ref(false);
+        const referralSearch        = ref('');
 
         const showClientModal          = ref(false);
         const showExpModal             = ref(false);
@@ -1009,8 +1191,9 @@ createApp({
         const restockForm         = ref({ product:null, qty:0, isInitial:false });
         const editTxForm          = ref({});
         const stockCorrectionForm = ref({ productName:'', currentStock:0, newStock:0, reason:'盤點更正' });
-        // ✨ eForm now includes trialDate
-        const eForm = ref({ clientId:null, type:'35pt', isNew:false, isReferral:false, trialDate:'' });
+
+        // ✦ eForm: added trialName + trialPhone
+        const eForm = ref({ clientId:null, type:'35pt', isNew:false, isReferral:false, trialDate:'', trialName:'', trialPhone:'' });
         const rForm = ref({ discount:'0', clientId:null });
 
         const correctionReasons = ['盤點更正','損耗/破損','內部使用','系統錯誤','其他'];
@@ -1050,13 +1233,23 @@ createApp({
             return d.toISOString().split('T')[0];
         });
 
-        // ─── Stock ───
-        const stockData    = ref({});
-        const loadStock    = () => { try { stockData.value = JSON.parse(localStorage.getItem('fwstk_v1')||'{}'); } catch(e) { stockData.value={}; } };
-        const saveStockLocal = () => localStorage.setItem('fwstk_v1', JSON.stringify(stockData.value));
-        const getStock     = (name) => (!name ? 0 : stockData.value[name] ?? 0);
-        const modifyStock  = (name, delta) => { stockData.value[name] = Math.max(0,(stockData.value[name]??0)+delta); saveStockLocal(); };
-        const setStock     = (name, qty)   => { stockData.value[name] = Math.max(0, qty); saveStockLocal(); };
+        // ─── ✦ Stock: reactive() for proper Vue 3 reactivity ───
+        const stockData = reactive({});
+
+        const loadStock = () => {
+            try {
+                const d = JSON.parse(localStorage.getItem('fwstk_v1') || '{}');
+                // Clear and rebuild to ensure Vue tracks all keys
+                Object.keys(stockData).forEach(k => delete stockData[k]);
+                Object.assign(stockData, d);
+            } catch(e) {}
+        };
+        const saveStockLocal = () => {
+            localStorage.setItem('fwstk_v1', JSON.stringify({ ...stockData }));
+        };
+        const getStock     = (name) => (!name ? 0 : stockData[name] ?? 0);
+        const modifyStock  = (name, delta) => { stockData[name] = Math.max(0, (stockData[name] ?? 0) + delta); saveStockLocal(); };
+        const setStock     = (name, qty)   => { stockData[name] = Math.max(0, qty); saveStockLocal(); };
         const quickAdjustStock = (name, delta) => modifyStock(name, delta);
 
         const stockInfo = (name) => {
@@ -1100,6 +1293,7 @@ createApp({
         const openStockCorrection = (p) => { stockCorrectionForm.value={productName:p.prod_name,currentStock:getStock(p.prod_name),newStock:getStock(p.prod_name),reason:'盤點更正'}; showStockCorrectionModal.value=true; };
         const saveStockCorrection = () => { const{productName,newStock}=stockCorrectionForm.value; if(newStock<0)return; setStock(productName,Number(newStock)); showStockCorrectionModal.value=false; };
 
+        // ✦ CSV Export
         const exportStockCSV = () => {
             if (products.value.length===0) return;
             const now = new Date();
@@ -1110,6 +1304,90 @@ createApp({
             a.href=url; a.download=`FITWORKHK_庫存_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         };
+
+        // ✦ CSV Import
+        const triggerImport = () => {
+            const el = document.getElementById('stockImportInput');
+            if (el) el.click();
+        };
+
+        const importStockCSV = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                // Remove BOM if present
+                const text = e.target.result.replace(/^\uFEFF/, '');
+                const lines = text.split(/\r?\n/).filter(l => l.trim());
+                let imported = 0, skipped = 0;
+
+                lines.forEach(line => {
+                    // Split CSV line, handle quoted fields
+                    const parts = line.split(',').map(p => p.trim().replace(/^["'`]|["'`]$/g, ''));
+                    if (parts.length < 2) return;
+
+                    const name = parts[0].trim();
+                    // Skip header / metadata rows
+                    if (!name || ['產品名稱','FITWORKHK 庫存清單','匯出','類別',''].some(h => name.startsWith(h))) return;
+
+                    // Detect format: 7+ cols = exported format (col[2] is stock), else col[1]
+                    const qtyStr = parts.length >= 7 ? parts[2] : parts[1];
+                    const qty = parseInt(qtyStr.replace(/[^0-9]/g, ''), 10);
+
+                    if (!isNaN(qty) && qty >= 0) {
+                        setStock(name, qty);
+                        imported++;
+                    } else {
+                        skipped++;
+                    }
+                });
+
+                event.target.value = '';
+                alert(`✅ 匯入完成\n✓ 已更新 ${imported} 款產品庫存\n⚠ 跳過 ${skipped} 行（無效格式）`);
+            };
+            reader.readAsText(file, 'UTF-8');
+        };
+
+        // ─── ✦ Referral / Generation ───
+        const getClientGeneration = (clientId) => {
+            let gen = 0;
+            let current = clients.value.find(c => c.id === clientId);
+            const visited = new Set();
+            while (current && current.referred_by_id) {
+                if (visited.has(current.id) || gen > 10) break;
+                visited.add(current.id);
+                current = clients.value.find(c => c.id === current.referred_by_id);
+                gen++;
+            }
+            return gen;
+        };
+
+        const genLabel = (clientId) => {
+            const g = getClientGeneration(clientId);
+            if (g === 0) return { label: '直接', cls: 'bg-slate-100 text-slate-500' };
+            if (g === 1) return { label: '1代', cls: 'bg-blue-100 text-blue-600' };
+            if (g === 2) return { label: '2代', cls: 'bg-purple-100 text-purple-600' };
+            return { label: g + '代', cls: 'bg-indigo-100 text-indigo-600' };
+        };
+
+        // ─── ✦ Searchable dropdown computed ───
+        const exFilteredClients = computed(() => {
+            const q = exClientSearch.value.toLowerCase();
+            return clients.value.filter(c => !q || (c.name + (c.phone||'')).toLowerCase().includes(q)).slice(0, 40);
+        });
+
+        const rtFilteredClients = computed(() => {
+            const q = rtClientSearch.value.toLowerCase();
+            return clients.value.filter(c => !q || (c.name + (c.phone||'')).toLowerCase().includes(q)).slice(0, 40);
+        });
+
+        const referralFilteredClients = computed(() => {
+            const q = referralSearch.value.toLowerCase();
+            const currentId = clientForm.value.id;
+            return clients.value
+                .filter(c => c.id !== currentId && (!q || (c.name + (c.phone||'')).toLowerCase().includes(q)))
+                .slice(0, 40);
+        });
 
         // ─── Auth ───
         const handleAuth = async () => {
@@ -1130,8 +1408,8 @@ createApp({
         };
         const handleLogout = async () => { await sb.auth.signOut(); session.value=null; showProfile.value=false; };
 
-        const checkPasskeySupport   = async () => { if (window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable) passkeySupported.value = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); };
-        const checkPasskeyRegistered= (email) => { passkeyRegistered.value = !!localStorage.getItem(getPasskeyKey(email)); };
+        const checkPasskeySupport    = async () => { if (window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable) passkeySupported.value = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); };
+        const checkPasskeyRegistered = (email) => { passkeyRegistered.value = !!localStorage.getItem(getPasskeyKey(email)); };
         const registerPasskey = async () => {
             if (!session.value) return;
             const {email,id:userId} = session.value.user;
@@ -1163,7 +1441,6 @@ createApp({
                 sb.from('clients').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
                 sb.from('finances').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
                 sb.from('products').select('*').eq('is_active',true).in('category',['内','外']).order('prod_seq'),
-                // ✨ Load upcoming trials (next 30 days)
                 sb.from('trials').select('*').eq('user_id',uid).gte('trial_date',today).order('trial_date',{ascending:true})
             ]);
             clients.value  = c     || [];
@@ -1172,7 +1449,7 @@ createApp({
             trials.value   = tr    || [];
         };
 
-        // ─── ✨ NEW: Upcoming Trials ───
+        // ─── Upcoming Trials ───
         const upcomingTrials = computed(() => {
             const today = new Date(); today.setHours(0,0,0,0);
             const in30  = new Date(today); in30.setDate(today.getDate()+30);
@@ -1195,7 +1472,7 @@ createApp({
             const {error} = await sb.from('finances').update({type,category,amount:Number(amount),note,person}).eq('id',id).eq('user_id',session.value.user.id);
             if (!error) { showEditTxModal.value=false; await loadData(); } else alert(error.message);
         };
-        const deleteTx      = () => { showEditTxModal.value=false; showDeleteConfirm.value=true; };
+        const deleteTx        = () => { showEditTxModal.value=false; showDeleteConfirm.value=true; };
         const confirmDeleteTx = async () => {
             const {error} = await sb.from('finances').delete().eq('id',editTxForm.value.id).eq('user_id',session.value.user.id);
             if (!error) { showDeleteConfirm.value=false; await loadData(); } else alert(error.message);
@@ -1218,41 +1495,60 @@ createApp({
             window.open(`https://wa.me/${hk}?text=${msg}`,'_blank');
         };
 
-        // ─── Exercise POS ───
+        // ─── ✦ Exercise POS (trial = no client, packages = client required) ───
         const saveExercise = async (person) => {
-            if (!eForm.value.clientId) return alert("請先選擇客戶");
-            const {type,isNew,isReferral,clientId,trialDate} = eForm.value;
+            const {type, isNew, isReferral, clientId, trialDate, trialName, trialPhone} = eForm.value;
+
+            // Validation
+            if (type === 'trial') {
+                if (!trialName.trim()) return alert("請輸入試堂人名字");
+            } else {
+                if (!clientId) return alert("請先選擇客戶");
+            }
+
             let profit = 0;
-            if (type==='trial') profit=98;
-            else if (type==='10pt') profit=isReferral?413:465;
-            else if (type==='35pt') profit=isNew?1250.50:1277.50;
+            if (type === 'trial')  profit = 98;
+            else if (type === '10pt') profit = isReferral ? 413 : 465;
+            else if (type === '35pt') profit = isNew ? 1250.50 : 1277.50;
 
             const {error} = await sb.from('finances').insert({
-                user_id:session.value.user.id, type:'income', category:'運動',
-                amount:profit, person, client_id:clientId, note:type
+                user_id:   session.value.user.id,
+                type:      'income',
+                category:  '運動',
+                amount:    profit,
+                person,
+                client_id: type === 'trial' ? null : clientId,
+                note:      type
             });
-            if (error) return alert("錯誤："+error.message);
+            if (error) return alert("錯誤：" + error.message);
 
-            // ✨ Save to trials table if trial date is set
-            if (type==='trial' && trialDate) {
-                const client = clients.value.find(c=>c.id===clientId);
-                const {error:te} = await sb.from('trials').insert([{
-                    user_id:    session.value.user.id,
-                    client_id:  clientId,
-                    client_name:client?.name || '未知客戶',
-                    trial_date: trialDate,
-                    paid_date:  todayDate.value,
-                    amount:     profit,
+            // ✦ Save trial record (with phone, no client_id)
+            if (type === 'trial') {
+                const trialPayload = {
+                    user_id:     session.value.user.id,
+                    client_id:   null,
+                    client_name: trialName.trim(),
+                    trial_date:  trialDate || null,
+                    paid_date:   todayDate.value,
+                    amount:      profit,
                     person,
-                    reminded:   false
-                }]);
+                    reminded:    false
+                };
+                // Attempt to include trial_phone (requires column in DB)
+                if (trialPhone.trim()) trialPayload.trial_phone = trialPhone.trim();
+
+                const {error: te} = await sb.from('trials').insert([trialPayload]);
                 if (te) console.warn('Failed to save trial:', te.message);
             }
 
             await loadData();
-            const msg = trialDate ? `✅ 入帳成功 +$${profit.toFixed(2)}\n📅 試堂：${trialDate}\n🔔 提醒：${reminderDate.value}` : `✅ 入帳成功 +$${profit.toFixed(2)}`;
+
+            const msg = (type === 'trial' && trialDate)
+                ? `✅ 入帳成功 +$${profit.toFixed(2)}\n📅 試堂：${trialDate}\n🔔 提醒：${reminderDate.value}`
+                : `✅ 入帳成功 +$${profit.toFixed(2)}`;
             alert(msg);
-            eForm.value = { clientId:null, type:'35pt', isNew:false, isReferral:false, trialDate:'' };
+
+            eForm.value = { clientId:null, type:'35pt', isNew:false, isReferral:false, trialDate:'', trialName:'', trialPhone:'' };
             currentTab.value = 'dashboard';
         };
 
@@ -1270,8 +1566,13 @@ createApp({
             if (cart.value.length===0) return;
             const totalP=cartTotal.value, note=cart.value.map(i=>`${i.name}×${i.qty}`).join(', ');
             const {error} = await sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'零售',amount:totalP,person,client_id:rForm.value.clientId,note});
-            if (!error) { cart.value.forEach(item=>modifyStock(item.name,-item.qty)); cart.value=[]; rForm.value.clientId=null; await loadData(); alert("✅ 結帳成功\n利潤："+(totalP===0?'$0':(totalP>0?'+$':'-$')+Math.abs(totalP).toFixed(2))); currentTab.value='dashboard'; }
-            else alert("錯誤："+error.message);
+            if (!error) {
+                cart.value.forEach(item=>modifyStock(item.name,-item.qty));
+                cart.value=[]; rForm.value.clientId=null; showRtClientDropdown.value=false;
+                await loadData();
+                alert("✅ 結帳成功\n利潤："+(totalP===0?'$0':(totalP>0?'+$':'-$')+Math.abs(totalP).toFixed(2)));
+                currentTab.value='dashboard';
+            } else alert("錯誤："+error.message);
         };
 
         // ─── Restock ───
@@ -1287,16 +1588,29 @@ createApp({
             else alert("錯誤："+error.message);
         };
 
-        // ─── CRM ───
+        // ─── ✦ CRM (with referred_by_id) ───
         const openClient = (c) => {
-            clientForm.value = c ? {...c} : {name:'',phone:'',branch:'觀塘',source:'廣告',marathon:false,expiry_date:new Date(new Date().setFullYear(new Date().getFullYear()+1)).toISOString().split('T')[0]};
-            showClientModal.value=true;
+            clientForm.value = c ? {...c} : {
+                name:'', phone:'', branch:'觀塘', source:'廣告', marathon:false,
+                expiry_date: new Date(new Date().setFullYear(new Date().getFullYear()+1)).toISOString().split('T')[0],
+                referred_by_id: null
+            };
+            showReferralDropdown.value = false;
+            referralSearch.value = '';
+            showClientModal.value = true;
         };
         const saveClient = async () => {
             if (!clientForm.value.name) return alert("請輸入客戶姓名");
-            const payload={...clientForm.value,user_id:session.value.user.id};
-            const res=clientForm.value.id ? await sb.from('clients').update(payload).eq('id',clientForm.value.id) : await sb.from('clients').insert([payload]);
-            if (!res.error) { showClientModal.value=false; await loadData(); } else alert(res.error.message);
+            const payload = { ...clientForm.value, user_id: session.value.user.id };
+            if (!payload.referred_by_id) payload.referred_by_id = null;
+            const res = clientForm.value.id
+                ? await sb.from('clients').update(payload).eq('id', clientForm.value.id)
+                : await sb.from('clients').insert([payload]);
+            if (!res.error) {
+                showClientModal.value = false;
+                showReferralDropdown.value = false;
+                await loadData();
+            } else alert(res.error.message);
         };
 
         // ─── Finance ───
@@ -1349,9 +1663,8 @@ createApp({
         const daysUntilExpiry    = (date) => Math.ceil((new Date(date)-new Date())/86400000);
         const formatDate         = (iso) => { if(!iso)return ''; const d=new Date(iso); return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; };
 
-        const filteredClients  = computed(() => clients.value.filter(c=>(c.name+c.phone).toLowerCase().includes(cSearch.value.toLowerCase()) && (crmBranchFilter.value==='全部'||c.branch===crmBranchFilter.value)));
+        const filteredClients  = computed(() => clients.value.filter(c=>(c.name+(c.phone||'')).toLowerCase().includes(cSearch.value.toLowerCase()) && (crmBranchFilter.value==='全部'||c.branch===crmBranchFilter.value)));
         const filteredProducts = computed(() => products.value.filter(p=>p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase())).map(p=>({name:p.prod_name,retail:parseFloat(p.retail_price),cost:parseFloat(p.cost)})));
-        const filteredRefs     = computed(() => clients.value.filter(c=>c.name.includes(refSearch.value)));
 
         onMounted(async () => {
             await checkPasskeySupport();
@@ -1369,7 +1682,13 @@ createApp({
             passkeySupported, passkeyRegistered, registerPasskey, loginWithPasskey, removePasskey,
             currentTab, retailSubTab, financeSubTab, tabs, dateRange, dateRanges, reportPerson,
             clients, finances, products, trials, cart,
-            pSearch, cSearch, crmBranchFilter, refSearch, stockSearch, stockFilter, stockFilters, txSearch, txTypeFilter,
+            pSearch, cSearch, crmBranchFilter, stockSearch, stockFilter, stockFilters, txSearch, txTypeFilter,
+            // ✦ Searchable dropdowns
+            showExClientDropdown, exClientSearch, exFilteredClients,
+            showRtClientDropdown, rtClientSearch, rtFilteredClients,
+            showReferralDropdown, referralSearch, referralFilteredClients,
+            // ✦ Referral / generation
+            getClientGeneration, genLabel,
             showClientModal, clientForm, openClient, saveClient,
             showExpModal, expForm, openExp, saveExp, expCats,
             showRestockModal, restockForm, openRestock, saveRestock,
@@ -1378,19 +1697,21 @@ createApp({
             showStockCorrectionModal, stockCorrectionForm, openStockCorrection, saveStockCorrection, correctionReasons,
             showProfile,
             exerciseItems, eForm, saveExercise,
-            rForm, addToCart, increaseQty, decreaseQty, getUnitProfit, getSellPrice, isLossSale, cartTotal, cartItemCount, cartHasLoss, saveRetail,
-            getStock, stockInfo, quickAdjustStock, exportStockCSV,
-            stockCategories, filteredStockCategories, totalStockQty, totalStockValue, totalRetailValue, stockSummary, lowStockItems,
+            rForm, addToCart, increaseQty, decreaseQty, getUnitProfit, getSellPrice, isLossSale,
+            cartTotal, cartItemCount, cartHasLoss, saveRetail,
+            getStock, stockInfo, quickAdjustStock, exportStockCSV, importStockCSV, triggerImport,
+            stockCategories, filteredStockCategories, totalStockQty, totalStockValue, totalRetailValue,
+            stockSummary, lowStockItems,
             upcomingTrials, daysUntilTrial, todayDate, tomorrowDate, reminderDate,
             expiringClients, daysUntilExpiry, openWhatsApp,
             incomeByCategory, expenseByCategory,
-            filteredClients, filteredProducts, filteredRefs,
+            filteredClients, filteredProducts,
             groupedTransactions, recentTransactions,
             totalProfit, totalIncome, totalExpense, branchStats,
             marathonStats: computed(()=>({active:clients.value.filter(c=>c.marathon).length})),
             isExpiring: (d) => (new Date(d)-new Date())/86400000 < 14,
             triggerReset: () => { showProfile.value=false; forgotPassword(); },
-            formatDate, dateRanges
+            formatDate
         };
     }
 }).mount('#app');
