@@ -1091,14 +1091,15 @@ const stockCategories=computed(()=>{
 
     // ── Load data ──
     const loadData=async()=>{
-      const uid=session.value.user.id,today=new Date().toISOString().split('T')[0];
-      const[{data:c},{data:f},{data:prods},{data:tr}]=await Promise.all([
-        sb.from('clients').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
-        sb.from('finances').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
-sb.from('products').select('*').eq('is_active',true).in('category',['內','外']).order('prod_seq'),
-sb.from('trials').select('*')...
-      clients.value=c||[];finances.value=f||[];products.value=prods||[];trials.value=tr||[];
-    };
+  const uid=session.value.user.id,today=new Date().toISOString().split('T')[0];
+  const[{data:c},{data:f},{data:prods},{data:tr}]=await Promise.all([
+    sb.from('clients').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
+    sb.from('finances').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
+    sb.from('products').select('*').eq('is_active',true).in('category',['內','外']).order('prod_seq'),
+    sb.from('trials').select('*').eq('user_id',uid).gte('trial_date',today).order('trial_date',{ascending:true})
+  ]);
+  clients.value=c||[];finances.value=f||[];products.value=prods||[];trials.value=tr||[];
+};
 
     // ── Monthly metrics ──
     const loadMonthlyMetrics=async()=>{
