@@ -41,7 +41,6 @@
                 </div>
             </div>
 
-            <!-- Recovery Form -->
             <div v-if="authState === 'recovery'" class="bg-white rounded-3xl p-6 shadow-2xl space-y-4">
                 <h2 class="font-black text-lg">設定新密碼</h2>
                 <input type="password" v-model="newPassword" placeholder="輸入新密碼（最少 6 位）"
@@ -53,7 +52,6 @@
                 </button>
             </div>
 
-            <!-- Login / Register Form -->
             <div v-else class="bg-white rounded-3xl p-6 shadow-2xl space-y-3">
                 <input type="email" v-model="authForm.email" placeholder="Email" autocomplete="username"
                     class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none">
@@ -82,7 +80,6 @@
 
     <!-- ═══════════ MAIN APP ═══════════ -->
     <div v-else>
-        <!-- Header -->
         <header class="bg-white border-b border-slate-100 sticky top-0 z-40">
             <div class="max-w-lg mx-auto px-4 py-3 flex justify-between items-center">
                 <div class="font-black text-lg italic text-blue-800">FITWORK<span class="text-slate-300">HK</span></div>
@@ -93,35 +90,25 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="max-w-lg mx-auto px-4 py-4 pb-28 space-y-4">
 
             <!-- ── DASHBOARD ── -->
             <section v-if="currentTab === 'dashboard'" class="space-y-4">
-
-                <!-- Profit Hero Card -->
                 <div class="bg-gradient-to-br from-blue-900 via-blue-800 to-slate-800 rounded-3xl p-5 text-white shadow-xl">
-                    <!-- Date Range Pills -->
                     <div class="flex gap-2 mb-4">
                         <button v-for="r in dateRanges" :key="r.id" @click="dateRange = r.id"
-                            :class="dateRange === r.id
-                                ? 'bg-blue-300 text-blue-900'
-                                : 'bg-white/10 text-white/60 hover:bg-white/20'"
+                            :class="dateRange === r.id ? 'bg-blue-300 text-blue-900' : 'bg-white/10 text-white/60 hover:bg-white/20'"
                             class="px-3 py-1 rounded-full text-xs font-bold transition-colors">
                             {{ r.name }}
                         </button>
                     </div>
-                    <!-- Person Filter -->
                     <div class="flex gap-2 mb-4">
                         <button v-for="p in ['All','Kwan','Cat']" :key="p" @click="reportPerson = p"
-                            :class="reportPerson === p
-                                ? 'bg-white text-blue-800'
-                                : 'bg-white/10 text-white/60'"
+                            :class="reportPerson === p ? 'bg-white text-blue-800' : 'bg-white/10 text-white/60'"
                             class="px-3 py-1 rounded-xl text-xs font-black transition-colors">
                             {{ p }}
                         </button>
                     </div>
-                    <!-- Profit Number -->
                     <p class="text-blue-300 text-xs font-bold uppercase tracking-widest">純利潤</p>
                     <p class="text-5xl font-black mt-1 tracking-tight">${{ totalProfit }}</p>
                     <div class="flex gap-4 mt-3 text-xs text-white/50 font-semibold">
@@ -130,7 +117,6 @@
                     </div>
                 </div>
 
-                <!-- Branch + Marathon Stats -->
                 <div class="grid grid-cols-3 gap-3">
                     <div v-for="b in ['觀塘','中環','佐敦']" :key="b"
                         class="bg-white rounded-2xl p-4 text-center shadow-sm border border-slate-100">
@@ -152,7 +138,6 @@
                     </div>
                 </div>
 
-                <!-- Recent Transactions -->
                 <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     <div class="px-4 py-3 border-b border-slate-50 flex justify-between items-center">
                         <p class="font-black text-sm">最近交易</p>
@@ -172,9 +157,10 @@
                             </p>
                             <p class="text-xs text-slate-300 mt-0.5">{{ formatDate(t.created_at) }}</p>
                         </div>
+                        <!-- ★ toFixed(2) -->
                         <span :class="t.type === 'income' ? 'text-emerald-600' : 'text-red-500'"
                             class="font-black text-sm">
-                            {{ t.type === 'income' ? '+' : '-' }}${{ Number(t.amount).toFixed(0) }}
+                            {{ t.type === 'income' ? '+' : '-' }}${{ Number(t.amount).toFixed(2) }}
                         </span>
                     </div>
                 </div>
@@ -232,7 +218,6 @@
                     <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">Exercise</span>
                 </div>
 
-                <!-- Client Select -->
                 <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇客戶</p>
                     <select v-model="eForm.clientId"
@@ -242,7 +227,6 @@
                     </select>
                 </div>
 
-                <!-- Service Type -->
                 <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">服務類型</p>
                     <div class="space-y-2">
@@ -250,14 +234,13 @@
                             :class="eForm.type === p.id
                                 ? 'bg-blue-600 text-white border-blue-600'
                                 : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-200'"
-                            class="w-full p-4 rounded-xl border-2 font-bold flex justify-between items-center transition-colors active:scale-98">
+                            class="w-full p-4 rounded-xl border-2 font-bold flex justify-between items-center transition-colors">
                             <span class="text-sm font-black">{{ p.name }}</span>
                             <span class="text-base font-black">${{ p.price }}</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Options -->
                 <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">優惠選項</p>
                     <div class="grid grid-cols-2 gap-2">
@@ -280,7 +263,6 @@
                     </div>
                 </div>
 
-                <!-- Checkout -->
                 <div class="grid grid-cols-2 gap-3">
                     <button @click="saveExercise('Kwan')"
                         class="bg-slate-900 text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-transform">
@@ -318,27 +300,29 @@
                         :class="i < filteredProducts.length - 1 ? 'border-b border-slate-50' : ''"
                         class="px-4 py-3 flex justify-between items-center active:bg-emerald-50 cursor-pointer transition-colors">
                         <span class="font-semibold text-sm">{{ p.name }}</span>
+                        <!-- ★ toFixed(2) -->
                         <span class="font-black text-emerald-600 text-sm">
-                            ${{ (p.retail * (1 - parseFloat(rForm.discount))).toFixed(0) }}
+                            ${{ (p.retail * (1 - parseFloat(rForm.discount))).toFixed(2) }}
                         </span>
                     </div>
                 </div>
 
-                <!-- Cart -->
                 <div v-if="cart.length > 0" class="bg-slate-900 rounded-2xl p-5 text-white">
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">購物車 · {{ cart.length }} 件</p>
                     <div v-for="(item, i) in cart" :key="i"
                         class="flex justify-between items-center py-2.5 border-b border-slate-800 last:border-0">
                         <span class="text-sm font-semibold text-slate-300 truncate flex-1 mr-3">{{ item.name }}</span>
                         <div class="flex items-center gap-3">
-                            <span class="text-emerald-400 font-bold text-sm">+${{ item.profit.toFixed(0) }}</span>
+                            <!-- ★ toFixed(2) -->
+                            <span class="text-emerald-400 font-bold text-sm">+${{ item.profit.toFixed(2) }}</span>
                             <button @click="cart.splice(i,1)" class="text-red-400 font-black text-xl leading-none">×</button>
                         </div>
                     </div>
                     <div class="mt-3 pt-3 border-t border-slate-700 flex justify-between items-center">
                         <span class="font-bold text-slate-400 text-sm">總利潤</span>
+                        <!-- ★ toFixed(2) -->
                         <span class="font-black text-emerald-400 text-lg">
-                            ${{ cart.reduce((a,b) => a + b.profit, 0).toFixed(0) }}
+                            ${{ cart.reduce((a,b) => a + b.profit, 0).toFixed(2) }}
                         </span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 mt-4">
@@ -373,7 +357,6 @@
 
         </main>
 
-        <!-- Bottom Navigation -->
         <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-100 z-40">
             <div class="max-w-lg mx-auto grid grid-cols-5">
                 <button v-for="t in tabs" :key="t.id" @click="currentTab = t.id"
@@ -538,23 +521,24 @@
 
     createApp({
         setup() {
-            const session          = ref(null);
-            const recoverySession  = ref(null); // ★ 新增：獨立存放 recovery session
-            const authState        = ref('login');
-            const authForm         = ref({ email: '', password: '' });
-            const newPassword      = ref('');
-            const currentTab       = ref('dashboard');
-            const dateRange        = ref('month');
-            const reportPerson     = ref('All');
-            const showProfile      = ref(false);
-            const clients          = ref([]);
-            const finances         = ref([]);
-            const cart             = ref([]);
-            const pSearch          = ref('');
-            const cSearch          = ref('');
-            const refSearch        = ref('');
-            const passkeySupported = ref(false);
-            const passkeyRegistered= ref(false);
+            const session           = ref(null);
+            const recoverySession   = ref(null);
+            const authState         = ref('login');
+            const authForm          = ref({ email: '', password: '' });
+            const newPassword       = ref('');
+            const currentTab        = ref('dashboard');
+            const dateRange         = ref('month');
+            const reportPerson      = ref('All');
+            const showProfile       = ref(false);
+            const clients           = ref([]);
+            const finances          = ref([]);
+            const products          = ref([]);  // ★ 改為從 Supabase 載入，移除 hardcoded productDb
+            const cart              = ref([]);
+            const pSearch           = ref('');
+            const cSearch           = ref('');
+            const refSearch         = ref('');
+            const passkeySupported  = ref(false);
+            const passkeyRegistered = ref(false);
 
             const tabs = [
                 { id:'dashboard', name:'總覽',  icon:'📊' },
@@ -574,18 +558,6 @@
                 { id:'trial', name:'試堂',     price:98   },
                 { id:'10pt',  name:'10點套票', price:850  },
                 { id:'35pt',  name:'35點套票', price:2550 }
-            ];
-            const productDb = [
-                {name:'營養蛋白素-雲呢拿', retail:464},
-                {name:'營養蛋白素-野草莓', retail:464},
-                {name:'濃縮蘆薈汁-原味',   retail:446},
-                {name:'天然瓜拿拿茶',       retail:323},
-                {name:'佳能蛋白質粉',       retail:369},
-                {name:'營養纖維粉',         retail:419},
-                {name:'夜寧新',             retail:1105},
-                {name:'深海魚油',           retail:336},
-                {name:'日日強韌蘆薈洗髮露', retail:145},
-                {name:'日日強韌蘆薈護髮乳', retail:145}
             ];
 
             // ── Auth ──────────────────────────────────────────────────
@@ -699,14 +671,22 @@
             // ── Data ──────────────────────────────────────────────────
             const loadData = async () => {
                 const uid = session.value.user.id;
-                const [{ data: c, error: ce }, { data: f, error: fe }] = await Promise.all([
+                const [
+                    { data: c,     error: ce },
+                    { data: f,     error: fe },
+                    { data: prods, error: pe }  // ★ 新增 products 讀取
+                ] = await Promise.all([
                     sb.from('clients').select('*').eq('user_id', uid).order('created_at', { ascending: false }),
-                    sb.from('finances').select('*').eq('user_id', uid).order('created_at', { ascending: false })
+                    sb.from('finances').select('*').eq('user_id', uid).order('created_at', { ascending: false }),
+                    // ★ 只取 is_active=true、category 為 内/外 的產品
+                    sb.from('products').select('*').eq('is_active', true).in('category', ['内', '外']).order('prod_seq')
                 ]);
                 if (ce) console.error('clients:', ce.message);
                 if (fe) console.error('finances:', fe.message);
-                clients.value  = c || [];
-                finances.value = f || [];
+                if (pe) console.error('products:', pe.message);
+                clients.value  = c     || [];
+                finances.value = f     || [];
+                products.value = prods || [];
             };
 
             // ── Exercise POS ──────────────────────────────────────────
@@ -717,7 +697,7 @@
                 let profit = 0;
                 if (type === 'trial')      profit = 98;
                 else if (type === '10pt')  profit = isReferral ? 413 : 465;
-                else if (type === '35pt')  profit = isNew ? 1250.5 : 1277.5;
+                else if (type === '35pt')  profit = isNew ? 1250.50 : 1277.50;
 
                 const { error } = await sb.from('finances').insert({
                     user_id: session.value.user.id,
@@ -728,8 +708,8 @@
                     note: type
                 });
                 if (!error) {
-                    await loadData(); // ★ 修正：await 確保數據先更新
-                    alert("✅ 入帳成功 +$" + profit);
+                    await loadData();
+                    alert("✅ 入帳成功 +$" + profit.toFixed(2));
                     currentTab.value = 'dashboard';
                 } else {
                     alert("錯誤：" + error.message);
@@ -740,7 +720,7 @@
             const rForm = ref({ discount: '0' });
             const addToCart = (p) => {
                 const retail = p.retail * (1 - parseFloat(rForm.value.discount));
-                const profit = retail - (p.retail * 0.5);
+                const profit = retail - p.cost;  // ★ 改用資料庫實際 cost 計算利潤
                 cart.value.push({ name: p.name, profit });
             };
             const saveRetail = async (person) => {
@@ -755,8 +735,8 @@
                 });
                 if (!error) {
                     cart.value = [];
-                    await loadData(); // ★ 修正：await
-                    alert("✅ 結帳成功 +$" + totalP.toFixed(0));
+                    await loadData();
+                    alert("✅ 結帳成功 +$" + totalP.toFixed(2));  // ★ toFixed(2)
                     currentTab.value = 'dashboard';
                 } else {
                     alert("錯誤：" + error.message);
@@ -800,7 +780,7 @@
                 });
                 if (!error) {
                     showExpModal.value = false;
-                    await loadData(); // ★ 修正：await
+                    await loadData();
                     currentTab.value = 'dashboard';
                 } else {
                     alert("錯誤：" + error.message);
@@ -814,39 +794,37 @@
                     const matchPerson = reportPerson.value === 'All' || f.person === reportPerson.value;
                     if (!matchPerson) return false;
                     const d = new Date(f.created_at);
-                    if (dateRange.value === 'today') {
-                        return d.toDateString() === now.toDateString();
-                    }
+                    if (dateRange.value === 'today') return d.toDateString() === now.toDateString();
                     if (dateRange.value === 'week') {
                         const start = new Date(now);
                         start.setDate(now.getDate() - now.getDay());
                         start.setHours(0,0,0,0);
                         return d >= start;
                     }
-                    if (dateRange.value === 'month') {
+                    if (dateRange.value === 'month')
                         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                    }
-                    if (dateRange.value === 'year') {
+                    if (dateRange.value === 'year')
                         return d.getFullYear() === now.getFullYear();
-                    }
                     return true;
                 });
             };
 
+            // ★ 全部改為 toFixed(2)
             const totalProfit = computed(() => {
                 const arr = filterByDate(finances.value);
                 const inc = arr.filter(f => f.type==='income').reduce((a,b) => a+Number(b.amount), 0);
                 const exp = arr.filter(f => f.type==='expense').reduce((a,b) => a+Number(b.amount), 0);
-                return (inc - exp).toFixed(1);
+                return (inc - exp).toFixed(2);
             });
             const totalIncome = computed(() =>
                 filterByDate(finances.value).filter(f => f.type==='income')
-                    .reduce((a,b) => a+Number(b.amount), 0).toFixed(0)
+                    .reduce((a,b) => a+Number(b.amount), 0).toFixed(2)
             );
             const totalExpense = computed(() =>
                 filterByDate(finances.value).filter(f => f.type==='expense')
-                    .reduce((a,b) => a+Number(b.amount), 0).toFixed(0)
+                    .reduce((a,b) => a+Number(b.amount), 0).toFixed(2)
             );
+
             const branchStats = computed(() => {
                 const b = {'觀塘':0,'中環':0,'佐敦':0};
                 clients.value.forEach(c => { if (b[c.branch] !== undefined) b[c.branch]++; });
@@ -866,9 +844,7 @@
             // ── Lifecycle ─────────────────────────────────────────────
             onMounted(async () => {
                 await checkPasskeySupport();
-
                 sb.auth.onAuthStateChange((event, sessionData) => {
-                    // ★ 修正：PASSWORD_RECOVERY 不設定主 session，防止直接進入主畫面
                     if (event === 'PASSWORD_RECOVERY') {
                         recoverySession.value = sessionData;
                         authState.value = 'recovery';
@@ -881,7 +857,6 @@
                         checkPasskeyRegistered(sessionData.user.email);
                     }
                 });
-
                 if (window.location.hash.includes('type=recovery')) {
                     authState.value = 'recovery';
                 }
@@ -891,7 +866,7 @@
                 session, authState, authForm, newPassword,
                 handleAuth, forgotPassword, updatePassword, handleLogout,
                 currentTab, tabs, dateRange, dateRanges, reportPerson,
-                clients, finances, cart, pSearch, cSearch, refSearch,
+                clients, finances, products, cart, pSearch, cSearch, refSearch,
                 showClientModal, clientForm, openClient, saveClient,
                 showExpModal, expForm, openExp, saveExp,
                 exerciseItems, eForm, saveExercise,
@@ -901,8 +876,15 @@
                         (c.name + c.phone).toLowerCase().includes(cSearch.value.toLowerCase())
                     )
                 ),
+                // ★ 改為從 products ref 讀取，映射 DB 欄位
                 filteredProducts: computed(() =>
-                    productDb.filter(p => p.name.toLowerCase().includes(pSearch.value.toLowerCase()))
+                    products.value
+                        .filter(p => p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase()))
+                        .map(p => ({
+                            name:   p.prod_name,
+                            retail: parseFloat(p.retail_price),
+                            cost:   parseFloat(p.cost)
+                        }))
                 ),
                 filteredRefs: computed(() => clients.value.filter(c => c.name.includes(refSearch.value))),
                 totalProfit, totalIncome, totalExpense,
