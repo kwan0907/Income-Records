@@ -9,23 +9,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         [v-cloak]{display:none}
-        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px)}
-        .slide-up{animation:slideUp .28s cubic-bezier(.32,.72,0,1)}
-        @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px)}
+        .slide-up{animation:slideUp .3s cubic-bezier(.32,.72,0,1)}
+        @keyframes slideUp{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
         .no-scrollbar::-webkit-scrollbar{display:none}
         *{-webkit-tap-highlight-color:transparent}
-        .bar-fill{transition:width .6s cubic-bezier(.4,0,.2,1)}
+        .bar-fill{transition:width .7s cubic-bezier(.4,0,.2,1)}
+        .fade-in{animation:fadeIn .25s ease}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        .card-press{transition:transform .1s,box-shadow .1s}
+        .card-press:active{transform:scale(0.97)}
+        input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+        .trial-pulse{animation:trialPulse 2s ease-in-out infinite}
+        @keyframes trialPulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.3)}50%{box-shadow:0 0 0 8px rgba(99,102,241,0)}}
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 text-sm">
 <div id="app" v-cloak>
 
 <!-- ═══ LOGIN ═══ -->
-<div v-if="!session" class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-950 to-slate-900">
+<div v-if="!session" class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900">
     <div class="w-full max-w-sm">
-        <div class="text-center mb-8">
+        <div class="text-center mb-10">
+            <div class="w-16 h-16 bg-blue-500/20 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-blue-400/30">
+                <span class="text-3xl">💪</span>
+            </div>
             <div class="text-4xl font-black italic text-white tracking-tight">FITWORK<span class="text-blue-400">HK</span></div>
-            <div class="text-xs text-blue-300 font-semibold tracking-widest mt-1 uppercase">
+            <div class="text-xs text-blue-300/70 font-semibold tracking-widest mt-1.5 uppercase">
                 {{ authState === 'recovery' ? '設定新密碼' : 'Management System' }}
             </div>
         </div>
@@ -35,12 +45,12 @@
                 class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none">
             <button @click="updatePassword" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl active:scale-95 transition-transform shadow-lg">確認更新密碼</button>
         </div>
-        <div v-else class="bg-white rounded-3xl p-6 shadow-2xl space-y-3">
+        <div v-else class="bg-white/95 backdrop-blur rounded-3xl p-6 shadow-2xl space-y-3">
             <input type="email" v-model="authForm.email" placeholder="Email" autocomplete="username"
-                class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none">
+                class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none bg-slate-50">
             <input type="password" v-model="authForm.password" placeholder="Password"
                 :autocomplete="authState === 'login' ? 'current-password' : 'new-password'"
-                class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none">
+                class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none bg-slate-50">
             <button @click="handleAuth" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform">
                 {{ authState === 'login' ? '登入' : '建立帳號' }}
             </button>
@@ -60,59 +70,98 @@
 
 <!-- ═══ MAIN APP ═══ -->
 <div v-else>
-    <header class="bg-white border-b border-slate-100 sticky top-0 z-40">
+    <header class="bg-white/95 backdrop-blur border-b border-slate-100 sticky top-0 z-40 shadow-sm">
         <div class="max-w-lg mx-auto px-4 py-3 flex justify-between items-center">
             <div class="font-black text-lg italic text-blue-800">FITWORK<span class="text-slate-300">HK</span></div>
-            <button @click="showProfile = true"
-                class="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-base font-black">
-                {{ session.user.email.charAt(0).toUpperCase() }}
-            </button>
+            <div class="flex items-center gap-2">
+                <button @click="showProfile = true"
+                    class="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-sm font-black text-white shadow-md">
+                    {{ session.user.email.charAt(0).toUpperCase() }}
+                </button>
+            </div>
         </div>
     </header>
 
     <main class="max-w-lg mx-auto px-4 py-4 pb-28 space-y-4">
 
         <!-- ══ DASHBOARD ══ -->
-        <section v-if="currentTab === 'dashboard'" class="space-y-4">
+        <section v-if="currentTab === 'dashboard'" class="space-y-4 fade-in">
+            <!-- Hero card -->
             <div class="bg-gradient-to-br from-blue-900 via-blue-800 to-slate-800 rounded-3xl p-5 text-white shadow-xl">
                 <div class="flex gap-2 mb-4 flex-wrap">
                     <button v-for="r in dateRanges" :key="r.id" @click="dateRange = r.id"
-                        :class="dateRange === r.id ? 'bg-blue-300 text-blue-900' : 'bg-white/10 text-white/60'"
-                        class="px-3 py-1 rounded-full text-xs font-bold transition-colors">{{ r.name }}</button>
+                        :class="dateRange === r.id ? 'bg-white text-blue-900' : 'bg-white/10 text-white/60'"
+                        class="px-3 py-1 rounded-full text-xs font-black transition-all">{{ r.name }}</button>
                 </div>
-                <div class="flex gap-2 mb-4">
+                <div class="flex gap-2 mb-5">
                     <button v-for="p in ['All','Kwan','Cat']" :key="p" @click="reportPerson = p"
-                        :class="reportPerson === p ? 'bg-white text-blue-800' : 'bg-white/10 text-white/60'"
-                        class="px-3 py-1 rounded-xl text-xs font-black transition-colors">{{ p }}</button>
+                        :class="reportPerson === p ? 'bg-blue-400 text-blue-900' : 'bg-white/10 text-white/50'"
+                        class="px-3 py-1 rounded-xl text-xs font-black transition-all">{{ p }}</button>
                 </div>
-                <p class="text-blue-300 text-xs font-bold uppercase tracking-widest">純利潤</p>
-                <p class="text-5xl font-black mt-1 tracking-tight" :class="parseFloat(totalProfit) < 0 ? 'text-red-300' : 'text-white'">
+                <p class="text-blue-300/80 text-xs font-bold uppercase tracking-widest">純利潤</p>
+                <p class="text-5xl font-black mt-1 tracking-tight" :class="parseFloat(totalProfit) < 0 ? 'text-red-300' : ''">
                     ${{ totalProfit }}
                 </p>
                 <div class="flex gap-4 mt-3 text-xs font-semibold">
-                    <span class="text-emerald-300">↑ 收入 ${{ totalIncome }}</span>
-                    <span class="text-red-300">↓ 支出 ${{ totalExpense }}</span>
+                    <span class="flex items-center gap-1 text-emerald-300"><span class="w-2 h-2 bg-emerald-400 rounded-full"></span>收入 ${{ totalIncome }}</span>
+                    <span class="flex items-center gap-1 text-red-300"><span class="w-2 h-2 bg-red-400 rounded-full"></span>支出 ${{ totalExpense }}</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-3">
-                <div v-for="b in ['觀塘','中環','佐敦']" :key="b"
-                    class="bg-white rounded-2xl p-4 text-center shadow-sm border border-slate-100">
+            <!-- Quick stats -->
+            <div class="grid grid-cols-3 gap-2.5">
+                <div v-for="b in ['觀塘','中環','佐敦']" :key="b" class="bg-white rounded-2xl p-4 text-center shadow-sm border border-slate-100">
                     <p class="text-2xl font-black text-blue-600">{{ branchStats[b] }}</p>
                     <p class="text-xs text-slate-400 font-semibold mt-1">{{ b }}</p>
                 </div>
             </div>
-
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-2.5">
                 <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">馬拉松</p>
+                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">🏃 馬拉松</p>
                     <p class="text-3xl font-black text-emerald-500 mt-1">{{ marathonStats.active }}</p>
                     <p class="text-xs text-slate-300 mt-0.5">活躍成員</p>
                 </div>
                 <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">總客戶</p>
+                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">👥 客戶</p>
                     <p class="text-3xl font-black text-blue-600 mt-1">{{ clients.length }}</p>
                     <p class="text-xs text-slate-300 mt-0.5">已登記</p>
+                </div>
+            </div>
+
+            <!-- ✨ NEW: 即將試堂 -->
+            <div v-if="upcomingTrials.length > 0"
+                class="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm overflow-hidden trial-pulse">
+                <div class="px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-indigo-100 flex justify-between items-center">
+                    <div>
+                        <p class="font-black text-sm text-indigo-700">📅 即將試堂</p>
+                        <p class="text-xs text-indigo-400 font-semibold mt-0.5">30 天內 · 已記試堂日期</p>
+                    </div>
+                    <span class="text-xs font-bold text-indigo-600 bg-indigo-100 px-2.5 py-1 rounded-full">{{ upcomingTrials.length }} 個</span>
+                </div>
+                <div v-for="(t, i) in upcomingTrials" :key="t.id"
+                    :class="i < upcomingTrials.length - 1 ? 'border-b border-slate-50' : ''"
+                    class="px-4 py-3.5 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <div :class="daysUntilTrial(t.trial_date) === 0 ? 'bg-red-100' : daysUntilTrial(t.trial_date) <= 3 ? 'bg-orange-100' : 'bg-indigo-100'"
+                            class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 text-lg">
+                            {{ daysUntilTrial(t.trial_date) === 0 ? '🔥' : daysUntilTrial(t.trial_date) <= 3 ? '⏰' : '📅' }}
+                        </div>
+                        <div class="min-w-0">
+                            <p class="font-black text-sm">{{ t.client_name }}</p>
+                            <p class="text-xs text-slate-400 font-semibold mt-0.5">{{ t.person }} · HK${{ t.amount }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-sm font-black"
+                            :class="daysUntilTrial(t.trial_date) === 0 ? 'text-red-600' : daysUntilTrial(t.trial_date) === 1 ? 'text-orange-500' : daysUntilTrial(t.trial_date) <= 3 ? 'text-amber-600' : 'text-indigo-600'">
+                            {{ daysUntilTrial(t.trial_date) === 0 ? '今天試堂！' : daysUntilTrial(t.trial_date) === 1 ? '明天試堂！' : daysUntilTrial(t.trial_date) + ' 天後' }}
+                        </p>
+                        <p class="text-xs text-slate-300 mt-0.5 font-mono">{{ t.trial_date }}</p>
+                        <div class="flex items-center justify-end gap-1 mt-1">
+                            <span v-if="t.reminded" class="text-xs bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-md font-bold">✉️ 已提醒</span>
+                            <span v-else class="text-xs bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-md font-semibold">等待中</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -120,9 +169,9 @@
             <div v-if="incomeByCategory.length > 0" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
                 <div class="flex justify-between items-center mb-4">
                     <p class="font-black text-sm">📊 收入分佈</p>
-                    <span class="text-xs text-slate-400 font-bold">總 ${{ totalIncome }}</span>
+                    <span class="text-xs text-slate-400 font-bold bg-slate-50 px-2 py-1 rounded-lg">總 ${{ totalIncome }}</span>
                 </div>
-                <div v-for="cat in incomeByCategory" :key="cat.name" class="mb-4 last:mb-0">
+                <div v-for="cat in incomeByCategory" :key="cat.name" class="mb-3.5 last:mb-0">
                     <div class="flex justify-between items-center mb-1.5">
                         <span class="text-xs font-black text-slate-700 flex items-center gap-1.5">
                             <span>{{ cat.emoji }}</span>{{ cat.name }}
@@ -132,11 +181,8 @@
                             <span class="text-xs text-slate-400 font-bold w-9 text-right bg-slate-50 px-1.5 py-0.5 rounded-md">{{ cat.pct }}%</span>
                         </div>
                     </div>
-                    <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
-                        <div :class="cat.barColor" :style="{width: cat.pct + '%'}"
-                            class="bar-fill h-full rounded-full flex items-center justify-end pr-1.5">
-                            <span v-if="cat.pct > 15" class="text-white text-xs font-black leading-none">{{ cat.pct }}%</span>
-                        </div>
+                    <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div :class="cat.barColor" :style="{width: cat.pct + '%'}" class="bar-fill h-full rounded-full"></div>
                     </div>
                 </div>
             </div>
@@ -145,9 +191,9 @@
             <div v-if="expenseByCategory.length > 0" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
                 <div class="flex justify-between items-center mb-4">
                     <p class="font-black text-sm">💸 支出分佈</p>
-                    <span class="text-xs text-slate-400 font-bold">總 ${{ totalExpense }}</span>
+                    <span class="text-xs text-slate-400 font-bold bg-slate-50 px-2 py-1 rounded-lg">總 ${{ totalExpense }}</span>
                 </div>
-                <div v-for="cat in expenseByCategory" :key="cat.name" class="mb-4 last:mb-0">
+                <div v-for="cat in expenseByCategory" :key="cat.name" class="mb-3.5 last:mb-0">
                     <div class="flex justify-between items-center mb-1.5">
                         <span class="text-xs font-black text-slate-700">{{ cat.name }}</span>
                         <div class="flex items-center gap-2">
@@ -155,32 +201,27 @@
                             <span class="text-xs text-slate-400 font-bold w-9 text-right bg-slate-50 px-1.5 py-0.5 rounded-md">{{ cat.pct }}%</span>
                         </div>
                     </div>
-                    <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div class="bar-fill h-full rounded-full bg-red-400" :style="{width: cat.pct + '%'}"></div>
+                    <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="bar-fill h-full rounded-full bg-gradient-to-r from-red-400 to-rose-500" :style="{width: cat.pct + '%'}"></div>
                     </div>
                 </div>
             </div>
 
             <!-- 庫存警告 -->
-            <div v-if="lowStockItems.length > 0"
-                class="bg-white rounded-2xl border-2 border-amber-100 shadow-sm overflow-hidden">
-                <div class="px-4 py-3 bg-amber-50 border-b border-amber-100 flex justify-between items-center">
+            <div v-if="lowStockItems.length > 0" class="bg-white rounded-2xl border-2 border-amber-200 shadow-sm overflow-hidden">
+                <div class="px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 flex justify-between items-center">
                     <p class="font-black text-sm text-amber-700">📦 庫存警告</p>
-                    <span class="text-xs font-bold text-amber-600 bg-amber-100 px-2.5 py-1 rounded-full">
-                        {{ lowStockItems.length }} 款不足
-                    </span>
+                    <span class="text-xs font-bold text-amber-600 bg-amber-100 px-2.5 py-1 rounded-full">{{ lowStockItems.length }} 款不足</span>
                 </div>
                 <div v-for="(item, i) in lowStockItems" :key="item.name"
                     :class="i < lowStockItems.length - 1 ? 'border-b border-slate-50' : ''"
                     class="px-4 py-3 flex justify-between items-center cursor-pointer active:bg-amber-50"
-                    @click="currentTab = 'retail'">
+                    @click="currentTab = 'retail'; retailSubTab = 'stock'">
                     <div>
                         <p class="font-bold text-sm">{{ item.name }}</p>
-                        <p class="text-xs text-slate-400 mt-0.5">點擊前往補貨</p>
+                        <p class="text-xs text-slate-400 mt-0.5">點擊查看庫存</p>
                     </div>
-                    <span :class="item.stock === 0
-                        ? 'bg-red-100 text-red-600 border-red-200'
-                        : 'bg-amber-100 text-amber-700 border-amber-200'"
+                    <span :class="item.stock === 0 ? 'bg-red-100 text-red-600 border-red-200' : 'bg-amber-100 text-amber-700 border-amber-200'"
                         class="text-xs font-black px-3 py-1.5 rounded-xl border font-mono">
                         {{ item.stock === 0 ? '缺　貨' : item.stock + ' 件' }}
                     </span>
@@ -188,25 +229,25 @@
             </div>
 
             <!-- 即將到期 -->
-            <div v-if="expiringClients.length > 0"
-                class="bg-white rounded-2xl border-2 border-red-100 shadow-sm overflow-hidden">
-                <div class="px-4 py-3 bg-red-50 border-b border-red-100 flex justify-between items-center">
+            <div v-if="expiringClients.length > 0" class="bg-white rounded-2xl border-2 border-red-100 shadow-sm overflow-hidden">
+                <div class="px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 border-b border-red-100 flex justify-between items-center">
                     <p class="font-black text-sm text-red-600">🔔 即將到期</p>
-                    <span class="text-xs font-bold text-red-500 bg-red-100 px-2.5 py-1 rounded-full">
-                        {{ expiringClients.length }} 位 · 14天內
-                    </span>
+                    <span class="text-xs font-bold text-red-500 bg-red-100 px-2.5 py-1 rounded-full">{{ expiringClients.length }} 位 · 14天內</span>
                 </div>
                 <div v-for="(c, i) in expiringClients" :key="c.id"
-                    @click="openClient(c); currentTab = 'crm'"
                     :class="i < expiringClients.length - 1 ? 'border-b border-slate-50' : ''"
-                    class="px-4 py-3 flex justify-between items-center cursor-pointer active:bg-red-50 transition-colors">
-                    <div>
+                    class="px-4 py-3 flex justify-between items-center">
+                    <div @click="openClient(c); currentTab = 'crm'" class="flex-1 cursor-pointer">
                         <p class="font-bold text-sm">{{ c.name }}</p>
                         <p class="text-xs text-slate-400 mt-0.5">{{ c.branch }} · {{ c.phone }}</p>
                     </div>
-                    <div class="text-right">
-                        <p class="text-xs font-black text-red-500 animate-pulse">{{ daysUntilExpiry(c.expiry_date) }} 天後到期</p>
-                        <p class="text-xs text-slate-300 mt-0.5">{{ c.expiry_date }}</p>
+                    <div class="flex items-center gap-2">
+                        <div class="text-right">
+                            <p class="text-xs font-black text-red-500">{{ daysUntilExpiry(c.expiry_date) }}天後</p>
+                            <p class="text-xs text-slate-300">{{ c.expiry_date }}</p>
+                        </div>
+                        <button v-if="c.phone" @click.stop="openWhatsApp(c.phone, c.name)"
+                            class="w-9 h-9 bg-green-500 text-white rounded-xl flex items-center justify-center text-base shadow-sm active:scale-90 transition-transform flex-shrink-0">💬</button>
                     </div>
                 </div>
             </div>
@@ -214,79 +255,78 @@
             <!-- 最近交易 -->
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                 <div class="px-4 py-3 border-b border-slate-50 flex justify-between items-center">
-                    <p class="font-black text-sm">最近交易</p>
-                    <span class="text-xs text-slate-300 font-semibold">最新 10 筆</span>
+                    <p class="font-black text-sm">📋 最近交易</p>
+                    <button @click="currentTab = 'finance'; financeSubTab = 'history'" class="text-xs text-blue-500 font-bold">全部記錄 →</button>
                 </div>
                 <div v-if="recentTransactions.length === 0" class="p-8 text-center text-slate-300">
-                    <p class="text-3xl mb-2">📋</p>
-                    <p class="text-sm font-semibold">暫無記錄</p>
+                    <p class="text-3xl mb-2">📋</p><p class="text-sm font-semibold">暫無記錄</p>
                 </div>
                 <div v-for="(t, i) in recentTransactions" :key="t.id"
                     :class="i < recentTransactions.length - 1 ? 'border-b border-slate-50' : ''"
-                    class="px-4 py-3 flex justify-between items-center">
-                    <div>
-                        <p class="font-bold text-sm">
-                            {{ t.category }}
+                    class="flex items-center gap-2 px-4 py-3">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-sm">{{ t.category }}
                             <span class="text-xs font-normal text-slate-400 ml-1">{{ t.person }}</span>
-                            <span v-if="getClientName(t.client_id)" class="text-xs font-semibold text-blue-400 ml-1">
-                                · {{ getClientName(t.client_id) }}
-                            </span>
                         </p>
-                        <p class="text-xs text-slate-300 mt-0.5">
-                            {{ formatDate(t.created_at) }}{{ t.note ? ' · ' + t.note : '' }}
-                        </p>
+                        <p class="text-xs text-slate-300 mt-0.5">{{ formatDate(t.created_at) }}{{ t.note ? ' · ' + t.note : '' }}</p>
                     </div>
-                    <span :class="t.type === 'income' ? 'text-emerald-600' : 'text-red-500'"
-                        class="font-black text-sm flex-shrink-0 ml-2">
+                    <span :class="t.type === 'income' ? 'text-emerald-600' : 'text-red-500'" class="font-black text-sm flex-shrink-0">
                         {{ t.type === 'income' ? '+' : '-' }}${{ Number(t.amount).toFixed(2) }}
                     </span>
+                    <button @click="openEditTx(t)" class="text-slate-300 p-1.5 rounded-lg active:bg-slate-100 transition-colors flex-shrink-0">✏️</button>
                 </div>
             </div>
         </section>
 
         <!-- ══ CRM ══ -->
-        <section v-if="currentTab === 'crm'" class="space-y-4">
+        <section v-if="currentTab === 'crm'" class="space-y-4 fade-in">
             <div class="flex gap-2">
                 <div class="relative flex-1">
                     <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
                     <input v-model="cSearch" placeholder="搜尋姓名 / 電話..."
                         class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-blue-400">
                 </div>
-                <button @click="openClient(null)"
-                    class="bg-blue-600 text-white w-12 h-12 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center">+</button>
+                <button @click="openClient(null)" class="bg-blue-600 text-white w-12 h-12 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center">+</button>
+            </div>
+            <div class="flex gap-2">
+                <button v-for="b in ['全部','觀塘','中環','佐敦']" :key="b" @click="crmBranchFilter = b"
+                    :class="crmBranchFilter === b ? 'bg-blue-600 text-white' : 'bg-white text-slate-500 border border-slate-200'"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm">{{ b }}</button>
             </div>
             <div v-if="filteredClients.length === 0" class="text-center py-12 text-slate-300">
-                <p class="text-4xl mb-3">👥</p>
-                <p class="font-semibold">暫無客戶記錄</p>
+                <p class="text-4xl mb-3">👥</p><p class="font-semibold">暫無客戶記錄</p>
             </div>
             <div v-for="c in filteredClients" :key="c.id" @click="openClient(c)"
-                class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer active:bg-slate-50 transition-colors">
-                <div class="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center font-black text-blue-600 text-lg flex-shrink-0">
+                class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer active:bg-slate-50 transition-colors card-press">
+                <div class="w-11 h-11 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center font-black text-white text-lg flex-shrink-0 shadow-sm">
                     {{ c.name.charAt(0) }}
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
                         <p class="font-black text-sm">{{ c.name }}</p>
-                        <span v-if="isExpiring(c.expiry_date)"
-                            class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold animate-pulse">快到期</span>
-                        <span v-if="c.marathon"
-                            class="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">馬拉松</span>
+                        <span v-if="isExpiring(c.expiry_date)" class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">快到期</span>
+                        <span v-if="c.marathon" class="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">🏃 馬拉松</span>
                     </div>
                     <p class="text-xs text-slate-400 font-semibold mt-0.5 truncate">{{ c.phone }}</p>
                 </div>
-                <div class="text-right flex-shrink-0">
-                    <p class="text-xs font-bold text-slate-400">{{ c.branch }}</p>
-                    <p class="text-xs font-bold text-blue-600 mt-0.5">{{ c.expiry_date }}</p>
+                <div class="text-right flex-shrink-0 flex items-center gap-2">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400">{{ c.branch }}</p>
+                        <p class="text-xs font-bold text-blue-600 mt-0.5">{{ c.expiry_date }}</p>
+                    </div>
+                    <button v-if="c.phone" @click.stop="openWhatsApp(c.phone, c.name)"
+                        class="w-8 h-8 bg-green-500 text-white rounded-xl flex items-center justify-center text-sm shadow-sm active:scale-90 transition-transform">💬</button>
                 </div>
             </div>
         </section>
 
         <!-- ══ EXERCISE POS ══ -->
-        <section v-if="currentTab === 'exercise'" class="space-y-4">
+        <section v-if="currentTab === 'exercise'" class="space-y-4 fade-in">
             <div class="flex items-center justify-between">
                 <h2 class="font-black text-xl text-blue-800">運動 POS</h2>
                 <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">Exercise</span>
             </div>
+            <!-- 選擇客戶 -->
             <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇客戶 <span class="text-red-400">*</span></p>
                 <select v-model="eForm.clientId"
@@ -297,31 +337,103 @@
                 </select>
                 <div v-if="eForm.clientId" class="mt-2 flex items-center gap-1.5">
                     <span class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">✓</span>
-                    <span class="text-xs text-blue-600 font-black">{{ clients.find(c => c.id === eForm.clientId)?.name }}</span>
-                    <span class="text-xs text-slate-400 font-semibold">{{ clients.find(c => c.id === eForm.clientId)?.branch }}</span>
+                    <span class="text-xs text-blue-600 font-black">{{ clients.find(c=>c.id===eForm.clientId)?.name }}</span>
+                    <span class="text-xs text-slate-400 font-semibold">{{ clients.find(c=>c.id===eForm.clientId)?.branch }}</span>
                 </div>
             </div>
+            <!-- 服務類型 -->
             <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">服務類型</p>
                 <div class="space-y-2">
-                    <button v-for="p in exerciseItems" :key="p.id" @click="eForm.type = p.id"
+                    <button v-for="p in exerciseItems" :key="p.id" @click="eForm.type = p.id; if(p.id !== 'trial') eForm.trialDate = ''"
                         :class="eForm.type === p.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 border-slate-200 text-slate-700'"
-                        class="w-full p-4 rounded-xl border-2 font-bold flex justify-between items-center transition-colors">
+                        class="w-full p-4 rounded-xl border-2 font-bold flex justify-between items-center transition-all">
                         <span class="text-sm font-black">{{ p.name }}</span>
                         <span class="text-base font-black">${{ p.price }}</span>
                     </button>
                 </div>
             </div>
+            <!-- ✨ NEW: 試堂日期排期 (只在選擇試堂時顯示) -->
+            <transition name="fade">
+                <div v-if="eForm.type === 'trial'"
+                    class="bg-white rounded-2xl p-4 border-2 border-indigo-200 shadow-sm space-y-3">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-base">📅</span>
+                        <p class="font-black text-sm text-indigo-700">試堂日期排期</p>
+                        <span class="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold ml-auto">Email 提醒</span>
+                    </div>
+
+                    <!-- 收款日（今天，自動） -->
+                    <div class="flex items-center justify-between bg-emerald-50 rounded-xl px-4 py-3 border border-emerald-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base">💰</span>
+                            <div>
+                                <p class="text-xs text-slate-500 font-semibold">收款日期</p>
+                                <p class="font-black text-sm text-emerald-700">{{ todayDate }}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs bg-emerald-100 text-emerald-600 font-bold px-2.5 py-1 rounded-lg border border-emerald-200">今天 ✅</span>
+                    </div>
+
+                    <!-- 試堂日期選擇 -->
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 mb-1.5 pl-1">試堂日期（選填）</p>
+                        <input type="date" v-model="eForm.trialDate" :min="tomorrowDate"
+                            class="w-full border-2 border-indigo-200 p-3.5 rounded-xl font-bold text-sm focus:border-indigo-500 outline-none bg-indigo-50 text-indigo-800">
+                    </div>
+
+                    <!-- 提醒預覽 -->
+                    <div v-if="eForm.trialDate"
+                        class="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-3.5 border-2 border-indigo-200">
+                        <div class="flex items-start gap-2.5">
+                            <span class="text-xl flex-shrink-0">📧</span>
+                            <div class="flex-1">
+                                <p class="font-black text-sm text-indigo-700">自動 Email 提醒</p>
+                                <p class="text-xs text-indigo-500 font-semibold mt-1">
+                                    提醒將於 <span class="font-black text-indigo-700 bg-white px-1.5 py-0.5 rounded-md">{{ reminderDate }}</span> 早上 9 點發至你的信箱
+                                </p>
+                                <div class="flex items-center gap-4 mt-2 pt-2 border-t border-indigo-100">
+                                    <div class="text-center">
+                                        <p class="text-xs text-indigo-400 font-semibold">收款</p>
+                                        <p class="text-xs font-black text-slate-700">{{ todayDate }}</p>
+                                    </div>
+                                    <div class="flex-1 flex items-center gap-1">
+                                        <div class="flex-1 h-0.5 bg-indigo-200"></div>
+                                        <span class="text-xs text-indigo-400">→</span>
+                                        <div class="flex-1 h-0.5 bg-indigo-200"></div>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="text-xs text-orange-400 font-semibold">提醒</p>
+                                        <p class="text-xs font-black text-orange-600">{{ reminderDate }}</p>
+                                    </div>
+                                    <div class="flex-1 flex items-center gap-1">
+                                        <div class="flex-1 h-0.5 bg-indigo-200"></div>
+                                        <span class="text-xs text-indigo-400">→</span>
+                                        <div class="flex-1 h-0.5 bg-indigo-200"></div>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="text-xs text-emerald-500 font-semibold">試堂</p>
+                                        <p class="text-xs font-black text-emerald-600">{{ eForm.trialDate }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-center gap-2">
+                        <span class="text-base">⚠️</span>
+                        <p class="text-xs text-slate-400 font-semibold">未設試堂日期 · 不會發送 Email 提醒</p>
+                    </div>
+                </div>
+            </transition>
+            <!-- 優惠選項 -->
             <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">優惠選項</p>
                 <div class="grid grid-cols-2 gap-2">
-                    <label :class="eForm.isNew ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'"
-                        class="flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-colors">
+                    <label :class="eForm.isNew ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-200'" class="flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer">
                         <input type="checkbox" v-model="eForm.isNew" class="w-4 h-4 accent-amber-500">
                         <div><p class="text-xs font-black">新客優惠</p><p class="text-xs text-slate-400">-$98</p></div>
                     </label>
-                    <label :class="eForm.isReferral ? 'bg-purple-50 border-purple-300' : 'bg-slate-50 border-slate-200'"
-                        class="flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-colors">
+                    <label :class="eForm.isReferral ? 'bg-purple-50 border-purple-300' : 'bg-slate-50 border-slate-200'" class="flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer">
                         <input type="checkbox" v-model="eForm.isReferral" class="w-4 h-4 accent-purple-500">
                         <div><p class="text-xs font-black">轉介紹</p><p class="text-xs text-slate-400">免費</p></div>
                     </label>
@@ -333,195 +445,274 @@
             </div>
         </section>
 
-        <!-- ══ RETAIL POS ══ -->
-        <section v-if="currentTab === 'retail'" class="space-y-4">
-
-            <!-- ★★★ 頂部：標題列 + 匯出按鈕 -->
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="font-black text-xl text-emerald-700">零售 POS</h2>
-                    <p class="text-xs text-slate-400 font-semibold mt-0.5">
-                        共 {{ products.length }} 款 ·
-                        庫存總值 ${{ totalStockValue.toFixed(0) }}
-                    </p>
-                </div>
-                <!-- ★ 匯出按鈕 -->
-                <button @click="exportStockCSV"
-                    class="flex items-center gap-1.5 bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow-md active:scale-95 transition-transform">
-                    <span class="text-base leading-none">📥</span>
-                    匯出庫存
+        <!-- ══ RETAIL POS + 庫存總覽 ══ -->
+        <section v-if="currentTab === 'retail'" class="space-y-4 fade-in">
+            <div class="flex gap-1.5 p-1.5 bg-slate-200/60 rounded-2xl">
+                <button @click="retailSubTab = 'pos'"
+                    :class="retailSubTab === 'pos' ? 'bg-white shadow-md text-emerald-700' : 'text-slate-400'"
+                    class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">🛒 POS 結帳</button>
+                <button @click="retailSubTab = 'stock'"
+                    :class="retailSubTab === 'stock' ? 'bg-white shadow-md text-blue-700' : 'text-slate-400'"
+                    class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">
+                    📦 庫存總覽
+                    <span v-if="lowStockItems.length > 0" class="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{{ lowStockItems.length }}</span>
                 </button>
             </div>
 
-            <!-- 折扣選擇 -->
-            <div class="flex items-center justify-between bg-white rounded-2xl px-4 py-3 border border-slate-100 shadow-sm">
-                <span class="text-xs text-slate-500 font-bold">折扣模式</span>
-                <select v-model="rForm.discount"
-                    :class="rForm.discount !== '0'
-                        ? 'border-amber-300 bg-amber-50 text-amber-700 font-black'
-                        : 'border-slate-200 bg-white text-slate-600'"
-                    class="border-2 px-3 py-2 rounded-xl text-sm focus:outline-none transition-colors">
-                    <option value="0">原價</option>
-                    <option value="0.25">75折</option>
-                    <option value="0.35">65折</option>
-                    <option value="0.5">50折 (廠本)</option>
-                </select>
-            </div>
-
-            <div v-if="rForm.discount === '0.5'"
-                class="bg-blue-50 border-2 border-blue-200 rounded-2xl px-4 py-3 flex items-center gap-2">
-                <span class="text-base">ℹ️</span>
-                <p class="text-xs font-bold text-blue-700">50折 = 廠本價銷售 = $0 利潤（保本出貨）</p>
-            </div>
-
-            <!-- 客戶選擇 -->
-            <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇購買客戶</p>
-                <select v-model="rForm.clientId"
-                    :class="rForm.clientId ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-slate-50'"
-                    class="w-full p-3 rounded-xl border-2 font-semibold text-sm focus:outline-none transition-colors">
-                    <option :value="null">-- 選擇客戶（可選）--</option>
-                    <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }} ({{ c.phone }})</option>
-                </select>
-            </div>
-
-            <!-- 搜尋 -->
-            <div class="relative">
-                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
-                <input v-model="pSearch" placeholder="搜尋產品..."
-                    class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400">
-            </div>
-
-            <!-- 產品列表 -->
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden max-h-80 overflow-y-auto no-scrollbar">
-                <div v-if="filteredProducts.length === 0"
-                    class="p-6 text-center text-slate-300 text-sm font-semibold">找不到產品</div>
-                <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex justify-between items-center sticky top-0">
-                    <span class="text-xs text-slate-400 font-bold">產品列表</span>
-                    <span class="text-xs text-slate-400 font-bold">庫存 / 售價</span>
+            <!-- POS -->
+            <template v-if="retailSubTab === 'pos'">
+                <div class="flex items-center justify-between bg-white rounded-2xl px-4 py-3 border border-slate-100 shadow-sm">
+                    <span class="text-xs text-slate-500 font-bold">折扣模式</span>
+                    <select v-model="rForm.discount"
+                        :class="rForm.discount !== '0' ? 'border-amber-300 bg-amber-50 text-amber-700 font-black' : 'border-slate-200 bg-white text-slate-600'"
+                        class="border-2 px-3 py-2 rounded-xl text-sm focus:outline-none transition-colors">
+                        <option value="0">原價</option>
+                        <option value="0.25">75折</option>
+                        <option value="0.35">65折</option>
+                        <option value="0.5">50折 (廠本)</option>
+                    </select>
                 </div>
-                <div v-for="(p, i) in filteredProducts" :key="p.name"
-                    :class="i < filteredProducts.length - 1 ? 'border-b border-slate-50' : ''"
-                    class="flex items-center gap-2 pr-3">
-                    <div @click="addToCart(p)"
-                        :class="isLossSale(p) ? 'active:bg-red-50' : 'active:bg-emerald-50'"
-                        class="flex-1 px-4 py-3.5 flex items-center gap-2 cursor-pointer transition-colors min-w-0">
-                        <span class="font-semibold text-sm flex-1 truncate">{{ p.name }}</span>
-                        <span :class="getStock(p.name) === 0
-                                ? 'bg-red-100 text-red-600 border-red-200'
-                                : getStock(p.name) <= 3
-                                    ? 'bg-amber-100 text-amber-700 border-amber-200'
-                                    : 'bg-slate-100 text-slate-500 border-slate-200'"
-                            class="text-xs font-black px-2 py-0.5 rounded-lg border font-mono flex-shrink-0">
-                            {{ getStock(p.name) === 0 ? '缺貨' : '庫' + getStock(p.name) }}
-                        </span>
-                        <div class="flex items-center gap-1.5 flex-shrink-0">
-                            <span v-if="isLossSale(p)"
-                                class="text-xs font-black text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md">虧本</span>
-                            <span v-else-if="rForm.discount === '0.5'"
-                                class="text-xs font-black text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-md">保本</span>
-                            <span :class="isLossSale(p) ? 'text-red-500' : rForm.discount === '0.5' ? 'text-blue-600' : 'text-emerald-600'"
-                                class="font-black text-sm">
+                <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇購買客戶</p>
+                    <select v-model="rForm.clientId"
+                        :class="rForm.clientId ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-slate-50'"
+                        class="w-full p-3 rounded-xl border-2 font-semibold text-sm focus:outline-none transition-colors">
+                        <option :value="null">-- 選擇客戶（可選）--</option>
+                        <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }} ({{ c.phone }})</option>
+                    </select>
+                </div>
+                <div class="relative">
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
+                    <input v-model="pSearch" placeholder="搜尋產品..." class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400">
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden max-h-72 overflow-y-auto no-scrollbar">
+                    <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex justify-between items-center sticky top-0">
+                        <span class="text-xs text-slate-400 font-bold">產品</span>
+                        <span class="text-xs text-slate-400 font-bold">庫存 / 售價</span>
+                    </div>
+                    <div v-if="filteredProducts.length === 0" class="p-6 text-center text-slate-300 text-sm font-semibold">找不到產品</div>
+                    <div v-for="(p, i) in filteredProducts" :key="p.name"
+                        :class="i < filteredProducts.length - 1 ? 'border-b border-slate-50' : ''"
+                        class="flex items-center gap-2 pr-3">
+                        <div @click="addToCart(p)" class="flex-1 px-4 py-3.5 flex items-center gap-2 cursor-pointer active:bg-emerald-50 transition-colors min-w-0">
+                            <span class="font-semibold text-sm flex-1 truncate">{{ p.name }}</span>
+                            <span :class="getStock(p.name) === 0 ? 'bg-red-100 text-red-600 border-red-200' : getStock(p.name) <= 3 ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-500 border-slate-200'"
+                                class="text-xs font-black px-2 py-0.5 rounded-lg border font-mono flex-shrink-0">
+                                {{ getStock(p.name) === 0 ? '缺貨' : '庫' + getStock(p.name) }}
+                            </span>
+                            <span :class="isLossSale(p) ? 'text-red-500' : rForm.discount === '0.5' ? 'text-blue-600' : 'text-emerald-600'" class="font-black text-sm flex-shrink-0">
                                 ${{ getSellPrice(p).toFixed(2) }}
                             </span>
                         </div>
+                        <button @click.stop="openRestock({name: p.name, cost: p.cost, retail: p.retail})"
+                            class="flex-shrink-0 bg-amber-100 text-amber-700 text-xs font-black px-2.5 py-1.5 rounded-lg active:scale-90 transition-transform border border-amber-200">入貨</button>
                     </div>
-                    <button @click.stop="openRestock(p)"
-                        class="flex-shrink-0 bg-amber-100 text-amber-700 text-xs font-black px-2.5 py-1.5 rounded-lg active:scale-90 transition-transform border border-amber-200">
-                        入貨
+                </div>
+                <div v-if="cart.length > 0" class="bg-slate-900 rounded-2xl p-5 text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">購物車</p>
+                            <p class="text-xs text-slate-500 mt-0.5">{{ cartItemCount }} 件 · {{ cart.length }} 款</p>
+                        </div>
+                        <button @click="cart = []" class="text-xs text-slate-600 font-semibold hover:text-red-400 transition-colors px-2 py-1">清空</button>
+                    </div>
+                    <div v-for="(item, i) in cart" :key="item.name" class="py-3 border-b border-slate-800 last:border-0">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-slate-200 truncate">{{ item.name }}</p>
+                                <span class="text-xs font-bold" :class="getUnitProfit(item) > 0 ? 'text-emerald-400/80' : getUnitProfit(item) < 0 ? 'text-red-400/80' : 'text-blue-400/80'">
+                                    {{ getUnitProfit(item) === 0 ? '±$0' : (getUnitProfit(item) > 0 ? '+' : '') + '$' + getUnitProfit(item).toFixed(2) }} × {{ item.qty }}
+                                </span>
+                            </div>
+                            <div class="flex items-center bg-slate-800 rounded-xl overflow-hidden flex-shrink-0">
+                                <button @click="decreaseQty(i)" class="w-8 h-8 flex items-center justify-center font-black text-slate-300 text-lg active:bg-slate-700 select-none">−</button>
+                                <span class="text-sm font-black text-white w-7 text-center select-none">{{ item.qty }}</span>
+                                <button @click="increaseQty(i)" class="w-8 h-8 flex items-center justify-center font-black text-slate-300 text-lg active:bg-slate-700 select-none">+</button>
+                            </div>
+                            <button @click="cart.splice(i,1)" class="text-slate-600 text-xl leading-none active:text-red-400 flex-shrink-0">×</button>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
+                        <span class="font-bold text-slate-400 text-sm">總利潤</span>
+                        <span class="font-black text-2xl" :class="cartTotal > 0 ? 'text-emerald-400' : cartTotal < 0 ? 'text-red-400' : 'text-blue-400'">
+                            {{ cartTotal === 0 ? '$0.00' : cartTotal > 0 ? '+$' + cartTotal.toFixed(2) : '-$' + Math.abs(cartTotal).toFixed(2) }}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mt-4">
+                        <button @click="saveRetail('Kwan')" class="bg-emerald-500 py-3.5 rounded-xl font-black text-sm active:scale-95 transition-transform">Kwan 結帳</button>
+                        <button @click="saveRetail('Cat')" class="bg-emerald-700 py-3.5 rounded-xl font-black text-sm active:scale-95 transition-transform">Cat 結帳</button>
+                    </div>
+                </div>
+                <div v-else class="text-center py-8 text-slate-300">
+                    <p class="text-4xl mb-2">🛒</p><p class="text-sm font-semibold">點擊產品加入購物車</p>
+                </div>
+            </template>
+
+            <!-- 庫存總覽 -->
+            <template v-if="retailSubTab === 'stock'">
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">總庫存件數</p>
+                        <p class="text-3xl font-black text-blue-700 mt-1">{{ totalStockQty }}</p>
+                        <p class="text-xs text-slate-300 mt-0.5">件 · {{ products.length }} 款</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">廠本存值</p>
+                        <p class="text-2xl font-black text-slate-700 mt-1">${{ totalStockValue.toFixed(0) }}</p>
+                        <p class="text-xs text-emerald-500 font-semibold mt-0.5">零售值 ${{ totalRetailValue.toFixed(0) }}</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+                    <div class="flex-shrink-0 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5 text-center min-w-max">
+                        <p class="text-xl font-black text-red-600">{{ stockSummary.outOfStock }}</p>
+                        <p class="text-xs text-red-500 font-bold mt-0.5">❌ 缺貨</p>
+                    </div>
+                    <div class="flex-shrink-0 bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5 text-center min-w-max">
+                        <p class="text-xl font-black text-amber-600">{{ stockSummary.lowStock }}</p>
+                        <p class="text-xs text-amber-600 font-bold mt-0.5">⚠️ 不足</p>
+                    </div>
+                    <div class="flex-shrink-0 bg-blue-50 border border-blue-200 rounded-xl px-3.5 py-2.5 text-center min-w-max">
+                        <p class="text-xl font-black text-blue-600">{{ stockSummary.normal }}</p>
+                        <p class="text-xs text-blue-600 font-bold mt-0.5">✅ 正常</p>
+                    </div>
+                    <div class="flex-shrink-0 bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 text-center min-w-max">
+                        <p class="text-xl font-black text-emerald-600">{{ stockSummary.abundant }}</p>
+                        <p class="text-xs text-emerald-600 font-bold mt-0.5">🟢 充足</p>
+                    </div>
+                    <button @click="exportStockCSV" class="flex-shrink-0 bg-slate-800 text-white rounded-xl px-3.5 py-2.5 font-black text-xs flex items-center gap-1.5 min-w-max active:scale-95 transition-transform">
+                        📥 匯出 CSV
                     </button>
                 </div>
-            </div>
-
-            <!-- 購物車 -->
-            <div v-if="cart.length > 0" class="bg-slate-900 rounded-2xl p-5 text-white">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">購物車</p>
-                        <p class="text-xs text-slate-500 mt-0.5">{{ cartItemCount }} 件 · {{ cart.length }} 款</p>
-                    </div>
-                    <button @click="cart = []" class="text-xs text-slate-500 font-semibold active:text-red-400 transition-colors px-2 py-1">清空</button>
+                <div class="relative">
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
+                    <input v-model="stockSearch" placeholder="搜尋產品名稱..."
+                        class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-blue-400">
                 </div>
-                <div v-if="cartHasLoss"
-                    class="mb-4 bg-red-950/60 border border-red-800/60 rounded-xl p-3 flex items-start gap-2">
-                    <span class="text-base flex-shrink-0 mt-0.5">⚠️</span>
-                    <div>
-                        <p class="text-red-300 font-black text-xs">含虧本產品</p>
-                        <p class="text-red-400/70 text-xs mt-0.5">確認後將記錄實際虧損金額</p>
-                    </div>
+                <div class="flex gap-2">
+                    <button v-for="f in stockFilters" :key="f.id" @click="stockFilter = f.id"
+                        :class="stockFilter === f.id ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-500 border border-slate-200'"
+                        class="px-3.5 py-1.5 rounded-xl text-xs font-black transition-all">{{ f.name }}</button>
                 </div>
-                <div v-for="(item, i) in cart" :key="item.name" class="py-3 border-b border-slate-800 last:border-0">
-                    <div class="flex items-center gap-2">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-slate-200 truncate">{{ item.name }}</p>
-                            <div class="flex items-center gap-2 mt-0.5">
-                                <span class="text-xs font-bold"
-                                    :class="getUnitProfit(item) > 0 ? 'text-emerald-400/80' : getUnitProfit(item) < 0 ? 'text-red-400/80' : 'text-blue-400/80'">
-                                    {{ getUnitProfit(item) === 0 ? '±$0 (保本)' : (getUnitProfit(item) > 0 ? '+' : '') + '$' + getUnitProfit(item).toFixed(2) }}
-                                </span>
-                                <span class="text-xs text-slate-600">× {{ item.qty }}</span>
+                <div v-for="cat in filteredStockCategories" :key="cat.name" class="space-y-2">
+                    <div class="flex items-center gap-2 px-1">
+                        <span class="text-base">{{ cat.emoji }}</span>
+                        <h3 class="font-black text-sm text-slate-700">{{ cat.name }}</h3>
+                        <span class="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-bold">{{ cat.items.length }} 款</span>
+                        <span class="text-xs text-blue-500 font-bold ml-auto">{{ cat.items.reduce((s,p) => s + getStock(p.prod_name), 0) }} 件</span>
+                    </div>
+                    <div v-for="p in cat.items" :key="p.prod_name"
+                        class="bg-white rounded-2xl border shadow-sm overflow-hidden transition-all"
+                        :class="stockInfo(p.prod_name).cardBorder">
+                        <div class="px-4 pt-4 pb-2 flex justify-between items-start">
+                            <div class="flex-1 min-w-0 pr-3">
+                                <p class="font-black text-sm">{{ p.prod_name }}</p>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <span class="text-xs text-slate-400">廠 <span class="font-black text-slate-600">${{ parseFloat(p.cost).toFixed(0) }}</span></span>
+                                    <span class="text-slate-200">|</span>
+                                    <span class="text-xs text-slate-400">零售 <span class="font-black text-emerald-600">${{ parseFloat(p.retail_price).toFixed(0) }}</span></span>
+                                </div>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <p class="text-4xl font-black leading-none" :class="stockInfo(p.prod_name).numColor">{{ getStock(p.prod_name) }}</p>
+                                <p class="text-xs text-slate-400 mt-0.5">件</p>
                             </div>
                         </div>
-                        <div class="flex items-center bg-slate-800 rounded-xl overflow-hidden flex-shrink-0">
-                            <button @click="decreaseQty(i)"
-                                class="w-8 h-8 flex items-center justify-center font-black text-slate-300 text-lg active:bg-slate-700 transition-colors select-none">−</button>
-                            <span class="text-sm font-black text-white w-7 text-center select-none">{{ item.qty }}</span>
-                            <button @click="increaseQty(i)"
-                                class="w-8 h-8 flex items-center justify-center font-black text-slate-300 text-lg active:bg-slate-700 transition-colors select-none">+</button>
+                        <div class="px-4 mb-3">
+                            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="bar-fill h-full rounded-full" :class="stockInfo(p.prod_name).bar" :style="{width: stockInfo(p.prod_name).pct + '%'}"></div>
+                            </div>
                         </div>
-                        <span class="font-black text-sm w-20 text-right flex-shrink-0"
-                            :class="(getUnitProfit(item) * item.qty) > 0 ? 'text-emerald-400'
-                                  : (getUnitProfit(item) * item.qty) < 0 ? 'text-red-400' : 'text-blue-400'">
-                            {{ getUnitProfit(item) === 0 ? '$0'
-                               : (getUnitProfit(item) * item.qty) >= 0
-                                   ? '+$' + (getUnitProfit(item) * item.qty).toFixed(2)
-                                   : '-$' + Math.abs(getUnitProfit(item) * item.qty).toFixed(2) }}
-                        </span>
-                        <button @click="cart.splice(i,1)"
-                            class="text-slate-600 hover:text-red-400 font-black text-xl leading-none flex-shrink-0 active:scale-90 transition-colors">×</button>
+                        <div class="px-4 pb-4 flex items-center justify-between gap-2">
+                            <span class="text-xs font-black px-2.5 py-1 rounded-lg border" :class="stockInfo(p.prod_name).badge">{{ stockInfo(p.prod_name).text }}</span>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center bg-slate-100 rounded-xl overflow-hidden">
+                                    <button @click="quickAdjustStock(p.prod_name, -1)" class="w-8 h-8 flex items-center justify-center font-black text-slate-600 active:bg-slate-200 select-none">−</button>
+                                    <span class="text-sm font-black text-slate-800 w-8 text-center select-none">{{ getStock(p.prod_name) }}</span>
+                                    <button @click="quickAdjustStock(p.prod_name, 1)" class="w-8 h-8 flex items-center justify-center font-black text-slate-600 active:bg-slate-200 select-none">+</button>
+                                </div>
+                                <button @click="openRestock({name: p.prod_name, cost: parseFloat(p.cost), retail: parseFloat(p.retail_price)})"
+                                    class="text-xs font-black bg-amber-100 text-amber-700 px-3 py-2 rounded-xl border border-amber-200 active:scale-90 transition-transform">📦 入貨</button>
+                                <button @click="openStockCorrection(p)"
+                                    class="text-xs font-black bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-200 active:scale-90 transition-transform">✏️ 修正</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
-                    <span class="font-bold text-slate-400 text-sm">總利潤</span>
-                    <span class="font-black text-2xl"
-                        :class="cartTotal > 0 ? 'text-emerald-400' : cartTotal < 0 ? 'text-red-400' : 'text-blue-400'">
-                        {{ cartTotal === 0 ? '$0.00 (保本)'
-                           : cartTotal > 0 ? '+$' + cartTotal.toFixed(2)
-                           : '-$' + Math.abs(cartTotal).toFixed(2) }}
-                    </span>
-                </div>
-                <div class="grid grid-cols-2 gap-2 mt-4">
-                    <button @click="saveRetail('Kwan')"
-                        class="bg-emerald-500 py-3.5 rounded-xl font-black text-sm active:scale-95 transition-transform">Kwan 結帳</button>
-                    <button @click="saveRetail('Cat')"
-                        class="bg-emerald-700 py-3.5 rounded-xl font-black text-sm active:scale-95 transition-transform">Cat 結帳</button>
-                </div>
-            </div>
-            <div v-else class="text-center py-8 text-slate-300">
-                <p class="text-4xl mb-2">🛒</p>
-                <p class="text-sm font-semibold">點擊產品加入購物車</p>
-            </div>
+            </template>
         </section>
 
         <!-- ══ FINANCE ══ -->
-        <section v-if="currentTab === 'finance'" class="space-y-4">
-            <h2 class="font-black text-xl text-slate-800">支出管理</h2>
-            <div class="grid grid-cols-2 gap-3">
-                <button v-for="c in expCats" :key="c" @click="openExp(c)"
-                    :class="c.includes('收入') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-700'"
-                    class="p-4 border-2 rounded-2xl font-bold text-left shadow-sm active:scale-95 transition-all">
-                    <span class="text-xl block mb-2">
-                        {{ c.includes('廣告') ? '📢' : c.includes('租金') ? '🏢' : c.includes('採購') ? '📦' : c.includes('馬拉松') ? '🏃' : c.includes('收入') ? '💚' : '📌' }}
-                    </span>
-                    <span class="text-xs leading-tight">{{ c }}</span>
-                </button>
+        <section v-if="currentTab === 'finance'" class="space-y-4 fade-in">
+            <div class="flex gap-1.5 p-1.5 bg-slate-200/60 rounded-2xl">
+                <button @click="financeSubTab = 'add'"
+                    :class="financeSubTab === 'add' ? 'bg-white shadow-md text-slate-800' : 'text-slate-400'"
+                    class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📝 記帳</button>
+                <button @click="financeSubTab = 'history'"
+                    :class="financeSubTab === 'history' ? 'bg-white shadow-md text-slate-800' : 'text-slate-400'"
+                    class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📋 全部記錄</button>
             </div>
+            <template v-if="financeSubTab === 'add'">
+                <h2 class="font-black text-lg text-slate-800 px-1">快速記帳</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <button v-for="c in expCats" :key="c" @click="openExp(c)"
+                        :class="c.includes('收入') ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-700'"
+                        class="p-4 border-2 rounded-2xl font-bold text-left shadow-sm active:scale-95 transition-all card-press">
+                        <span class="text-2xl block mb-2">
+                            {{ c.includes('廣告') ? '📢' : c.includes('租金') ? '🏢' : c.includes('採購') ? '📦' : c.includes('馬拉松') ? '🏃' : c.includes('收入') ? '💚' : '📌' }}
+                        </span>
+                        <span class="text-xs leading-tight font-black">{{ c }}</span>
+                    </button>
+                </div>
+            </template>
+            <template v-if="financeSubTab === 'history'">
+                <div class="flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
+                        <input v-model="txSearch" placeholder="搜尋金額、類別、備註..."
+                            class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl font-semibold text-sm shadow-sm focus:outline-none focus:border-blue-400">
+                    </div>
+                    <select v-model="txTypeFilter" class="bg-white border border-slate-200 px-3 py-3 rounded-2xl font-bold text-xs focus:outline-none shadow-sm">
+                        <option value="all">全部</option>
+                        <option value="income">收入</option>
+                        <option value="expense">支出</option>
+                    </select>
+                </div>
+                <div v-if="groupedTransactions.length === 0" class="text-center py-10 text-slate-300">
+                    <p class="text-4xl mb-2">📋</p><p class="font-semibold">暫無記錄</p>
+                </div>
+                <div v-for="group in groupedTransactions" :key="group.date" class="space-y-1.5">
+                    <div class="flex items-center justify-between px-1">
+                        <p class="text-xs font-black text-slate-400">{{ group.date }}</p>
+                        <p class="text-xs font-semibold" :class="group.dayTotal >= 0 ? 'text-emerald-500' : 'text-red-500'">
+                            {{ group.dayTotal >= 0 ? '+' : '' }}${{ group.dayTotal.toFixed(2) }}
+                        </p>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div v-for="(t, i) in group.items" :key="t.id"
+                            :class="i < group.items.length - 1 ? 'border-b border-slate-50' : ''"
+                            class="flex items-center gap-2 px-4 py-3">
+                            <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm"
+                                :class="t.type === 'income' ? 'bg-emerald-100' : 'bg-red-100'">
+                                {{ t.type === 'income' ? '↑' : '↓' }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-sm">{{ t.category }} <span class="text-xs font-normal text-slate-400 ml-1">{{ t.person }}</span></p>
+                                <p class="text-xs text-slate-300 truncate mt-0.5">{{ t.note || '無備註' }}</p>
+                            </div>
+                            <span :class="t.type === 'income' ? 'text-emerald-600' : 'text-red-500'" class="font-black text-sm flex-shrink-0">
+                                {{ t.type === 'income' ? '+' : '-' }}${{ Number(t.amount).toFixed(2) }}
+                            </span>
+                            <button @click="openEditTx(t)" class="text-slate-300 p-1.5 rounded-lg active:bg-slate-100 transition-colors flex-shrink-0">✏️</button>
+                        </div>
+                    </div>
+                </div>
+            </template>
         </section>
 
     </main>
 
     <!-- Bottom nav -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-100 z-40">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-slate-100 z-40 shadow-lg">
         <div class="max-w-lg mx-auto grid grid-cols-5">
             <button v-for="t in tabs" :key="t.id" @click="currentTab = t.id"
                 :class="currentTab === t.id ? 'text-blue-600' : 'text-slate-400'"
@@ -537,37 +728,21 @@
 <div v-if="showClientModal" class="modal-overlay" @click.self="showClientModal = false">
     <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-screen overflow-y-auto no-scrollbar">
         <div class="flex justify-between items-center">
-            <h2 class="text-lg font-black">{{ clientForm.id ? '修改客戶' : '新增客戶' }}</h2>
-            <button @click="showClientModal = false" class="text-slate-300 font-black text-2xl leading-none">×</button>
+            <h2 class="text-lg font-black">{{ clientForm.id ? '✏️ 修改客戶' : '➕ 新增客戶' }}</h2>
+            <button @click="showClientModal = false" class="text-slate-300 font-black text-2xl">×</button>
         </div>
-        <input v-model="clientForm.name" placeholder="客戶姓名 *"
-            class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none">
-        <input v-model="clientForm.phone" placeholder="電話號碼"
-            class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none">
+        <input v-model="clientForm.name" placeholder="客戶姓名 *" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50">
+        <input v-model="clientForm.phone" placeholder="電話號碼" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50">
         <div class="grid grid-cols-2 gap-3">
-            <select v-model="clientForm.branch"
-                class="border-2 border-slate-200 p-3 rounded-xl font-bold focus:outline-none focus:border-blue-400">
+            <select v-model="clientForm.branch" class="border-2 border-slate-200 p-3 rounded-xl font-bold focus:outline-none focus:border-blue-400 bg-slate-50">
                 <option value="觀塘">觀塘</option>
                 <option value="中環">中環</option>
                 <option value="佐敦">佐敦</option>
             </select>
-            <select v-model="clientForm.source"
-                class="border-2 border-slate-200 p-3 rounded-xl font-bold focus:outline-none focus:border-blue-400">
+            <select v-model="clientForm.source" class="border-2 border-slate-200 p-3 rounded-xl font-bold focus:outline-none focus:border-blue-400 bg-slate-50">
                 <option value="廣告">廣告</option>
                 <option value="轉介紹">轉介紹</option>
             </select>
-        </div>
-        <div v-if="clientForm.source === '轉介紹'"
-            class="p-4 bg-purple-50 rounded-2xl space-y-2 border-2 border-purple-100">
-            <p class="font-black text-purple-700 text-sm">搜尋推薦人</p>
-            <input v-model="refSearch" placeholder="推薦人姓名..."
-                class="w-full p-3 border border-purple-200 rounded-xl text-sm focus:outline-none bg-white">
-            <div class="max-h-24 overflow-y-auto space-y-1">
-                <div v-for="rc in filteredRefs" :key="rc.id"
-                    @click="clientForm.referral_id = rc.id; refSearch = rc.name"
-                    :class="clientForm.referral_id === rc.id ? 'bg-purple-200' : 'bg-white'"
-                    class="p-2 rounded-lg text-sm font-bold cursor-pointer border border-purple-100">{{ rc.name }}</div>
-            </div>
         </div>
         <label :class="clientForm.marathon ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 border-slate-200'"
             class="flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-colors">
@@ -575,9 +750,8 @@
             <span class="font-bold text-sm">活躍馬拉松成員 🏃</span>
         </label>
         <div>
-            <p class="text-xs font-bold text-slate-400 mb-1.5 pl-1">有效日期（預設一年）</p>
-            <input type="date" v-model="clientForm.expiry_date"
-                class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none">
+            <p class="text-xs font-bold text-slate-400 mb-1.5 pl-1">有效日期</p>
+            <input type="date" v-model="clientForm.expiry_date" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50">
         </div>
         <div class="grid grid-cols-2 gap-3 pt-1">
             <button @click="showClientModal = false" class="py-4 bg-slate-100 rounded-2xl font-black active:scale-95 transition-transform">取消</button>
@@ -590,23 +764,17 @@
 <div v-if="showExpModal" class="modal-overlay" @click.self="showExpModal = false">
     <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4">
         <div class="flex justify-between items-center">
-            <h3 class="font-black text-lg" :class="expForm.category.includes('收入') ? 'text-emerald-600' : 'text-slate-800'">
-                {{ expForm.category }}
-            </h3>
-            <button @click="showExpModal = false" class="text-slate-300 font-black text-2xl leading-none">×</button>
+            <h3 class="font-black text-lg" :class="expForm.category.includes('收入') ? 'text-emerald-600' : 'text-slate-800'">{{ expForm.category }}</h3>
+            <button @click="showExpModal = false" class="text-slate-300 font-black text-2xl">×</button>
         </div>
         <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">HK$</span>
-            <input type="number" v-model="expForm.amount" placeholder="0"
-                class="w-full border-2 border-slate-200 pl-14 pr-4 py-4 rounded-2xl font-black text-2xl focus:border-blue-400 outline-none">
+            <input type="number" v-model="expForm.amount" placeholder="0" class="w-full border-2 border-slate-200 pl-14 pr-4 py-4 rounded-2xl font-black text-2xl focus:border-blue-400 outline-none bg-slate-50">
         </div>
-        <textarea v-model="expForm.note" placeholder="備註（可選）..."
-            class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold h-20 resize-none focus:outline-none focus:border-blue-400"></textarea>
+        <textarea v-model="expForm.note" placeholder="備註（可選）..." class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold h-20 resize-none focus:outline-none focus:border-blue-400 bg-slate-50"></textarea>
         <div class="grid grid-cols-2 gap-3">
             <button @click="saveExp('Kwan')" class="bg-slate-900 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Kwan</button>
-            <button @click="saveExp('Cat')"
-                :class="expForm.category.includes('收入') ? 'bg-emerald-500' : 'bg-red-500'"
-                class="text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Cat</button>
+            <button @click="saveExp('Cat')" :class="expForm.category.includes('收入') ? 'bg-emerald-500' : 'bg-red-500'" class="text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Cat</button>
         </div>
     </div>
 </div>
@@ -615,120 +783,152 @@
 <div v-if="showRestockModal" class="modal-overlay" @click.self="showRestockModal = false">
     <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-screen overflow-y-auto no-scrollbar">
         <div class="flex justify-between items-center">
-            <h3 class="font-black text-lg" :class="restockForm.isInitial ? 'text-blue-700' : 'text-amber-700'">
-                {{ restockForm.isInitial ? '📋 設定現有庫存' : '📦 入貨記錄' }}
-            </h3>
-            <button @click="showRestockModal = false" class="text-slate-300 font-black text-2xl leading-none">×</button>
+            <h3 class="font-black text-lg text-amber-700">📦 入貨記錄</h3>
+            <button @click="showRestockModal = false" class="text-slate-300 font-black text-2xl">×</button>
         </div>
-
-        <!-- 模式切換 -->
         <div class="flex gap-1.5 p-1.5 bg-slate-100 rounded-2xl">
-            <button @click="restockForm.isInitial = false"
-                :class="!restockForm.isInitial ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500'"
-                class="flex-1 py-3 rounded-xl font-black text-xs transition-all active:scale-95">
-                📦 入貨<br><span class="font-semibold opacity-80">記錄支出</span>
-            </button>
-            <button @click="restockForm.isInitial = true"
-                :class="restockForm.isInitial ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'"
-                class="flex-1 py-3 rounded-xl font-black text-xs transition-all active:scale-95">
-                📋 盤點<br><span class="font-semibold opacity-80">不記帳</span>
-            </button>
+            <button @click="restockForm.isInitial = false" :class="!restockForm.isInitial ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500'" class="flex-1 py-3 rounded-xl font-black text-xs transition-all active:scale-95">📦 入貨<br><span class="font-semibold opacity-80">記錄支出</span></button>
+            <button @click="restockForm.isInitial = true" :class="restockForm.isInitial ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'" class="flex-1 py-3 rounded-xl font-black text-xs transition-all active:scale-95">📋 盤點<br><span class="font-semibold opacity-80">不記帳</span></button>
         </div>
-
-        <!-- 說明 -->
-        <div :class="restockForm.isInitial ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-amber-50 border-amber-200 text-amber-700'"
-            class="rounded-2xl px-4 py-3 border-2 text-xs font-semibold flex items-start gap-2">
-            <span class="text-base flex-shrink-0">{{ restockForm.isInitial ? 'ℹ️' : '💡' }}</span>
-            <span v-if="restockForm.isInitial">直接設定現有庫存數量，<strong>不會產生任何支出記錄</strong>。適合輸入已有存貨的初始數字。</span>
-            <span v-else>入貨後自動新增「產品採購」支出記錄。</span>
-        </div>
-
-        <!-- 產品資訊 -->
-        <div :class="restockForm.isInitial ? 'bg-blue-50 border-blue-100' : 'bg-amber-50 border-amber-100'"
-            class="rounded-2xl p-4 border-2">
+        <div class="rounded-2xl p-4 border-2 bg-amber-50 border-amber-100">
             <div class="flex justify-between items-start">
                 <div>
-                    <p class="font-black text-base" :class="restockForm.isInitial ? 'text-blue-800' : 'text-amber-800'">
-                        {{ restockForm.product?.name }}
-                    </p>
-                    <p class="text-xs mt-1 font-semibold" :class="restockForm.isInitial ? 'text-blue-500' : 'text-amber-500'">
-                        廠本 ${{ restockForm.product?.cost?.toFixed(2) }} / 件
-                    </p>
+                    <p class="font-black text-base text-amber-800">{{ restockForm.product?.name }}</p>
+                    <p class="text-xs mt-1 font-semibold text-amber-500">廠本 ${{ restockForm.product?.cost?.toFixed(2) }} / 件</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-xs font-bold" :class="restockForm.isInitial ? 'text-blue-600' : 'text-amber-600'">現有庫存</p>
-                    <p class="text-3xl font-black" :class="restockForm.isInitial ? 'text-blue-700' : 'text-amber-700'">
-                        {{ getStock(restockForm.product?.name || '') }}
-                    </p>
-                    <p class="text-xs font-semibold" :class="restockForm.isInitial ? 'text-blue-400' : 'text-amber-400'">件</p>
-                </div>
-            </div>
-            <div class="mt-3 pt-3 flex items-center justify-between"
-                :class="restockForm.isInitial ? 'border-t border-blue-200' : 'border-t border-amber-200'">
-                <span class="text-xs font-black" :class="restockForm.isInitial ? 'text-blue-600' : 'text-amber-600'">
-                    {{ restockForm.isInitial ? '設定後庫存' : '入貨後庫存' }}
-                </span>
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-bold" :class="restockForm.isInitial ? 'text-blue-400' : 'text-amber-400'">
-                        {{ getStock(restockForm.product?.name || '') }}
-                    </span>
-                    <span class="text-lg" :class="restockForm.isInitial ? 'text-blue-300' : 'text-amber-300'">→</span>
-                    <span class="text-xl font-black text-emerald-600">
-                        {{ restockForm.isInitial
-                            ? (restockForm.qty || 0)
-                            : getStock(restockForm.product?.name || '') + (restockForm.qty || 0) }}
-                    </span>
-                    <span class="text-xs text-slate-400 font-bold">件</span>
+                    <p class="text-xs font-bold text-amber-600">現有庫存</p>
+                    <p class="text-3xl font-black text-amber-700">{{ getStock(restockForm.product?.name || '') }}</p>
                 </div>
             </div>
         </div>
-
-        <!-- 數量 -->
         <div>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">
-                {{ restockForm.isInitial ? '現有數量（直接輸入總數）' : '入貨數量' }}
-            </p>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">{{ restockForm.isInitial ? '現有數量' : '入貨數量' }}</p>
             <div class="flex items-center gap-3">
-                <button @click="restockForm.qty = Math.max(0, (restockForm.qty || 0) - 1)"
-                    class="w-14 h-14 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 transition-transform flex-shrink-0 select-none">−</button>
-                <input type="number" v-model.number="restockForm.qty" min="0"
-                    class="flex-1 border-2 border-slate-200 p-4 rounded-2xl font-black text-3xl text-center focus:border-blue-400 outline-none">
-                <button @click="restockForm.qty = (restockForm.qty || 0) + 1"
-                    class="w-14 h-14 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 transition-transform flex-shrink-0 select-none">+</button>
+                <button @click="restockForm.qty = Math.max(0, (restockForm.qty||0) - 1)" class="w-14 h-14 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 flex-shrink-0 select-none">−</button>
+                <input type="number" v-model.number="restockForm.qty" min="0" class="flex-1 border-2 border-slate-200 p-4 rounded-2xl font-black text-3xl text-center focus:border-blue-400 outline-none bg-slate-50">
+                <button @click="restockForm.qty = (restockForm.qty||0) + 1" class="w-14 h-14 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 flex-shrink-0 select-none">+</button>
             </div>
         </div>
-
-        <!-- 成本 / 保本提示 -->
-        <div v-if="!restockForm.isInitial"
-            class="bg-red-50 rounded-2xl p-4 border-2 border-red-100 flex justify-between items-center">
-            <div>
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">總採購成本</p>
-                <p class="text-xs text-slate-400 mt-0.5">自動計入「產品採購」支出</p>
-            </div>
-            <span class="font-black text-2xl text-red-500">
-                -${{ ((restockForm.product?.cost || 0) * (restockForm.qty || 0)).toFixed(2) }}
-            </span>
+        <div v-if="!restockForm.isInitial" class="bg-red-50 rounded-2xl p-4 border-2 border-red-100 flex justify-between items-center">
+            <div><p class="text-xs font-bold text-slate-500">總採購成本</p></div>
+            <span class="font-black text-2xl text-red-500">-${{ ((restockForm.product?.cost||0) * (restockForm.qty||0)).toFixed(2) }}</span>
         </div>
-        <div v-else class="bg-emerald-50 rounded-2xl p-4 border-2 border-emerald-100 flex items-center gap-3">
-            <span class="text-2xl">✅</span>
-            <div>
-                <p class="text-sm font-black text-emerald-700">不記錄任何支出</p>
-                <p class="text-xs text-emerald-500 font-semibold mt-0.5">僅更新庫存數字，財務記錄不受影響</p>
-            </div>
-        </div>
-
-        <!-- 按鈕 -->
         <div v-if="restockForm.isInitial">
-            <button @click="saveRestock('system')"
-                class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-base shadow-lg active:scale-95 transition-transform">
-                ✅ 確認設定庫存為 {{ restockForm.qty || 0 }} 件
-            </button>
+            <button @click="saveRestock('system')" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-base shadow-lg active:scale-95 transition-transform">✅ 確認設定庫存為 {{ restockForm.qty||0 }} 件</button>
         </div>
         <div v-else class="grid grid-cols-2 gap-3">
-            <button @click="saveRestock('Kwan')"
-                class="bg-slate-900 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Kwan 入貨</button>
-            <button @click="saveRestock('Cat')"
-                class="bg-amber-600 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Cat 入貨</button>
+            <button @click="saveRestock('Kwan')" class="bg-slate-900 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Kwan 入貨</button>
+            <button @click="saveRestock('Cat')" class="bg-amber-600 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Cat 入貨</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL: 編輯交易記錄 ═══ -->
+<div v-if="showEditTxModal" class="modal-overlay" @click.self="showEditTxModal = false">
+    <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-screen overflow-y-auto no-scrollbar">
+        <div class="flex justify-between items-center">
+            <h3 class="font-black text-lg">✏️ 修改記錄</h3>
+            <button @click="showEditTxModal = false" class="text-slate-300 font-black text-2xl">×</button>
+        </div>
+        <div class="flex gap-1.5 p-1.5 bg-slate-100 rounded-2xl">
+            <button @click="editTxForm.type = 'income'" :class="editTxForm.type === 'income' ? 'bg-emerald-500 text-white shadow' : 'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-sm transition-all">↑ 收入</button>
+            <button @click="editTxForm.type = 'expense'" :class="editTxForm.type === 'expense' ? 'bg-red-500 text-white shadow' : 'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-sm transition-all">↓ 支出</button>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">類別</p>
+            <select v-model="editTxForm.category" class="w-full border-2 border-slate-200 p-3 rounded-2xl font-bold focus:outline-none focus:border-blue-400 bg-slate-50">
+                <optgroup label="收入">
+                    <option value="運動">運動</option>
+                    <option value="零售">零售</option>
+                    <option value="其他項目(收入)">其他項目(收入)</option>
+                </optgroup>
+                <optgroup label="支出">
+                    <option value="Fitwork廣告">Fitwork廣告</option>
+                    <option value="FZb廣告">FZb廣告</option>
+                    <option value="中環租金">中環租金</option>
+                    <option value="觀塘租金">觀塘租金</option>
+                    <option value="產品採購">產品採購</option>
+                    <option value="馬拉松成本">馬拉松成本</option>
+                    <option value="其他項目(支出)">其他項目(支出)</option>
+                </optgroup>
+            </select>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">金額</p>
+            <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">HK$</span>
+                <input type="number" v-model="editTxForm.amount" class="w-full border-2 border-slate-200 pl-14 pr-4 py-4 rounded-2xl font-black text-2xl focus:border-blue-400 outline-none bg-slate-50">
+            </div>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">人員</p>
+            <div class="flex gap-2">
+                <button v-for="p in ['Kwan','Cat','system']" :key="p" @click="editTxForm.person = p"
+                    :class="editTxForm.person === p ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'"
+                    class="flex-1 py-3 rounded-xl font-black text-sm transition-all active:scale-95">{{ p }}</button>
+            </div>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">備註</p>
+            <textarea v-model="editTxForm.note" placeholder="備註..." class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold h-16 resize-none focus:outline-none focus:border-blue-400 bg-slate-50"></textarea>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+            <button @click="showEditTxModal = false" class="py-4 bg-slate-100 rounded-2xl font-black active:scale-95 transition-transform text-sm">取消</button>
+            <button @click="saveEditTx" class="py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-transform text-sm">確認修改</button>
+            <button @click="deleteTx" class="py-4 bg-red-500 text-white rounded-2xl font-black active:scale-95 transition-transform text-sm">🗑️ 刪除</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL: 庫存修正 ═══ -->
+<div v-if="showStockCorrectionModal" class="modal-overlay" @click.self="showStockCorrectionModal = false">
+    <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4">
+        <div class="flex justify-between items-center">
+            <h3 class="font-black text-lg text-blue-700">🔧 庫存修正</h3>
+            <button @click="showStockCorrectionModal = false" class="text-slate-300 font-black text-2xl">×</button>
+        </div>
+        <div class="bg-blue-50 border-2 border-blue-100 rounded-2xl p-4 flex justify-between items-center">
+            <div>
+                <p class="font-black text-base text-blue-800">{{ stockCorrectionForm.productName }}</p>
+                <p class="text-xs text-blue-400 font-semibold mt-0.5">系統記錄庫存</p>
+            </div>
+            <div class="text-right">
+                <p class="text-4xl font-black text-blue-700">{{ stockCorrectionForm.currentStock }}</p>
+                <p class="text-xs text-blue-400">件</p>
+            </div>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">修正原因</p>
+            <div class="grid grid-cols-2 gap-2">
+                <button v-for="r in correctionReasons" :key="r" @click="stockCorrectionForm.reason = r"
+                    :class="stockCorrectionForm.reason === r ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600 border-slate-200'"
+                    class="py-2.5 rounded-xl border-2 font-bold text-xs transition-all active:scale-95">{{ r }}</button>
+            </div>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">正確數量</p>
+            <div class="flex items-center gap-3">
+                <button @click="stockCorrectionForm.newStock = Math.max(0, (stockCorrectionForm.newStock||0) - 1)" class="w-14 h-14 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 flex-shrink-0 select-none">−</button>
+                <input type="number" v-model.number="stockCorrectionForm.newStock" min="0" class="flex-1 border-2 border-slate-200 p-4 rounded-2xl font-black text-3xl text-center focus:border-blue-400 outline-none bg-slate-50">
+                <button @click="stockCorrectionForm.newStock = (stockCorrectionForm.newStock||0) + 1" class="w-14 h-14 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 flex-shrink-0 select-none">+</button>
+            </div>
+        </div>
+        <button @click="saveStockCorrection" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-base shadow-lg active:scale-95 transition-transform">✅ 確認修正庫存</button>
+    </div>
+</div>
+
+<!-- ═══ MODAL: 刪除確認 ═══ -->
+<div v-if="showDeleteConfirm" class="modal-overlay" @click.self="showDeleteConfirm = false">
+    <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4">
+        <div class="text-center py-2">
+            <p class="text-5xl mb-3">🗑️</p>
+            <p class="font-black text-lg">確認刪除此記錄？</p>
+            <p class="text-sm text-slate-400 mt-1.5 font-semibold">此操作無法復原</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <button @click="showDeleteConfirm = false" class="py-4 bg-slate-100 rounded-2xl font-black active:scale-95 transition-transform">取消</button>
+            <button @click="confirmDeleteTx" class="py-4 bg-red-500 text-white rounded-2xl font-black active:scale-95 transition-transform">確認刪除</button>
         </div>
     </div>
 </div>
@@ -738,23 +938,18 @@
     <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-3">
         <div class="flex justify-between items-center mb-1">
             <h3 class="font-black text-lg">帳號設定</h3>
-            <button @click="showProfile = false" class="text-slate-300 font-black text-2xl leading-none">×</button>
+            <button @click="showProfile = false" class="text-slate-300 font-black text-2xl">×</button>
         </div>
         <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl">
-            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-black text-lg flex-shrink-0">
-                {{ session.user.email.charAt(0).toUpperCase() }}
-            </div>
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0">{{ session.user.email.charAt(0).toUpperCase() }}</div>
             <p class="font-bold text-sm break-all text-slate-700">{{ session.user.email }}</p>
         </div>
-        <button @click="triggerReset" class="w-full p-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-sm active:scale-95 transition-transform">📧 修改密碼（發送郵件）</button>
+        <button @click="triggerReset" class="w-full p-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-sm active:scale-95 transition-transform">📧 修改密碼</button>
         <div v-if="passkeySupported">
-            <button v-if="!passkeyRegistered" @click="registerPasskey"
-                class="w-full p-4 bg-slate-800 text-white rounded-2xl font-bold text-sm active:scale-95 transition-transform">🔒 綁定 Face ID / 指紋登入</button>
-            <button v-else @click="removePasskey"
-                class="w-full p-4 bg-slate-100 rounded-2xl font-bold text-sm text-slate-500 active:scale-95 transition-transform">移除生物識別登入</button>
+            <button v-if="!passkeyRegistered" @click="registerPasskey" class="w-full p-4 bg-slate-800 text-white rounded-2xl font-bold text-sm active:scale-95 transition-transform">🔒 綁定 Face ID / 指紋登入</button>
+            <button v-else @click="removePasskey" class="w-full p-4 bg-slate-100 rounded-2xl font-bold text-sm text-slate-500 active:scale-95 transition-transform">移除生物識別登入</button>
         </div>
         <button @click="handleLogout" class="w-full p-4 bg-slate-900 text-white rounded-2xl font-black active:scale-95 transition-transform">登出帳號</button>
-        <button @click="deleteAccount" class="w-full text-xs text-slate-300 font-semibold py-2">刪除帳號（不可復原）</button>
     </div>
 </div>
 
@@ -762,21 +957,14 @@
 
 <script>
 const { createApp, ref, computed, onMounted } = Vue;
-
 const SUPA_URL = "https://ajnunehxtiofcphdyhqn.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
 const SITE_URL = "https://incomesapp.netlify.app/";
 const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
-function base64urlToUint8Array(b64url) {
-    const b64 = b64url.replace(/-/g,'+').replace(/_/g,'/');
-    return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-}
-function uint8ArrayToBase64url(arr) {
-    return btoa(Array.from(arr, b => String.fromCharCode(b)).join(''))
-        .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-}
-function getPasskeyKey(email) { return 'pk_cred_' + email; }
+function base64urlToUint8Array(b64url){const b64=b64url.replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from(atob(b64),c=>c.charCodeAt(0));}
+function uint8ArrayToBase64url(arr){return btoa(Array.from(arr,b=>String.fromCharCode(b)).join('')).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
+function getPasskeyKey(email){return 'pk_cred_'+email;}
 
 createApp({
     setup() {
@@ -784,133 +972,63 @@ createApp({
         const authState         = ref('login');
         const authForm          = ref({ email:'', password:'' });
         const newPassword       = ref('');
-        const currentTab        = ref('dashboard');
-        const dateRange         = ref('month');
-        const reportPerson      = ref('All');
-        const showProfile       = ref(false);
-        const clients           = ref([]);
-        const finances          = ref([]);
-        const products          = ref([]);
-        const cart              = ref([]);
-        const pSearch           = ref('');
-        const cSearch           = ref('');
-        const refSearch         = ref('');
         const passkeySupported  = ref(false);
         const passkeyRegistered = ref(false);
-        const showRestockModal  = ref(false);
-        const restockForm       = ref({ product: null, qty: 0, isInitial: false });
+        const showProfile       = ref(false);
 
-        // ─── Stock ───────────────────────────────────────────
-        const stockData = ref({});
-        const loadStock = () => {
-            try { stockData.value = JSON.parse(localStorage.getItem('fwstk_v1') || '{}'); }
-            catch(e) { stockData.value = {}; }
-        };
-        const saveStockLocal = () => localStorage.setItem('fwstk_v1', JSON.stringify(stockData.value));
-        const getStock  = (name) => (!name ? 0 : stockData.value[name] ?? 0);
-        const modifyStock = (name, delta) => {
-            stockData.value[name] = Math.max(0, (stockData.value[name] ?? 0) + delta);
-            saveStockLocal();
-        };
-        const setStock = (name, qty) => {
-            stockData.value[name] = Math.max(0, qty);
-            saveStockLocal();
-        };
+        const currentTab     = ref('dashboard');
+        const retailSubTab   = ref('pos');
+        const financeSubTab  = ref('add');
+        const dateRange      = ref('month');
+        const reportPerson   = ref('All');
 
-        // ★★★ 匯出庫存 CSV ────────────────────────────────────
-        const exportStockCSV = () => {
-            if (products.value.length === 0) return alert("暫無產品資料，請確認產品已載入");
+        const clients  = ref([]);
+        const finances = ref([]);
+        const products = ref([]);
+        const trials   = ref([]); // ✨ NEW
+        const cart     = ref([]);
 
-            const now     = new Date();
-            const dateStr = now.toLocaleDateString('zh-HK', { year:'numeric', month:'2-digit', day:'2-digit' });
-            const timeStr = now.toLocaleTimeString('zh-HK', { hour:'2-digit', minute:'2-digit' });
+        const pSearch         = ref('');
+        const cSearch         = ref('');
+        const crmBranchFilter = ref('全部');
+        const refSearch       = ref('');
+        const stockSearch     = ref('');
+        const stockFilter     = ref('all');
+        const txSearch        = ref('');
+        const txTypeFilter    = ref('all');
 
-            // ── 計算摘要數字 ──
-            const totalItems    = products.value.length;
-            const outOfStock    = products.value.filter(p => getStock(p.prod_name) === 0).length;
-            const lowStock      = products.value.filter(p => getStock(p.prod_name) > 0 && getStock(p.prod_name) < 5).length;
-            const normalStock   = totalItems - outOfStock - lowStock;
-            const totalQty      = products.value.reduce((s, p) => s + getStock(p.prod_name), 0);
-            const totalCostVal  = products.value.reduce((s, p) => s + getStock(p.prod_name) * parseFloat(p.cost || 0), 0);
-            const totalRetailVal= products.value.reduce((s, p) => s + getStock(p.prod_name) * parseFloat(p.retail_price || 0), 0);
+        const showClientModal          = ref(false);
+        const showExpModal             = ref(false);
+        const showRestockModal         = ref(false);
+        const showEditTxModal          = ref(false);
+        const showStockCorrectionModal = ref(false);
+        const showDeleteConfirm        = ref(false);
 
-            // ── 組裝列 ──
-            const rows = [];
+        const clientForm          = ref({});
+        const expForm             = ref({ category:'', amount:0, note:'' });
+        const restockForm         = ref({ product:null, qty:0, isInitial:false });
+        const editTxForm          = ref({});
+        const stockCorrectionForm = ref({ productName:'', currentStock:0, newStock:0, reason:'盤點更正' });
+        // ✨ eForm now includes trialDate
+        const eForm = ref({ clientId:null, type:'35pt', isNew:false, isReferral:false, trialDate:'' });
+        const rForm = ref({ discount:'0', clientId:null });
 
-            // 標題區
-            rows.push(['FITWORKHK 庫存清單']);
-            rows.push([`匯出日期：${dateStr} ${timeStr}`]);
-            rows.push([]);
+        const correctionReasons = ['盤點更正','損耗/破損','內部使用','系統錯誤','其他'];
 
-            // 摘要區
-            rows.push(['【庫存摘要】']);
-            rows.push(['總款式數', totalItems, '', '總件數', totalQty]);
-            rows.push(['正常庫存', normalStock, '', '廠本總值', `$${totalCostVal.toFixed(2)}`]);
-            rows.push(['庫存不足 (<5件)', lowStock, '', '零售總值', `$${totalRetailVal.toFixed(2)}`]);
-            rows.push(['缺貨款數', outOfStock, '', '潛在利潤', `$${(totalRetailVal - totalCostVal).toFixed(2)}`]);
-            rows.push([]);
-
-            // 產品明細標題
-            rows.push(['產品名稱', '現有庫存 (件)', '廠本價 ($)', '零售價 ($)', '廠本庫存值 ($)', '零售庫存值 ($)', '狀態']);
-
-            // 產品明細
-            products.value.forEach(p => {
-                const stock      = getStock(p.prod_name);
-                const cost       = parseFloat(p.cost || 0);
-                const retail     = parseFloat(p.retail_price || 0);
-                const costVal    = (stock * cost).toFixed(2);
-                const retailVal  = (stock * retail).toFixed(2);
-                const status     = stock === 0 ? '❌ 缺貨'
-                                 : stock < 5   ? '⚠️ 庫存不足'
-                                 :               '✅ 正常';
-                rows.push([
-                    p.prod_name,
-                    stock,
-                    cost.toFixed(2),
-                    retail.toFixed(2),
-                    costVal,
-                    retailVal,
-                    status
-                ]);
-            });
-
-            // ── 轉成 CSV 字串（BOM 讓 Excel 正確顯示中文）──
-            const csvContent = '\uFEFF' + rows.map(row =>
-                row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')
-            ).join('\r\n');
-
-            // ── 觸發下載 ──
-            const blob     = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url      = URL.createObjectURL(blob);
-            const link     = document.createElement('a');
-            const fileName = `FITWORKHK_庫存_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
-            link.href      = url;
-            link.download  = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        };
-
-        // ─── 庫存總值 (computed) ──────────────────────────────
-        const totalStockValue = computed(() =>
-            products.value.reduce((s, p) =>
-                s + getStock(p.prod_name) * parseFloat(p.cost || 0), 0)
-        );
-
-        // ─── Tabs / Config ───────────────────────────────────
         const tabs = [
             { id:'dashboard', name:'總覽',  icon:'📊' },
             { id:'crm',       name:'客戶',  icon:'👥' },
             { id:'exercise',  name:'運動',  icon:'🏋️' },
             { id:'retail',    name:'零售',  icon:'🛍️' },
-            { id:'finance',   name:'支出',  icon:'💰' }
+            { id:'finance',   name:'財務',  icon:'💰' }
         ];
         const dateRanges = [
-            { id:'today', name:'今日' },
-            { id:'week',  name:'本週' },
-            { id:'month', name:'本月' },
-            { id:'year',  name:'全年' }
+            { id:'today', name:'今日' }, { id:'week', name:'本週' },
+            { id:'month', name:'本月' }, { id:'year', name:'全年' }
+        ];
+        const stockFilters = [
+            { id:'all', name:'全部' }, { id:'danger', name:'❌ 缺貨' },
+            { id:'low', name:'⚠️ 不足' }, { id:'ok', name:'✅ 正常' }
         ];
         const expCats = ['Fitwork廣告','FZb廣告','中環租金','觀塘租金','產品採購','馬拉松成本','其他項目(收入)','其他項目(支出)'];
         const exerciseItems = [
@@ -919,328 +1037,360 @@ createApp({
             { id:'35pt',  name:'35點套票', price:2550 }
         ];
 
-        // ─── Auth ────────────────────────────────────────────
+        // ─── Date helpers ───
+        const todayDate = computed(() => new Date().toISOString().split('T')[0]);
+        const tomorrowDate = computed(() => {
+            const d = new Date(); d.setDate(d.getDate()+1);
+            return d.toISOString().split('T')[0];
+        });
+        const reminderDate = computed(() => {
+            if (!eForm.value.trialDate) return '';
+            const d = new Date(eForm.value.trialDate);
+            d.setDate(d.getDate()-1);
+            return d.toISOString().split('T')[0];
+        });
+
+        // ─── Stock ───
+        const stockData    = ref({});
+        const loadStock    = () => { try { stockData.value = JSON.parse(localStorage.getItem('fwstk_v1')||'{}'); } catch(e) { stockData.value={}; } };
+        const saveStockLocal = () => localStorage.setItem('fwstk_v1', JSON.stringify(stockData.value));
+        const getStock     = (name) => (!name ? 0 : stockData.value[name] ?? 0);
+        const modifyStock  = (name, delta) => { stockData.value[name] = Math.max(0,(stockData.value[name]??0)+delta); saveStockLocal(); };
+        const setStock     = (name, qty)   => { stockData.value[name] = Math.max(0, qty); saveStockLocal(); };
+        const quickAdjustStock = (name, delta) => modifyStock(name, delta);
+
+        const stockInfo = (name) => {
+            const s = getStock(name), pct = Math.min(100, Math.round(s/20*100));
+            if (s===0) return { text:'缺貨', badge:'bg-red-100 text-red-600 border-red-200',      bar:'bg-red-400',    pct, numColor:'text-red-500',    cardBorder:'border-red-100' };
+            if (s<5)   return { text:'不足', badge:'bg-amber-100 text-amber-700 border-amber-200', bar:'bg-amber-400',  pct, numColor:'text-amber-600',  cardBorder:'border-amber-100' };
+            if (s<10)  return { text:'正常', badge:'bg-blue-100 text-blue-700 border-blue-200',    bar:'bg-blue-400',   pct, numColor:'text-blue-600',   cardBorder:'border-slate-100' };
+            return             { text:'充足', badge:'bg-emerald-100 text-emerald-700 border-emerald-200', bar:'bg-emerald-500', pct, numColor:'text-emerald-600', cardBorder:'border-emerald-100' };
+        };
+
+        const stockCategories = computed(() => {
+            const cats = { '内':{ key:'内', name:'💊 内服產品', emoji:'💊', items:[] }, '外':{ key:'外', name:'🧴 外用產品', emoji:'🧴', items:[] } };
+            products.value.forEach(p => {
+                if (cats[p.category]) cats[p.category].items.push(p);
+                else { if (!cats['other']) cats['other']={ key:'other', name:'📦 其他', emoji:'📦', items:[] }; cats['other'].items.push(p); }
+            });
+            return Object.values(cats).filter(c=>c.items.length>0);
+        });
+
+        const filteredStockCategories = computed(() =>
+            stockCategories.value.map(cat => ({
+                ...cat, items: cat.items.filter(p => {
+                    const matchSearch = !stockSearch.value || p.prod_name.toLowerCase().includes(stockSearch.value.toLowerCase());
+                    const s = getStock(p.prod_name);
+                    const matchFilter = stockFilter.value==='all' || (stockFilter.value==='danger' && s===0) || (stockFilter.value==='low' && s>0 && s<5) || (stockFilter.value==='ok' && s>=5);
+                    return matchSearch && matchFilter;
+                })
+            })).filter(c=>c.items.length>0)
+        );
+
+        const totalStockQty    = computed(() => products.value.reduce((s,p)=>s+getStock(p.prod_name),0));
+        const totalStockValue  = computed(() => products.value.reduce((s,p)=>s+getStock(p.prod_name)*parseFloat(p.cost||0),0));
+        const totalRetailValue = computed(() => products.value.reduce((s,p)=>s+getStock(p.prod_name)*parseFloat(p.retail_price||0),0));
+        const stockSummary     = computed(() => {
+            let outOfStock=0,lowStock=0,normal=0,abundant=0;
+            products.value.forEach(p=>{ const s=getStock(p.prod_name); if(s===0)outOfStock++; else if(s<5)lowStock++; else if(s<10)normal++; else abundant++; });
+            return { outOfStock, lowStock, normal, abundant };
+        });
+        const lowStockItems = computed(() => products.value.map(p=>({name:p.prod_name,stock:getStock(p.prod_name)})).filter(i=>i.stock<5).sort((a,b)=>a.stock-b.stock));
+
+        const openStockCorrection = (p) => { stockCorrectionForm.value={productName:p.prod_name,currentStock:getStock(p.prod_name),newStock:getStock(p.prod_name),reason:'盤點更正'}; showStockCorrectionModal.value=true; };
+        const saveStockCorrection = () => { const{productName,newStock}=stockCorrectionForm.value; if(newStock<0)return; setStock(productName,Number(newStock)); showStockCorrectionModal.value=false; };
+
+        const exportStockCSV = () => {
+            if (products.value.length===0) return;
+            const now = new Date();
+            const rows = [['FITWORKHK 庫存清單'],[`匯出：${now.toLocaleDateString('zh-HK')}`],[],['產品名稱','類別','庫存(件)','廠本($)','零售($)','廠本值($)','零售值($)','狀態']];
+            products.value.forEach(p=>{ const s=getStock(p.prod_name),cost=parseFloat(p.cost||0),retail=parseFloat(p.retail_price||0); rows.push([p.prod_name,p.category==='内'?'内服':'外用',s,cost.toFixed(2),retail.toFixed(2),(s*cost).toFixed(2),(s*retail).toFixed(2),s===0?'缺貨':s<5?'不足':s<10?'正常':'充足']); });
+            const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+            const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+            a.href=url; a.download=`FITWORKHK_庫存_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        };
+
+        // ─── Auth ───
         const handleAuth = async () => {
-            const { email, password } = authForm.value;
-            const res = authState.value === 'login'
-                ? await sb.auth.signInWithPassword({ email, password })
-                : await sb.auth.signUp({ email, password });
+            const {email,password}=authForm.value;
+            const res = authState.value==='login' ? await sb.auth.signInWithPassword({email,password}) : await sb.auth.signUp({email,password});
             if (res.error) alert(res.error.message);
         };
         const forgotPassword = async () => {
             const e = prompt("輸入已註冊的 Email：");
             if (!e) return;
-            const { error } = await sb.auth.resetPasswordForEmail(e, { redirectTo: SITE_URL + 'reset-password.html' });
-            if (!error) alert("重設郵件已發送，請查收信箱！");
-            else alert(error.message);
+            const {error} = await sb.auth.resetPasswordForEmail(e,{redirectTo:SITE_URL+'reset-password.html'});
+            if (!error) alert("重設郵件已發送！"); else alert(error.message);
         };
         const updatePassword = async () => {
-            if (!newPassword.value || newPassword.value.length < 6) return alert("密碼最少需要 6 個字元");
-            const { error } = await sb.auth.updateUser({ password: newPassword.value });
-            if (!error) { alert("✅ 密碼更新成功！"); await sb.auth.signOut(); authState.value = 'login'; session.value = null; }
-            else alert(error.message);
+            if (!newPassword.value||newPassword.value.length<6) return alert("密碼最少需要 6 個字元");
+            const {error} = await sb.auth.updateUser({password:newPassword.value});
+            if (!error) { alert("✅ 密碼更新成功！"); await sb.auth.signOut(); authState.value='login'; session.value=null; } else alert(error.message);
         };
-        const handleLogout = async () => { await sb.auth.signOut(); session.value = null; showProfile.value = false; };
+        const handleLogout = async () => { await sb.auth.signOut(); session.value=null; showProfile.value=false; };
 
-        // ─── WebAuthn ────────────────────────────────────────
-        const checkPasskeySupport = async () => {
-            if (window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable)
-                passkeySupported.value = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-        };
-        const checkPasskeyRegistered = (email) => {
-            passkeyRegistered.value = !!localStorage.getItem(getPasskeyKey(email));
-        };
+        const checkPasskeySupport   = async () => { if (window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable) passkeySupported.value = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); };
+        const checkPasskeyRegistered= (email) => { passkeyRegistered.value = !!localStorage.getItem(getPasskeyKey(email)); };
         const registerPasskey = async () => {
             if (!session.value) return;
-            const { email, id: userId } = session.value.user;
+            const {email,id:userId} = session.value.user;
             try {
-                const credential = await navigator.credentials.create({
-                    publicKey: {
-                        challenge: crypto.getRandomValues(new Uint8Array(32)),
-                        rp: { name:"FITWORKHK", id:window.location.hostname },
-                        user: { id:base64urlToUint8Array(btoa(userId)), name:email, displayName:email },
-                        pubKeyCredParams: [{ type:"public-key", alg:-7 }, { type:"public-key", alg:-257 }],
-                        authenticatorSelection: { authenticatorAttachment:"platform", userVerification:"required" },
-                        timeout: 60000
-                    }
-                });
-                localStorage.setItem(getPasskeyKey(email), JSON.stringify({
-                    credId: uint8ArrayToBase64url(new Uint8Array(credential.rawId)), email
-                }));
-                passkeyRegistered.value = true;
-                alert("✅ 生物識別登入已綁定！");
-            } catch(e) { if (e.name !== 'NotAllowedError') alert("綁定失敗：" + e.message); }
+                const credential = await navigator.credentials.create({ publicKey:{ challenge:crypto.getRandomValues(new Uint8Array(32)), rp:{name:"FITWORKHK",id:window.location.hostname}, user:{id:base64urlToUint8Array(btoa(userId)),name:email,displayName:email}, pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}], authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required"}, timeout:60000 }});
+                localStorage.setItem(getPasskeyKey(email), JSON.stringify({credId:uint8ArrayToBase64url(new Uint8Array(credential.rawId)),email}));
+                passkeyRegistered.value=true; alert("✅ 生物識別登入已綁定！");
+            } catch(e) { if (e.name!=='NotAllowedError') alert("綁定失敗："+e.message); }
         };
         const loginWithPasskey = async () => {
-            const email = authForm.value.email || prompt("請輸入你的 Email：");
+            const email = authForm.value.email||prompt("請輸入你的 Email：");
             if (!email) return;
             const saved = localStorage.getItem(getPasskeyKey(email));
-            if (!saved) { alert("此 Email 未綁定，請先用密碼登入"); return; }
+            if (!saved) { alert("此 Email 未綁定"); return; }
             try {
-                const { credId } = JSON.parse(saved);
-                await navigator.credentials.get({
-                    publicKey: {
-                        challenge: crypto.getRandomValues(new Uint8Array(32)),
-                        allowCredentials: [{ type:"public-key", id:base64urlToUint8Array(credId) }],
-                        userVerification: "required", timeout: 60000
-                    }
-                });
-                const { error } = await sb.auth.signInWithOtp({ email, options:{ shouldCreateUser:false }});
-                if (error) alert("發送 Magic Link 失敗");
-                else alert("✅ Magic Link 已發送至 " + email);
-            } catch(e) { if (e.name !== 'NotAllowedError') alert("驗證失敗：" + e.message); }
+                const {credId} = JSON.parse(saved);
+                await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:"public-key",id:base64urlToUint8Array(credId)}],userVerification:"required",timeout:60000}});
+                const {error} = await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false}});
+                if (error) alert("發送 Magic Link 失敗"); else alert("✅ Magic Link 已發送至 "+email);
+            } catch(e) { if (e.name!=='NotAllowedError') alert("驗證失敗："+e.message); }
         };
-        const removePasskey = () => {
-            if (!session.value) return;
-            localStorage.removeItem(getPasskeyKey(session.value.user.email));
-            passkeyRegistered.value = false;
-            alert("已移除生物識別登入");
-        };
+        const removePasskey = () => { if (!session.value) return; localStorage.removeItem(getPasskeyKey(session.value.user.email)); passkeyRegistered.value=false; alert("已移除生物識別登入"); };
 
-        // ─── Data ────────────────────────────────────────────
+        // ─── Data Load ───
         const loadData = async () => {
             const uid = session.value.user.id;
-            const [{ data:c }, { data:f }, { data:prods }] = await Promise.all([
-                sb.from('clients').select('*').eq('user_id', uid).order('created_at', { ascending:false }),
-                sb.from('finances').select('*').eq('user_id', uid).order('created_at', { ascending:false }),
-                sb.from('products').select('*').eq('is_active', true).in('category', ['内','外']).order('prod_seq')
+            const today = new Date().toISOString().split('T')[0];
+            const [{ data:c },{ data:f },{ data:prods },{ data:tr }] = await Promise.all([
+                sb.from('clients').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
+                sb.from('finances').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
+                sb.from('products').select('*').eq('is_active',true).in('category',['内','外']).order('prod_seq'),
+                // ✨ Load upcoming trials (next 30 days)
+                sb.from('trials').select('*').eq('user_id',uid).gte('trial_date',today).order('trial_date',{ascending:true})
             ]);
             clients.value  = c     || [];
             finances.value = f     || [];
             products.value = prods || [];
-        };
-        const getClientName = (clientId) => {
-            if (!clientId) return null;
-            return clients.value.find(c => c.id === clientId)?.name || null;
+            trials.value   = tr    || [];
         };
 
-        // ─── Exercise POS ────────────────────────────────────
-        const eForm = ref({ clientId:null, type:'35pt', isNew:false, isReferral:false });
+        // ─── ✨ NEW: Upcoming Trials ───
+        const upcomingTrials = computed(() => {
+            const today = new Date(); today.setHours(0,0,0,0);
+            const in30  = new Date(today); in30.setDate(today.getDate()+30);
+            return trials.value.filter(t => {
+                const d = new Date(t.trial_date); d.setHours(0,0,0,0);
+                return d >= today && d <= in30;
+            });
+        });
+
+        const daysUntilTrial = (date) => {
+            const today = new Date(); today.setHours(0,0,0,0);
+            const d = new Date(date); d.setHours(0,0,0,0);
+            return Math.round((d - today) / 86400000);
+        };
+
+        // ─── Transaction Edit ───
+        const openEditTx    = (t) => { editTxForm.value={...t}; showEditTxModal.value=true; };
+        const saveEditTx    = async () => {
+            const {id,type,category,amount,note,person} = editTxForm.value;
+            const {error} = await sb.from('finances').update({type,category,amount:Number(amount),note,person}).eq('id',id).eq('user_id',session.value.user.id);
+            if (!error) { showEditTxModal.value=false; await loadData(); } else alert(error.message);
+        };
+        const deleteTx      = () => { showEditTxModal.value=false; showDeleteConfirm.value=true; };
+        const confirmDeleteTx = async () => {
+            const {error} = await sb.from('finances').delete().eq('id',editTxForm.value.id).eq('user_id',session.value.user.id);
+            if (!error) { showDeleteConfirm.value=false; await loadData(); } else alert(error.message);
+        };
+
+        const groupedTransactions = computed(() => {
+            let arr = finances.value;
+            if (txTypeFilter.value!=='all') arr=arr.filter(t=>t.type===txTypeFilter.value);
+            if (txSearch.value) { const q=txSearch.value.toLowerCase(); arr=arr.filter(t=>(t.category+t.note+t.person+String(t.amount)).toLowerCase().includes(q)); }
+            const groups={}, order=[];
+            arr.forEach(t=>{ const d=new Date(t.created_at); const key=d.toLocaleDateString('zh-HK',{year:'numeric',month:'long',day:'numeric',weekday:'short'}); if(!groups[key]){groups[key]=[];order.push(key);} groups[key].push(t); });
+            return order.map(k=>({ date:k, items:groups[k], dayTotal:groups[k].reduce((s,t)=>s+(t.type==='income'?1:-1)*Number(t.amount),0) }));
+        });
+
+        // ─── WhatsApp ───
+        const openWhatsApp = (phone, name) => {
+            if (!phone) return;
+            const clean=phone.replace(/[^0-9]/g,''), hk=clean.startsWith('852')?clean:'852'+clean;
+            const msg=encodeURIComponent(`你好 ${name}！你的 FITWORKHK 會籍即將到期，請盡快聯繫我們續期 💪 謝謝！`);
+            window.open(`https://wa.me/${hk}?text=${msg}`,'_blank');
+        };
+
+        // ─── Exercise POS ───
         const saveExercise = async (person) => {
             if (!eForm.value.clientId) return alert("請先選擇客戶");
-            const { type, isNew, isReferral, clientId } = eForm.value;
+            const {type,isNew,isReferral,clientId,trialDate} = eForm.value;
             let profit = 0;
-            if (type === 'trial') profit = 98;
-            else if (type === '10pt') profit = isReferral ? 413 : 465;
-            else if (type === '35pt') profit = isNew ? 1250.50 : 1277.50;
-            const { error } = await sb.from('finances').insert({
-                user_id: session.value.user.id, type:'income', category:'運動',
-                amount: profit, person, client_id: clientId, note: type
+            if (type==='trial') profit=98;
+            else if (type==='10pt') profit=isReferral?413:465;
+            else if (type==='35pt') profit=isNew?1250.50:1277.50;
+
+            const {error} = await sb.from('finances').insert({
+                user_id:session.value.user.id, type:'income', category:'運動',
+                amount:profit, person, client_id:clientId, note:type
             });
-            if (!error) {
-                await loadData();
-                alert("✅ 入帳成功 +$" + profit.toFixed(2));
-                eForm.value.clientId = null;
-                currentTab.value = 'dashboard';
-            } else alert("錯誤：" + error.message);
-        };
+            if (error) return alert("錯誤："+error.message);
 
-        // ─── Retail POS ──────────────────────────────────────
-        const rForm = ref({ discount:'0', clientId:null });
-
-        const getUnitProfit = (item) => {
-            const d = parseFloat(rForm.value.discount);
-            if (d === 0.5) return 0;
-            return item.retail * (1 - d) - item.cost;
-        };
-        const getSellPrice = (p) => p.retail * (1 - parseFloat(rForm.value.discount));
-        const isLossSale   = (p) => {
-            const d = parseFloat(rForm.value.discount);
-            return d !== 0.5 && p.retail * (1 - d) < p.cost;
-        };
-        const addToCart = (p) => {
-            const existing = cart.value.find(i => i.name === p.name);
-            if (existing) existing.qty++;
-            else cart.value.push({ name:p.name, cost:p.cost, retail:p.retail, qty:1 });
-        };
-        const increaseQty = (i) => cart.value[i].qty++;
-        const decreaseQty = (i) => {
-            if (cart.value[i].qty <= 1) cart.value.splice(i, 1);
-            else cart.value[i].qty--;
-        };
-        const cartTotal     = computed(() => cart.value.reduce((s, item) => s + getUnitProfit(item) * item.qty, 0));
-        const cartItemCount = computed(() => cart.value.reduce((s, item) => s + item.qty, 0));
-        const cartHasLoss   = computed(() => cart.value.some(item => getUnitProfit(item) < 0));
-
-        const saveRetail = async (person) => {
-            if (cart.value.length === 0) return;
-            const totalP = cartTotal.value;
-            const note   = cart.value.map(item => `${item.name}×${item.qty}`).join(', ');
-            const { error } = await sb.from('finances').insert({
-                user_id: session.value.user.id, type:'income', category:'零售',
-                amount: totalP, person, client_id: rForm.value.clientId, note
-            });
-            if (!error) {
-                cart.value.forEach(item => modifyStock(item.name, -item.qty));
-                const msg = totalP === 0 ? '$0 (保本)' : (totalP > 0 ? '+$' : '-$') + Math.abs(totalP).toFixed(2);
-                cart.value = [];
-                rForm.value.clientId = null;
-                await loadData();
-                alert("✅ 結帳成功\n利潤：" + msg);
-                currentTab.value = 'dashboard';
-            } else alert("錯誤：" + error.message);
-        };
-
-        // ─── Restock ─────────────────────────────────────────
-        const openRestock = (p) => {
-            restockForm.value = { product: p, qty: 0, isInitial: false };
-            showRestockModal.value = true;
-        };
-        const saveRestock = async (person) => {
-            const { product, qty, isInitial } = restockForm.value;
-            if (!product) return;
-            if (qty === null || qty === undefined || qty < 0) return alert("請輸入有效數量");
-
-            if (isInitial) {
-                setStock(product.name, Number(qty));
-                showRestockModal.value = false;
-                alert(`✅ 庫存已設定\n${product.name}：${qty} 件\n（無支出記錄）`);
-                return;
+            // ✨ Save to trials table if trial date is set
+            if (type==='trial' && trialDate) {
+                const client = clients.value.find(c=>c.id===clientId);
+                const {error:te} = await sb.from('trials').insert([{
+                    user_id:    session.value.user.id,
+                    client_id:  clientId,
+                    client_name:client?.name || '未知客戶',
+                    trial_date: trialDate,
+                    paid_date:  todayDate.value,
+                    amount:     profit,
+                    person,
+                    reminded:   false
+                }]);
+                if (te) console.warn('Failed to save trial:', te.message);
             }
 
-            if (qty < 1) return alert("入貨數量最少為 1");
-            const amount = product.cost * Number(qty);
-            const { error } = await sb.from('finances').insert({
-                user_id: session.value.user.id, type:'expense', category:'產品採購',
-                amount, person, note: `${product.name} ×${qty}`
-            });
-            if (!error) {
-                modifyStock(product.name, Number(qty));
-                showRestockModal.value = false;
-                await loadData();
-                alert(`✅ 入貨完成\n${product.name} ×${qty} 件\n採購成本：-$${amount.toFixed(2)}\n現有庫存：${getStock(product.name)} 件`);
-            } else alert("錯誤：" + error.message);
+            await loadData();
+            const msg = trialDate ? `✅ 入帳成功 +$${profit.toFixed(2)}\n📅 試堂：${trialDate}\n🔔 提醒：${reminderDate.value}` : `✅ 入帳成功 +$${profit.toFixed(2)}`;
+            alert(msg);
+            eForm.value = { clientId:null, type:'35pt', isNew:false, isReferral:false, trialDate:'' };
+            currentTab.value = 'dashboard';
         };
 
-        // ─── CRM ─────────────────────────────────────────────
-        const showClientModal = ref(false);
-        const clientForm = ref({});
+        // ─── Retail POS ───
+        const getUnitProfit = (item) => { const d=parseFloat(rForm.value.discount); if(d===0.5)return 0; return item.retail*(1-d)-item.cost; };
+        const getSellPrice  = (p)    => p.retail*(1-parseFloat(rForm.value.discount));
+        const isLossSale    = (p)    => { const d=parseFloat(rForm.value.discount); return d!==0.5&&p.retail*(1-d)<p.cost; };
+        const addToCart = (p) => { const ex=cart.value.find(i=>i.name===p.name); if(ex)ex.qty++; else cart.value.push({name:p.name,cost:p.cost,retail:p.retail,qty:1}); };
+        const increaseQty = (i) => cart.value[i].qty++;
+        const decreaseQty = (i) => { if(cart.value[i].qty<=1)cart.value.splice(i,1); else cart.value[i].qty--; };
+        const cartTotal     = computed(() => cart.value.reduce((s,item)=>s+getUnitProfit(item)*item.qty,0));
+        const cartItemCount = computed(() => cart.value.reduce((s,item)=>s+item.qty,0));
+        const cartHasLoss   = computed(() => cart.value.some(item=>getUnitProfit(item)<0));
+        const saveRetail = async (person) => {
+            if (cart.value.length===0) return;
+            const totalP=cartTotal.value, note=cart.value.map(i=>`${i.name}×${i.qty}`).join(', ');
+            const {error} = await sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'零售',amount:totalP,person,client_id:rForm.value.clientId,note});
+            if (!error) { cart.value.forEach(item=>modifyStock(item.name,-item.qty)); cart.value=[]; rForm.value.clientId=null; await loadData(); alert("✅ 結帳成功\n利潤："+(totalP===0?'$0':(totalP>0?'+$':'-$')+Math.abs(totalP).toFixed(2))); currentTab.value='dashboard'; }
+            else alert("錯誤："+error.message);
+        };
+
+        // ─── Restock ───
+        const openRestock = (p, forceInitial=false) => { restockForm.value={product:p,qty:0,isInitial:forceInitial}; showRestockModal.value=true; };
+        const saveRestock = async (person) => {
+            const {product,qty,isInitial}=restockForm.value;
+            if (!product) return;
+            if (isInitial) { setStock(product.name,Number(qty)); showRestockModal.value=false; alert(`✅ 庫存已設定\n${product.name}：${qty} 件`); return; }
+            if (qty<1) return alert("入貨數量最少為 1");
+            const amount=product.cost*Number(qty);
+            const {error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'expense',category:'產品採購',amount,person,note:`${product.name} ×${qty}`});
+            if (!error) { modifyStock(product.name,Number(qty)); showRestockModal.value=false; await loadData(); alert(`✅ 入貨完成\n${product.name} ×${qty} 件`); }
+            else alert("錯誤："+error.message);
+        };
+
+        // ─── CRM ───
         const openClient = (c) => {
-            clientForm.value = c ? {...c} : {
-                name:'', phone:'', branch:'觀塘', source:'廣告', marathon:false,
-                expiry_date: new Date(new Date().setFullYear(new Date().getFullYear()+1)).toISOString().split('T')[0]
-            };
-            showClientModal.value = true;
+            clientForm.value = c ? {...c} : {name:'',phone:'',branch:'觀塘',source:'廣告',marathon:false,expiry_date:new Date(new Date().setFullYear(new Date().getFullYear()+1)).toISOString().split('T')[0]};
+            showClientModal.value=true;
         };
         const saveClient = async () => {
             if (!clientForm.value.name) return alert("請輸入客戶姓名");
-            const payload = { ...clientForm.value, user_id: session.value.user.id };
-            const res = clientForm.value.id
-                ? await sb.from('clients').update(payload).eq('id', clientForm.value.id)
-                : await sb.from('clients').insert([payload]);
-            if (!res.error) { showClientModal.value = false; await loadData(); }
-            else alert(res.error.message);
+            const payload={...clientForm.value,user_id:session.value.user.id};
+            const res=clientForm.value.id ? await sb.from('clients').update(payload).eq('id',clientForm.value.id) : await sb.from('clients').insert([payload]);
+            if (!res.error) { showClientModal.value=false; await loadData(); } else alert(res.error.message);
         };
 
-        // ─── Finance ─────────────────────────────────────────
-        const showExpModal = ref(false);
-        const expForm = ref({ category:'', amount:0, note:'' });
-        const openExp = (c) => { expForm.value = { category:c, amount:0, note:'' }; showExpModal.value = true; };
+        // ─── Finance ───
+        const openExp = (c) => { expForm.value={category:c,amount:0,note:''}; showExpModal.value=true; };
         const saveExp = async (person) => {
-            const isInc = expForm.value.category.includes('收入');
-            const { error } = await sb.from('finances').insert({
-                user_id: session.value.user.id,
-                type:    isInc ? 'income' : 'expense',
-                category: expForm.value.category,
-                amount:  Number(expForm.value.amount),
-                person, note: expForm.value.note
-            });
-            if (!error) { showExpModal.value = false; await loadData(); currentTab.value = 'dashboard'; }
-            else alert("錯誤：" + error.message);
+            const isInc=expForm.value.category.includes('收入');
+            const {error}=await sb.from('finances').insert({user_id:session.value.user.id,type:isInc?'income':'expense',category:expForm.value.category,amount:Number(expForm.value.amount),person,note:expForm.value.note});
+            if (!error) { showExpModal.value=false; await loadData(); currentTab.value='dashboard'; } else alert("錯誤："+error.message);
         };
 
-        // ─── Dashboard Computed ───────────────────────────────
+        // ─── Dashboard ───
         const filterByDate = (arr) => {
-            const now = new Date();
-            return arr.filter(f => {
-                const matchP = reportPerson.value === 'All' || f.person === reportPerson.value;
+            const now=new Date();
+            return arr.filter(f=>{
+                const matchP=reportPerson.value==='All'||f.person===reportPerson.value;
                 if (!matchP) return false;
-                const d = new Date(f.created_at);
-                if (dateRange.value === 'today') return d.toDateString() === now.toDateString();
-                if (dateRange.value === 'week') {
-                    const start = new Date(now); start.setDate(now.getDate() - now.getDay()); start.setHours(0,0,0,0);
-                    return d >= start;
-                }
-                if (dateRange.value === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                if (dateRange.value === 'year')  return d.getFullYear() === now.getFullYear();
+                const d=new Date(f.created_at);
+                if (dateRange.value==='today') return d.toDateString()===now.toDateString();
+                if (dateRange.value==='week') { const s=new Date(now); s.setDate(now.getDate()-now.getDay()); s.setHours(0,0,0,0); return d>=s; }
+                if (dateRange.value==='month') return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
+                if (dateRange.value==='year') return d.getFullYear()===now.getFullYear();
                 return true;
             });
         };
-        const totalIncome  = computed(() => filterByDate(finances.value).filter(f => f.type === 'income').reduce((a,b) => a + Number(b.amount), 0).toFixed(2));
-        const totalExpense = computed(() => filterByDate(finances.value).filter(f => f.type === 'expense').reduce((a,b) => a + Number(b.amount), 0).toFixed(2));
-        const totalProfit  = computed(() => (parseFloat(totalIncome.value) - parseFloat(totalExpense.value)).toFixed(2));
+        const totalIncome  = computed(() => filterByDate(finances.value).filter(f=>f.type==='income').reduce((a,b)=>a+Number(b.amount),0).toFixed(2));
+        const totalExpense = computed(() => filterByDate(finances.value).filter(f=>f.type==='expense').reduce((a,b)=>a+Number(b.amount),0).toFixed(2));
+        const totalProfit  = computed(() => (parseFloat(totalIncome.value)-parseFloat(totalExpense.value)).toFixed(2));
 
         const incomeByCategory = computed(() => {
-            const filtered = filterByDate(finances.value).filter(f => f.type === 'income');
-            const total = filtered.reduce((s, f) => s + Number(f.amount), 0);
-            if (total === 0) return [];
-            const cats = {};
-            filtered.forEach(f => { cats[f.category] = (cats[f.category] || 0) + Number(f.amount); });
-            const styles = {
-                '運動':           { barColor:'bg-blue-500',    textColor:'text-blue-700',   emoji:'🏋️' },
-                '零售':           { barColor:'bg-emerald-500', textColor:'text-emerald-700', emoji:'🛍️' },
-                '其他項目(收入)': { barColor:'bg-purple-500',  textColor:'text-purple-700',  emoji:'💚' }
-            };
-            return Object.entries(cats)
-                .map(([name, amount]) => ({ name, amount, pct: Math.round(amount/total*100), ...(styles[name] || { barColor:'bg-slate-400', textColor:'text-slate-600', emoji:'📌' }) }))
-                .sort((a,b) => b.amount - a.amount);
+            const filtered=filterByDate(finances.value).filter(f=>f.type==='income');
+            const total=filtered.reduce((s,f)=>s+Number(f.amount),0);
+            if (total===0) return [];
+            const cats={};
+            filtered.forEach(f=>{ cats[f.category]=(cats[f.category]||0)+Number(f.amount); });
+            const styles={'運動':{barColor:'bg-blue-500',textColor:'text-blue-700',emoji:'🏋️'},'零售':{barColor:'bg-emerald-500',textColor:'text-emerald-700',emoji:'🛍️'},'其他項目(收入)':{barColor:'bg-purple-500',textColor:'text-purple-700',emoji:'💚'}};
+            return Object.entries(cats).map(([name,amount])=>({name,amount,pct:Math.round(amount/total*100),...(styles[name]||{barColor:'bg-slate-400',textColor:'text-slate-600',emoji:'📌'})})).sort((a,b)=>b.amount-a.amount);
         });
         const expenseByCategory = computed(() => {
-            const filtered = filterByDate(finances.value).filter(f => f.type === 'expense');
-            const total = filtered.reduce((s, f) => s + Number(f.amount), 0);
-            if (total === 0) return [];
-            const cats = {};
-            filtered.forEach(f => { cats[f.category] = (cats[f.category] || 0) + Number(f.amount); });
-            return Object.entries(cats)
-                .map(([name, amount]) => ({ name, amount, pct: Math.round(amount/total*100) }))
-                .sort((a,b) => b.amount - a.amount);
+            const filtered=filterByDate(finances.value).filter(f=>f.type==='expense');
+            const total=filtered.reduce((s,f)=>s+Number(f.amount),0);
+            if (total===0) return [];
+            const cats={};
+            filtered.forEach(f=>{ cats[f.category]=(cats[f.category]||0)+Number(f.amount); });
+            return Object.entries(cats).map(([name,amount])=>({name,amount,pct:Math.round(amount/total*100)})).sort((a,b)=>b.amount-a.amount);
         });
-        const branchStats       = computed(() => { const b={'觀塘':0,'中環':0,'佐敦':0}; clients.value.forEach(c => { if(b[c.branch]!==undefined) b[c.branch]++; }); return b; });
-        const recentTransactions= computed(() => finances.value.slice(0, 10));
-        const expiringClients   = computed(() => clients.value.filter(c => { const d=(new Date(c.expiry_date)-new Date())/86400000; return d>=0&&d<14; }).sort((a,b) => new Date(a.expiry_date)-new Date(b.expiry_date)));
-        const daysUntilExpiry   = (date) => Math.ceil((new Date(date) - new Date()) / 86400000);
-        const lowStockItems     = computed(() => products.value.map(p => ({ name:p.prod_name, stock:getStock(p.prod_name) })).filter(i => i.stock < 5).sort((a,b) => a.stock-b.stock));
-        const formatDate        = (iso) => { const d=new Date(iso); return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; };
+
+        const branchStats        = computed(() => { const b={'觀塘':0,'中環':0,'佐敦':0}; clients.value.forEach(c=>{ if(b[c.branch]!==undefined)b[c.branch]++; }); return b; });
+        const recentTransactions = computed(() => finances.value.slice(0,10));
+        const expiringClients    = computed(() => clients.value.filter(c=>{ const d=(new Date(c.expiry_date)-new Date())/86400000; return d>=0&&d<14; }).sort((a,b)=>new Date(a.expiry_date)-new Date(b.expiry_date)));
+        const daysUntilExpiry    = (date) => Math.ceil((new Date(date)-new Date())/86400000);
+        const formatDate         = (iso) => { if(!iso)return ''; const d=new Date(iso); return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; };
+
+        const filteredClients  = computed(() => clients.value.filter(c=>(c.name+c.phone).toLowerCase().includes(cSearch.value.toLowerCase()) && (crmBranchFilter.value==='全部'||c.branch===crmBranchFilter.value)));
+        const filteredProducts = computed(() => products.value.filter(p=>p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase())).map(p=>({name:p.prod_name,retail:parseFloat(p.retail_price),cost:parseFloat(p.cost)})));
+        const filteredRefs     = computed(() => clients.value.filter(c=>c.name.includes(refSearch.value)));
 
         onMounted(async () => {
             await checkPasskeySupport();
             loadStock();
             sb.auth.onAuthStateChange((event, sessionData) => {
-                if (event === 'PASSWORD_RECOVERY') { authState.value = 'recovery'; session.value = null; return; }
-                session.value = sessionData;
+                if (event==='PASSWORD_RECOVERY') { authState.value='recovery'; session.value=null; return; }
+                session.value=sessionData;
                 if (sessionData) { loadData(); checkPasskeyRegistered(sessionData.user.email); }
             });
-            if (window.location.hash.includes('type=recovery')) authState.value = 'recovery';
+            if (window.location.hash.includes('type=recovery')) authState.value='recovery';
         });
 
         return {
-            session, authState, authForm, newPassword,
-            handleAuth, forgotPassword, updatePassword, handleLogout,
-            currentTab, tabs, dateRange, dateRanges, reportPerson,
-            clients, finances, products, cart, pSearch, cSearch, refSearch,
+            session, authState, authForm, newPassword, handleAuth, forgotPassword, updatePassword, handleLogout,
+            passkeySupported, passkeyRegistered, registerPasskey, loginWithPasskey, removePasskey,
+            currentTab, retailSubTab, financeSubTab, tabs, dateRange, dateRanges, reportPerson,
+            clients, finances, products, trials, cart,
+            pSearch, cSearch, crmBranchFilter, refSearch, stockSearch, stockFilter, stockFilters, txSearch, txTypeFilter,
             showClientModal, clientForm, openClient, saveClient,
-            showExpModal, expForm, openExp, saveExp,
-            exerciseItems, eForm, saveExercise,
-            rForm, addToCart, increaseQty, decreaseQty,
-            getUnitProfit, getSellPrice, isLossSale,
-            cartTotal, cartItemCount, cartHasLoss, saveRetail,
+            showExpModal, expForm, openExp, saveExp, expCats,
             showRestockModal, restockForm, openRestock, saveRestock,
-            getStock, stockData, lowStockItems, totalStockValue,
-            exportStockCSV,
-            getClientName, expiringClients, daysUntilExpiry,
+            showEditTxModal, editTxForm, openEditTx, saveEditTx, deleteTx,
+            showDeleteConfirm, confirmDeleteTx,
+            showStockCorrectionModal, stockCorrectionForm, openStockCorrection, saveStockCorrection, correctionReasons,
+            showProfile,
+            exerciseItems, eForm, saveExercise,
+            rForm, addToCart, increaseQty, decreaseQty, getUnitProfit, getSellPrice, isLossSale, cartTotal, cartItemCount, cartHasLoss, saveRetail,
+            getStock, stockInfo, quickAdjustStock, exportStockCSV,
+            stockCategories, filteredStockCategories, totalStockQty, totalStockValue, totalRetailValue, stockSummary, lowStockItems,
+            upcomingTrials, daysUntilTrial, todayDate, tomorrowDate, reminderDate,
+            expiringClients, daysUntilExpiry, openWhatsApp,
             incomeByCategory, expenseByCategory,
-            filteredClients:  computed(() => clients.value.filter(c => (c.name+c.phone).toLowerCase().includes(cSearch.value.toLowerCase()))),
-            filteredProducts: computed(() => products.value.filter(p => p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase())).map(p => ({ name:p.prod_name, retail:parseFloat(p.retail_price), cost:parseFloat(p.cost) }))),
-            filteredRefs:     computed(() => clients.value.filter(c => c.name.includes(refSearch.value))),
-            totalProfit, totalIncome, totalExpense,
-            branchStats, recentTransactions,
-            marathonStats: computed(() => ({ active: clients.value.filter(c => c.marathon).length })),
-            showProfile, passkeySupported, passkeyRegistered,
-            registerPasskey, loginWithPasskey, removePasskey,
+            filteredClients, filteredProducts, filteredRefs,
+            groupedTransactions, recentTransactions,
+            totalProfit, totalIncome, totalExpense, branchStats,
+            marathonStats: computed(()=>({active:clients.value.filter(c=>c.marathon).length})),
             isExpiring: (d) => (new Date(d)-new Date())/86400000 < 14,
-            triggerReset: () => { showProfile.value = false; forgotPassword(); },
-            deleteAccount: () => alert("安全起見，請聯繫系統管理員進行刪除作業"),
-            formatDate, expCats
+            triggerReset: () => { showProfile.value=false; forgotPassword(); },
+            formatDate, dateRanges
         };
     }
 }).mount('#app');
