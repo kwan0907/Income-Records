@@ -335,21 +335,37 @@
 
         <!-- ══ RETAIL POS ══ -->
         <section v-if="currentTab === 'retail'" class="space-y-4">
+
+            <!-- ★★★ 頂部：標題列 + 匯出按鈕 -->
             <div class="flex items-center justify-between">
-                <h2 class="font-black text-xl text-emerald-700">零售 POS</h2>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs text-slate-400 font-semibold">折扣</span>
-                    <select v-model="rForm.discount"
-                        :class="rForm.discount !== '0'
-                            ? 'border-amber-300 bg-amber-50 text-amber-700 font-black'
-                            : 'border-slate-200 bg-white text-slate-600'"
-                        class="border-2 px-3 py-2 rounded-xl text-sm focus:outline-none transition-colors">
-                        <option value="0">原價</option>
-                        <option value="0.25">75折</option>
-                        <option value="0.35">65折</option>
-                        <option value="0.5">50折 (廠本)</option>
-                    </select>
+                <div>
+                    <h2 class="font-black text-xl text-emerald-700">零售 POS</h2>
+                    <p class="text-xs text-slate-400 font-semibold mt-0.5">
+                        共 {{ products.length }} 款 ·
+                        庫存總值 ${{ totalStockValue.toFixed(0) }}
+                    </p>
                 </div>
+                <!-- ★ 匯出按鈕 -->
+                <button @click="exportStockCSV"
+                    class="flex items-center gap-1.5 bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-black text-xs shadow-md active:scale-95 transition-transform">
+                    <span class="text-base leading-none">📥</span>
+                    匯出庫存
+                </button>
+            </div>
+
+            <!-- 折扣選擇 -->
+            <div class="flex items-center justify-between bg-white rounded-2xl px-4 py-3 border border-slate-100 shadow-sm">
+                <span class="text-xs text-slate-500 font-bold">折扣模式</span>
+                <select v-model="rForm.discount"
+                    :class="rForm.discount !== '0'
+                        ? 'border-amber-300 bg-amber-50 text-amber-700 font-black'
+                        : 'border-slate-200 bg-white text-slate-600'"
+                    class="border-2 px-3 py-2 rounded-xl text-sm focus:outline-none transition-colors">
+                    <option value="0">原價</option>
+                    <option value="0.25">75折</option>
+                    <option value="0.35">65折</option>
+                    <option value="0.5">50折 (廠本)</option>
+                </select>
             </div>
 
             <div v-if="rForm.discount === '0.5'"
@@ -358,6 +374,7 @@
                 <p class="text-xs font-bold text-blue-700">50折 = 廠本價銷售 = $0 利潤（保本出貨）</p>
             </div>
 
+            <!-- 客戶選擇 -->
             <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇購買客戶</p>
                 <select v-model="rForm.clientId"
@@ -368,6 +385,7 @@
                 </select>
             </div>
 
+            <!-- 搜尋 -->
             <div class="relative">
                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
                 <input v-model="pSearch" placeholder="搜尋產品..."
@@ -593,11 +611,9 @@
     </div>
 </div>
 
-<!-- ═══ MODAL: Restock ★★★ 整合入貨 + 盤點 ═══ -->
+<!-- ═══ MODAL: Restock ═══ -->
 <div v-if="showRestockModal" class="modal-overlay" @click.self="showRestockModal = false">
     <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-screen overflow-y-auto no-scrollbar">
-
-        <!-- Header -->
         <div class="flex justify-between items-center">
             <h3 class="font-black text-lg" :class="restockForm.isInitial ? 'text-blue-700' : 'text-amber-700'">
                 {{ restockForm.isInitial ? '📋 設定現有庫存' : '📦 入貨記錄' }}
@@ -605,44 +621,30 @@
             <button @click="showRestockModal = false" class="text-slate-300 font-black text-2xl leading-none">×</button>
         </div>
 
-        <!-- ★ 模式切換 -->
+        <!-- 模式切換 -->
         <div class="flex gap-1.5 p-1.5 bg-slate-100 rounded-2xl">
             <button @click="restockForm.isInitial = false"
-                :class="!restockForm.isInitial
-                    ? 'bg-amber-500 text-white shadow-md'
-                    : 'text-slate-500 hover:text-slate-700'"
+                :class="!restockForm.isInitial ? 'bg-amber-500 text-white shadow-md' : 'text-slate-500'"
                 class="flex-1 py-3 rounded-xl font-black text-xs transition-all active:scale-95">
-                📦 入貨<br>
-                <span class="font-semibold opacity-80">記錄支出</span>
+                📦 入貨<br><span class="font-semibold opacity-80">記錄支出</span>
             </button>
             <button @click="restockForm.isInitial = true"
-                :class="restockForm.isInitial
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-slate-500 hover:text-slate-700'"
+                :class="restockForm.isInitial ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500'"
                 class="flex-1 py-3 rounded-xl font-black text-xs transition-all active:scale-95">
-                📋 盤點<br>
-                <span class="font-semibold opacity-80">不記帳</span>
+                📋 盤點<br><span class="font-semibold opacity-80">不記帳</span>
             </button>
         </div>
 
         <!-- 說明 -->
-        <div :class="restockForm.isInitial
-                ? 'bg-blue-50 border-blue-200 text-blue-700'
-                : 'bg-amber-50 border-amber-200 text-amber-700'"
+        <div :class="restockForm.isInitial ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-amber-50 border-amber-200 text-amber-700'"
             class="rounded-2xl px-4 py-3 border-2 text-xs font-semibold flex items-start gap-2">
             <span class="text-base flex-shrink-0">{{ restockForm.isInitial ? 'ℹ️' : '💡' }}</span>
-            <span v-if="restockForm.isInitial">
-                直接設定現有庫存數量，<strong>不會產生任何支出記錄</strong>。<br>適合輸入已有存貨的初始數字。
-            </span>
-            <span v-else>
-                入貨後自動新增「產品採購」支出記錄。
-            </span>
+            <span v-if="restockForm.isInitial">直接設定現有庫存數量，<strong>不會產生任何支出記錄</strong>。適合輸入已有存貨的初始數字。</span>
+            <span v-else>入貨後自動新增「產品採購」支出記錄。</span>
         </div>
 
-        <!-- 產品資訊 + 庫存預覽 -->
-        <div :class="restockForm.isInitial
-                ? 'bg-blue-50 border-blue-100'
-                : 'bg-amber-50 border-amber-100'"
+        <!-- 產品資訊 -->
+        <div :class="restockForm.isInitial ? 'bg-blue-50 border-blue-100' : 'bg-amber-50 border-amber-100'"
             class="rounded-2xl p-4 border-2">
             <div class="flex justify-between items-start">
                 <div>
@@ -661,7 +663,6 @@
                     <p class="text-xs font-semibold" :class="restockForm.isInitial ? 'text-blue-400' : 'text-amber-400'">件</p>
                 </div>
             </div>
-            <!-- 預覽：操作後庫存 -->
             <div class="mt-3 pt-3 flex items-center justify-between"
                 :class="restockForm.isInitial ? 'border-t border-blue-200' : 'border-t border-amber-200'">
                 <span class="text-xs font-black" :class="restockForm.isInitial ? 'text-blue-600' : 'text-amber-600'">
@@ -682,7 +683,7 @@
             </div>
         </div>
 
-        <!-- 數量輸入 -->
+        <!-- 數量 -->
         <div>
             <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">
                 {{ restockForm.isInitial ? '現有數量（直接輸入總數）' : '入貨數量' }}
@@ -697,7 +698,7 @@
             </div>
         </div>
 
-        <!-- 底部資訊 -->
+        <!-- 成本 / 保本提示 -->
         <div v-if="!restockForm.isInitial"
             class="bg-red-50 rounded-2xl p-4 border-2 border-red-100 flex justify-between items-center">
             <div>
@@ -716,7 +717,7 @@
             </div>
         </div>
 
-        <!-- 確認按鈕 -->
+        <!-- 按鈕 -->
         <div v-if="restockForm.isInitial">
             <button @click="saveRestock('system')"
                 class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-base shadow-lg active:scale-95 transition-transform">
@@ -729,7 +730,6 @@
             <button @click="saveRestock('Cat')"
                 class="bg-amber-600 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Cat 入貨</button>
         </div>
-
     </div>
 </div>
 
@@ -800,19 +800,14 @@ createApp({
         const showRestockModal  = ref(false);
         const restockForm       = ref({ product: null, qty: 0, isInitial: false });
 
-        // ─── Stock (localStorage) ────────────────────────────
+        // ─── Stock ───────────────────────────────────────────
         const stockData = ref({});
         const loadStock = () => {
             try { stockData.value = JSON.parse(localStorage.getItem('fwstk_v1') || '{}'); }
             catch(e) { stockData.value = {}; }
         };
-        const saveStockLocal = () => {
-            localStorage.setItem('fwstk_v1', JSON.stringify(stockData.value));
-        };
-        const getStock = (name) => {
-            if (!name) return 0;
-            return stockData.value[name] ?? 0;
-        };
+        const saveStockLocal = () => localStorage.setItem('fwstk_v1', JSON.stringify(stockData.value));
+        const getStock  = (name) => (!name ? 0 : stockData.value[name] ?? 0);
         const modifyStock = (name, delta) => {
             stockData.value[name] = Math.max(0, (stockData.value[name] ?? 0) + delta);
             saveStockLocal();
@@ -821,6 +816,87 @@ createApp({
             stockData.value[name] = Math.max(0, qty);
             saveStockLocal();
         };
+
+        // ★★★ 匯出庫存 CSV ────────────────────────────────────
+        const exportStockCSV = () => {
+            if (products.value.length === 0) return alert("暫無產品資料，請確認產品已載入");
+
+            const now     = new Date();
+            const dateStr = now.toLocaleDateString('zh-HK', { year:'numeric', month:'2-digit', day:'2-digit' });
+            const timeStr = now.toLocaleTimeString('zh-HK', { hour:'2-digit', minute:'2-digit' });
+
+            // ── 計算摘要數字 ──
+            const totalItems    = products.value.length;
+            const outOfStock    = products.value.filter(p => getStock(p.prod_name) === 0).length;
+            const lowStock      = products.value.filter(p => getStock(p.prod_name) > 0 && getStock(p.prod_name) < 5).length;
+            const normalStock   = totalItems - outOfStock - lowStock;
+            const totalQty      = products.value.reduce((s, p) => s + getStock(p.prod_name), 0);
+            const totalCostVal  = products.value.reduce((s, p) => s + getStock(p.prod_name) * parseFloat(p.cost || 0), 0);
+            const totalRetailVal= products.value.reduce((s, p) => s + getStock(p.prod_name) * parseFloat(p.retail_price || 0), 0);
+
+            // ── 組裝列 ──
+            const rows = [];
+
+            // 標題區
+            rows.push(['FITWORKHK 庫存清單']);
+            rows.push([`匯出日期：${dateStr} ${timeStr}`]);
+            rows.push([]);
+
+            // 摘要區
+            rows.push(['【庫存摘要】']);
+            rows.push(['總款式數', totalItems, '', '總件數', totalQty]);
+            rows.push(['正常庫存', normalStock, '', '廠本總值', `$${totalCostVal.toFixed(2)}`]);
+            rows.push(['庫存不足 (<5件)', lowStock, '', '零售總值', `$${totalRetailVal.toFixed(2)}`]);
+            rows.push(['缺貨款數', outOfStock, '', '潛在利潤', `$${(totalRetailVal - totalCostVal).toFixed(2)}`]);
+            rows.push([]);
+
+            // 產品明細標題
+            rows.push(['產品名稱', '現有庫存 (件)', '廠本價 ($)', '零售價 ($)', '廠本庫存值 ($)', '零售庫存值 ($)', '狀態']);
+
+            // 產品明細
+            products.value.forEach(p => {
+                const stock      = getStock(p.prod_name);
+                const cost       = parseFloat(p.cost || 0);
+                const retail     = parseFloat(p.retail_price || 0);
+                const costVal    = (stock * cost).toFixed(2);
+                const retailVal  = (stock * retail).toFixed(2);
+                const status     = stock === 0 ? '❌ 缺貨'
+                                 : stock < 5   ? '⚠️ 庫存不足'
+                                 :               '✅ 正常';
+                rows.push([
+                    p.prod_name,
+                    stock,
+                    cost.toFixed(2),
+                    retail.toFixed(2),
+                    costVal,
+                    retailVal,
+                    status
+                ]);
+            });
+
+            // ── 轉成 CSV 字串（BOM 讓 Excel 正確顯示中文）──
+            const csvContent = '\uFEFF' + rows.map(row =>
+                row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')
+            ).join('\r\n');
+
+            // ── 觸發下載 ──
+            const blob     = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url      = URL.createObjectURL(blob);
+            const link     = document.createElement('a');
+            const fileName = `FITWORKHK_庫存_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
+            link.href      = url;
+            link.download  = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        };
+
+        // ─── 庫存總值 (computed) ──────────────────────────────
+        const totalStockValue = computed(() =>
+            products.value.reduce((s, p) =>
+                s + getStock(p.prod_name) * parseFloat(p.cost || 0), 0)
+        );
 
         // ─── Tabs / Config ───────────────────────────────────
         const tabs = [
@@ -967,34 +1043,25 @@ createApp({
             if (d === 0.5) return 0;
             return item.retail * (1 - d) - item.cost;
         };
-        const getSellPrice = (p) => {
+        const getSellPrice = (p) => p.retail * (1 - parseFloat(rForm.value.discount));
+        const isLossSale   = (p) => {
             const d = parseFloat(rForm.value.discount);
-            return p.retail * (1 - d);
-        };
-        const isLossSale = (p) => {
-            const d = parseFloat(rForm.value.discount);
-            if (d === 0.5) return false;
-            return p.retail * (1 - d) < p.cost;
+            return d !== 0.5 && p.retail * (1 - d) < p.cost;
         };
         const addToCart = (p) => {
-            const existing = cart.value.find(item => item.name === p.name);
-            if (existing) { existing.qty++; }
-            else { cart.value.push({ name: p.name, cost: p.cost, retail: p.retail, qty: 1 }); }
+            const existing = cart.value.find(i => i.name === p.name);
+            if (existing) existing.qty++;
+            else cart.value.push({ name:p.name, cost:p.cost, retail:p.retail, qty:1 });
         };
         const increaseQty = (i) => cart.value[i].qty++;
         const decreaseQty = (i) => {
             if (cart.value[i].qty <= 1) cart.value.splice(i, 1);
             else cart.value[i].qty--;
         };
-        const cartTotal = computed(() =>
-            cart.value.reduce((sum, item) => sum + getUnitProfit(item) * item.qty, 0)
-        );
-        const cartItemCount = computed(() =>
-            cart.value.reduce((sum, item) => sum + item.qty, 0)
-        );
-        const cartHasLoss = computed(() =>
-            cart.value.some(item => getUnitProfit(item) < 0)
-        );
+        const cartTotal     = computed(() => cart.value.reduce((s, item) => s + getUnitProfit(item) * item.qty, 0));
+        const cartItemCount = computed(() => cart.value.reduce((s, item) => s + item.qty, 0));
+        const cartHasLoss   = computed(() => cart.value.some(item => getUnitProfit(item) < 0));
+
         const saveRetail = async (person) => {
             if (cart.value.length === 0) return;
             const totalP = cartTotal.value;
@@ -1014,7 +1081,7 @@ createApp({
             } else alert("錯誤：" + error.message);
         };
 
-        // ─── Restock ★★★ 整合版 ──────────────────────────────
+        // ─── Restock ─────────────────────────────────────────
         const openRestock = (p) => {
             restockForm.value = { product: p, qty: 0, isInitial: false };
             showRestockModal.value = true;
@@ -1024,7 +1091,6 @@ createApp({
             if (!product) return;
             if (qty === null || qty === undefined || qty < 0) return alert("請輸入有效數量");
 
-            // ★ 盤點模式：直接設定庫存，不記帳
             if (isInitial) {
                 setStock(product.name, Number(qty));
                 showRestockModal.value = false;
@@ -1032,16 +1098,11 @@ createApp({
                 return;
             }
 
-            // 入貨模式：記錄支出 + 增加庫存
             if (qty < 1) return alert("入貨數量最少為 1");
             const amount = product.cost * Number(qty);
             const { error } = await sb.from('finances').insert({
-                user_id:  session.value.user.id,
-                type:     'expense',
-                category: '產品採購',
-                amount,
-                person,
-                note: `${product.name} ×${qty}`
+                user_id: session.value.user.id, type:'expense', category:'產品採購',
+                amount, person, note: `${product.name} ×${qty}`
             });
             if (!error) {
                 modifyStock(product.name, Number(qty));
@@ -1078,10 +1139,10 @@ createApp({
         const saveExp = async (person) => {
             const isInc = expForm.value.category.includes('收入');
             const { error } = await sb.from('finances').insert({
-                user_id:  session.value.user.id,
-                type:     isInc ? 'income' : 'expense',
+                user_id: session.value.user.id,
+                type:    isInc ? 'income' : 'expense',
                 category: expForm.value.category,
-                amount:   Number(expForm.value.amount),
+                amount:  Number(expForm.value.amount),
                 person, note: expForm.value.note
             });
             if (!error) { showExpModal.value = false; await loadData(); currentTab.value = 'dashboard'; }
@@ -1105,17 +1166,10 @@ createApp({
                 return true;
             });
         };
-        const totalIncome = computed(() =>
-            filterByDate(finances.value).filter(f => f.type === 'income')
-                .reduce((a,b) => a + Number(b.amount), 0).toFixed(2)
-        );
-        const totalExpense = computed(() =>
-            filterByDate(finances.value).filter(f => f.type === 'expense')
-                .reduce((a,b) => a + Number(b.amount), 0).toFixed(2)
-        );
-        const totalProfit = computed(() =>
-            (parseFloat(totalIncome.value) - parseFloat(totalExpense.value)).toFixed(2)
-        );
+        const totalIncome  = computed(() => filterByDate(finances.value).filter(f => f.type === 'income').reduce((a,b) => a + Number(b.amount), 0).toFixed(2));
+        const totalExpense = computed(() => filterByDate(finances.value).filter(f => f.type === 'expense').reduce((a,b) => a + Number(b.amount), 0).toFixed(2));
+        const totalProfit  = computed(() => (parseFloat(totalIncome.value) - parseFloat(totalExpense.value)).toFixed(2));
+
         const incomeByCategory = computed(() => {
             const filtered = filterByDate(finances.value).filter(f => f.type === 'income');
             const total = filtered.reduce((s, f) => s + Number(f.amount), 0);
@@ -1123,17 +1177,13 @@ createApp({
             const cats = {};
             filtered.forEach(f => { cats[f.category] = (cats[f.category] || 0) + Number(f.amount); });
             const styles = {
-                '運動':           { barColor:'bg-blue-500',   textColor:'text-blue-700',   emoji:'🏋️' },
+                '運動':           { barColor:'bg-blue-500',    textColor:'text-blue-700',   emoji:'🏋️' },
                 '零售':           { barColor:'bg-emerald-500', textColor:'text-emerald-700', emoji:'🛍️' },
                 '其他項目(收入)': { barColor:'bg-purple-500',  textColor:'text-purple-700',  emoji:'💚' }
             };
             return Object.entries(cats)
-                .map(([name, amount]) => ({
-                    name, amount,
-                    pct: Math.round(amount / total * 100),
-                    ...(styles[name] || { barColor:'bg-slate-400', textColor:'text-slate-600', emoji:'📌' })
-                }))
-                .sort((a, b) => b.amount - a.amount);
+                .map(([name, amount]) => ({ name, amount, pct: Math.round(amount/total*100), ...(styles[name] || { barColor:'bg-slate-400', textColor:'text-slate-600', emoji:'📌' }) }))
+                .sort((a,b) => b.amount - a.amount);
         });
         const expenseByCategory = computed(() => {
             const filtered = filterByDate(finances.value).filter(f => f.type === 'expense');
@@ -1142,34 +1192,15 @@ createApp({
             const cats = {};
             filtered.forEach(f => { cats[f.category] = (cats[f.category] || 0) + Number(f.amount); });
             return Object.entries(cats)
-                .map(([name, amount]) => ({
-                    name, amount,
-                    pct: Math.round(amount / total * 100)
-                }))
-                .sort((a, b) => b.amount - a.amount);
+                .map(([name, amount]) => ({ name, amount, pct: Math.round(amount/total*100) }))
+                .sort((a,b) => b.amount - a.amount);
         });
-        const branchStats = computed(() => {
-            const b = {'觀塘':0,'中環':0,'佐敦':0};
-            clients.value.forEach(c => { if (b[c.branch] !== undefined) b[c.branch]++; });
-            return b;
-        });
-        const recentTransactions = computed(() => finances.value.slice(0, 10));
-        const expiringClients = computed(() =>
-            clients.value
-                .filter(c => { const d = (new Date(c.expiry_date) - new Date()) / 86400000; return d >= 0 && d < 14; })
-                .sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date))
-        );
-        const daysUntilExpiry = (date) => Math.ceil((new Date(date) - new Date()) / 86400000);
-        const lowStockItems = computed(() =>
-            products.value
-                .map(p => ({ name: p.prod_name, stock: getStock(p.prod_name) }))
-                .filter(item => item.stock < 5)
-                .sort((a, b) => a.stock - b.stock)
-        );
-        const formatDate = (iso) => {
-            const d = new Date(iso);
-            return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-        };
+        const branchStats       = computed(() => { const b={'觀塘':0,'中環':0,'佐敦':0}; clients.value.forEach(c => { if(b[c.branch]!==undefined) b[c.branch]++; }); return b; });
+        const recentTransactions= computed(() => finances.value.slice(0, 10));
+        const expiringClients   = computed(() => clients.value.filter(c => { const d=(new Date(c.expiry_date)-new Date())/86400000; return d>=0&&d<14; }).sort((a,b) => new Date(a.expiry_date)-new Date(b.expiry_date)));
+        const daysUntilExpiry   = (date) => Math.ceil((new Date(date) - new Date()) / 86400000);
+        const lowStockItems     = computed(() => products.value.map(p => ({ name:p.prod_name, stock:getStock(p.prod_name) })).filter(i => i.stock < 5).sort((a,b) => a.stock-b.stock));
+        const formatDate        = (iso) => { const d=new Date(iso); return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; };
 
         onMounted(async () => {
             await checkPasskeySupport();
@@ -1194,24 +1225,19 @@ createApp({
             getUnitProfit, getSellPrice, isLossSale,
             cartTotal, cartItemCount, cartHasLoss, saveRetail,
             showRestockModal, restockForm, openRestock, saveRestock,
-            getStock, stockData, lowStockItems,
+            getStock, stockData, lowStockItems, totalStockValue,
+            exportStockCSV,
             getClientName, expiringClients, daysUntilExpiry,
             incomeByCategory, expenseByCategory,
-            filteredClients: computed(() =>
-                clients.value.filter(c => (c.name + c.phone).toLowerCase().includes(cSearch.value.toLowerCase()))
-            ),
-            filteredProducts: computed(() =>
-                products.value
-                    .filter(p => p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase()))
-                    .map(p => ({ name:p.prod_name, retail:parseFloat(p.retail_price), cost:parseFloat(p.cost) }))
-            ),
-            filteredRefs: computed(() => clients.value.filter(c => c.name.includes(refSearch.value))),
+            filteredClients:  computed(() => clients.value.filter(c => (c.name+c.phone).toLowerCase().includes(cSearch.value.toLowerCase()))),
+            filteredProducts: computed(() => products.value.filter(p => p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase())).map(p => ({ name:p.prod_name, retail:parseFloat(p.retail_price), cost:parseFloat(p.cost) }))),
+            filteredRefs:     computed(() => clients.value.filter(c => c.name.includes(refSearch.value))),
             totalProfit, totalIncome, totalExpense,
             branchStats, recentTransactions,
             marathonStats: computed(() => ({ active: clients.value.filter(c => c.marathon).length })),
             showProfile, passkeySupported, passkeyRegistered,
             registerPasskey, loginWithPasskey, removePasskey,
-            isExpiring: (d) => (new Date(d) - new Date()) / 86400000 < 14,
+            isExpiring: (d) => (new Date(d)-new Date())/86400000 < 14,
             triggerReset: () => { showProfile.value = false; forgotPassword(); },
             deleteAccount: () => alert("安全起見，請聯繫系統管理員進行刪除作業"),
             formatDate, expCats
