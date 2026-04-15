@@ -74,8 +74,6 @@
 
         <!-- ══ DASHBOARD ══ -->
         <section v-if="currentTab === 'dashboard'" class="space-y-4">
-
-            <!-- Hero card -->
             <div class="bg-gradient-to-br from-blue-900 via-blue-800 to-slate-800 rounded-3xl p-5 text-white shadow-xl">
                 <div class="flex gap-2 mb-4 flex-wrap">
                     <button v-for="r in dateRanges" :key="r.id" @click="dateRange = r.id"
@@ -89,7 +87,7 @@
                 </div>
                 <p class="text-blue-300 text-xs font-bold uppercase tracking-widest">純利潤</p>
                 <p class="text-5xl font-black mt-1 tracking-tight" :class="parseFloat(totalProfit) < 0 ? 'text-red-300' : 'text-white'">
-                    {{ parseFloat(totalProfit) >= 0 ? '' : '' }}${{ totalProfit }}
+                    ${{ totalProfit }}
                 </p>
                 <div class="flex gap-4 mt-3 text-xs font-semibold">
                     <span class="text-emerald-300">↑ 收入 ${{ totalIncome }}</span>
@@ -97,7 +95,6 @@
                 </div>
             </div>
 
-            <!-- Branch stats -->
             <div class="grid grid-cols-3 gap-3">
                 <div v-for="b in ['觀塘','中環','佐敦']" :key="b"
                     class="bg-white rounded-2xl p-4 text-center shadow-sm border border-slate-100">
@@ -119,7 +116,7 @@
                 </div>
             </div>
 
-            <!-- ★★★ 收入分類圖表 -->
+            <!-- 收入分佈 -->
             <div v-if="incomeByCategory.length > 0" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
                 <div class="flex justify-between items-center mb-4">
                     <p class="font-black text-sm">📊 收入分佈</p>
@@ -144,7 +141,7 @@
                 </div>
             </div>
 
-            <!-- ★★★ 支出分類圖表 -->
+            <!-- 支出分佈 -->
             <div v-if="expenseByCategory.length > 0" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
                 <div class="flex justify-between items-center mb-4">
                     <p class="font-black text-sm">💸 支出分佈</p>
@@ -164,7 +161,7 @@
                 </div>
             </div>
 
-            <!-- ★★★ 庫存警告 -->
+            <!-- 庫存警告 -->
             <div v-if="lowStockItems.length > 0"
                 class="bg-white rounded-2xl border-2 border-amber-100 shadow-sm overflow-hidden">
                 <div class="px-4 py-3 bg-amber-50 border-b border-amber-100 flex justify-between items-center">
@@ -175,7 +172,7 @@
                 </div>
                 <div v-for="(item, i) in lowStockItems" :key="item.name"
                     :class="i < lowStockItems.length - 1 ? 'border-b border-slate-50' : ''"
-                    class="px-4 py-3 flex justify-between items-center"
+                    class="px-4 py-3 flex justify-between items-center cursor-pointer active:bg-amber-50"
                     @click="currentTab = 'retail'">
                     <div>
                         <p class="font-bold text-sm">{{ item.name }}</p>
@@ -190,7 +187,7 @@
                 </div>
             </div>
 
-            <!-- Expiring clients -->
+            <!-- 即將到期 -->
             <div v-if="expiringClients.length > 0"
                 class="bg-white rounded-2xl border-2 border-red-100 shadow-sm overflow-hidden">
                 <div class="px-4 py-3 bg-red-50 border-b border-red-100 flex justify-between items-center">
@@ -214,7 +211,7 @@
                 </div>
             </div>
 
-            <!-- Recent transactions -->
+            <!-- 最近交易 -->
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                 <div class="px-4 py-3 border-b border-slate-50 flex justify-between items-center">
                     <p class="font-black text-sm">最近交易</p>
@@ -355,14 +352,12 @@
                 </div>
             </div>
 
-            <!-- ★ 50折 tip -->
             <div v-if="rForm.discount === '0.5'"
                 class="bg-blue-50 border-2 border-blue-200 rounded-2xl px-4 py-3 flex items-center gap-2">
                 <span class="text-base">ℹ️</span>
                 <p class="text-xs font-bold text-blue-700">50折 = 廠本價銷售 = $0 利潤（保本出貨）</p>
             </div>
 
-            <!-- Client selector -->
             <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇購買客戶</p>
                 <select v-model="rForm.clientId"
@@ -373,33 +368,27 @@
                 </select>
             </div>
 
-            <!-- Search -->
             <div class="relative">
                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
                 <input v-model="pSearch" placeholder="搜尋產品..."
                     class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400">
             </div>
 
-            <!-- ★★★ Product list with STOCK -->
+            <!-- 產品列表 -->
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden max-h-80 overflow-y-auto no-scrollbar">
                 <div v-if="filteredProducts.length === 0"
                     class="p-6 text-center text-slate-300 text-sm font-semibold">找不到產品</div>
-
-                <!-- ★ 庫存總覽小標題 -->
                 <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex justify-between items-center sticky top-0">
                     <span class="text-xs text-slate-400 font-bold">產品列表</span>
                     <span class="text-xs text-slate-400 font-bold">庫存 / 售價</span>
                 </div>
-
                 <div v-for="(p, i) in filteredProducts" :key="p.name"
                     :class="i < filteredProducts.length - 1 ? 'border-b border-slate-50' : ''"
                     class="flex items-center gap-2 pr-3">
                     <div @click="addToCart(p)"
                         :class="isLossSale(p) ? 'active:bg-red-50' : 'active:bg-emerald-50'"
                         class="flex-1 px-4 py-3.5 flex items-center gap-2 cursor-pointer transition-colors min-w-0">
-                        <!-- Product name -->
                         <span class="font-semibold text-sm flex-1 truncate">{{ p.name }}</span>
-                        <!-- ★ Stock badge -->
                         <span :class="getStock(p.name) === 0
                                 ? 'bg-red-100 text-red-600 border-red-200'
                                 : getStock(p.name) <= 3
@@ -408,7 +397,6 @@
                             class="text-xs font-black px-2 py-0.5 rounded-lg border font-mono flex-shrink-0">
                             {{ getStock(p.name) === 0 ? '缺貨' : '庫' + getStock(p.name) }}
                         </span>
-                        <!-- Price + loss badge -->
                         <div class="flex items-center gap-1.5 flex-shrink-0">
                             <span v-if="isLossSale(p)"
                                 class="text-xs font-black text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md">虧本</span>
@@ -420,7 +408,6 @@
                             </span>
                         </div>
                     </div>
-                    <!-- Restock button -->
                     <button @click.stop="openRestock(p)"
                         class="flex-shrink-0 bg-amber-100 text-amber-700 text-xs font-black px-2.5 py-1.5 rounded-lg active:scale-90 transition-transform border border-amber-200">
                         入貨
@@ -428,7 +415,7 @@
                 </div>
             </div>
 
-            <!-- ★★★ CART - Fixed merge + correct signs + qty stepper -->
+            <!-- 購物車 -->
             <div v-if="cart.length > 0" class="bg-slate-900 rounded-2xl p-5 text-white">
                 <div class="flex items-center justify-between mb-4">
                     <div>
@@ -437,8 +424,6 @@
                     </div>
                     <button @click="cart = []" class="text-xs text-slate-500 font-semibold active:text-red-400 transition-colors px-2 py-1">清空</button>
                 </div>
-
-                <!-- Loss warning -->
                 <div v-if="cartHasLoss"
                     class="mb-4 bg-red-950/60 border border-red-800/60 rounded-xl p-3 flex items-start gap-2">
                     <span class="text-base flex-shrink-0 mt-0.5">⚠️</span>
@@ -447,24 +432,18 @@
                         <p class="text-red-400/70 text-xs mt-0.5">確認後將記錄實際虧損金額</p>
                     </div>
                 </div>
-
-                <!-- ★★★ Cart items - unitProfit computed dynamically -->
-                <div v-for="(item, i) in cart" :key="item.name"
-                    class="py-3 border-b border-slate-800 last:border-0">
+                <div v-for="(item, i) in cart" :key="item.name" class="py-3 border-b border-slate-800 last:border-0">
                     <div class="flex items-center gap-2">
-                        <!-- Info -->
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-semibold text-slate-200 truncate">{{ item.name }}</p>
                             <div class="flex items-center gap-2 mt-0.5">
                                 <span class="text-xs font-bold"
                                     :class="getUnitProfit(item) > 0 ? 'text-emerald-400/80' : getUnitProfit(item) < 0 ? 'text-red-400/80' : 'text-blue-400/80'">
-                                    <!-- ★ FIX: correct sign -->
                                     {{ getUnitProfit(item) === 0 ? '±$0 (保本)' : (getUnitProfit(item) > 0 ? '+' : '') + '$' + getUnitProfit(item).toFixed(2) }}
                                 </span>
                                 <span class="text-xs text-slate-600">× {{ item.qty }}</span>
                             </div>
                         </div>
-                        <!-- ★ Qty stepper -->
                         <div class="flex items-center bg-slate-800 rounded-xl overflow-hidden flex-shrink-0">
                             <button @click="decreaseQty(i)"
                                 class="w-8 h-8 flex items-center justify-center font-black text-slate-300 text-lg active:bg-slate-700 transition-colors select-none">−</button>
@@ -472,21 +451,18 @@
                             <button @click="increaseQty(i)"
                                 class="w-8 h-8 flex items-center justify-center font-black text-slate-300 text-lg active:bg-slate-700 transition-colors select-none">+</button>
                         </div>
-                        <!-- ★ Item subtotal with correct sign -->
                         <span class="font-black text-sm w-20 text-right flex-shrink-0"
                             :class="(getUnitProfit(item) * item.qty) > 0 ? 'text-emerald-400'
                                   : (getUnitProfit(item) * item.qty) < 0 ? 'text-red-400' : 'text-blue-400'">
-                            {{ getUnitProfit(item) === 0 ? '$0' :
-                               (getUnitProfit(item) * item.qty) >= 0 ? '+$' + (getUnitProfit(item) * item.qty).toFixed(2)
-                                : '-$' + Math.abs(getUnitProfit(item) * item.qty).toFixed(2) }}
+                            {{ getUnitProfit(item) === 0 ? '$0'
+                               : (getUnitProfit(item) * item.qty) >= 0
+                                   ? '+$' + (getUnitProfit(item) * item.qty).toFixed(2)
+                                   : '-$' + Math.abs(getUnitProfit(item) * item.qty).toFixed(2) }}
                         </span>
-                        <!-- Remove -->
                         <button @click="cart.splice(i,1)"
                             class="text-slate-600 hover:text-red-400 font-black text-xl leading-none flex-shrink-0 active:scale-90 transition-colors">×</button>
                     </div>
                 </div>
-
-                <!-- ★ Total with correct sign -->
                 <div class="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
                     <span class="font-bold text-slate-400 text-sm">總利潤</span>
                     <span class="font-black text-2xl"
@@ -496,7 +472,6 @@
                            : '-$' + Math.abs(cartTotal).toFixed(2) }}
                     </span>
                 </div>
-
                 <div class="grid grid-cols-2 gap-2 mt-4">
                     <button @click="saveRetail('Kwan')"
                         class="bg-emerald-500 py-3.5 rounded-xl font-black text-sm active:scale-95 transition-transform">Kwan 結帳</button>
@@ -504,7 +479,6 @@
                         class="bg-emerald-700 py-3.5 rounded-xl font-black text-sm active:scale-95 transition-transform">Cat 結帳</button>
                 </div>
             </div>
-
             <div v-else class="text-center py-8 text-slate-300">
                 <p class="text-4xl mb-2">🛒</p>
                 <p class="text-sm font-semibold">點擊產品加入購物車</p>
@@ -619,60 +593,143 @@
     </div>
 </div>
 
-<!-- ═══ MODAL: Restock ★★ updated with stock preview ═══ -->
+<!-- ═══ MODAL: Restock ★★★ 整合入貨 + 盤點 ═══ -->
 <div v-if="showRestockModal" class="modal-overlay" @click.self="showRestockModal = false">
-    <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4">
+    <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-screen overflow-y-auto no-scrollbar">
+
+        <!-- Header -->
         <div class="flex justify-between items-center">
-            <h3 class="font-black text-lg text-amber-700">📦 入貨記錄</h3>
+            <h3 class="font-black text-lg" :class="restockForm.isInitial ? 'text-blue-700' : 'text-amber-700'">
+                {{ restockForm.isInitial ? '📋 設定現有庫存' : '📦 入貨記錄' }}
+            </h3>
             <button @click="showRestockModal = false" class="text-slate-300 font-black text-2xl leading-none">×</button>
         </div>
-        <div class="bg-amber-50 rounded-2xl p-4 border-2 border-amber-100">
+
+        <!-- ★ 模式切換 -->
+        <div class="flex gap-1.5 p-1.5 bg-slate-100 rounded-2xl">
+            <button @click="restockForm.isInitial = false"
+                :class="!restockForm.isInitial
+                    ? 'bg-amber-500 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700'"
+                class="flex-1 py-3 rounded-xl font-black text-xs transition-all active:scale-95">
+                📦 入貨<br>
+                <span class="font-semibold opacity-80">記錄支出</span>
+            </button>
+            <button @click="restockForm.isInitial = true"
+                :class="restockForm.isInitial
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-500 hover:text-slate-700'"
+                class="flex-1 py-3 rounded-xl font-black text-xs transition-all active:scale-95">
+                📋 盤點<br>
+                <span class="font-semibold opacity-80">不記帳</span>
+            </button>
+        </div>
+
+        <!-- 說明 -->
+        <div :class="restockForm.isInitial
+                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : 'bg-amber-50 border-amber-200 text-amber-700'"
+            class="rounded-2xl px-4 py-3 border-2 text-xs font-semibold flex items-start gap-2">
+            <span class="text-base flex-shrink-0">{{ restockForm.isInitial ? 'ℹ️' : '💡' }}</span>
+            <span v-if="restockForm.isInitial">
+                直接設定現有庫存數量，<strong>不會產生任何支出記錄</strong>。<br>適合輸入已有存貨的初始數字。
+            </span>
+            <span v-else>
+                入貨後自動新增「產品採購」支出記錄。
+            </span>
+        </div>
+
+        <!-- 產品資訊 + 庫存預覽 -->
+        <div :class="restockForm.isInitial
+                ? 'bg-blue-50 border-blue-100'
+                : 'bg-amber-50 border-amber-100'"
+            class="rounded-2xl p-4 border-2">
             <div class="flex justify-between items-start">
                 <div>
-                    <p class="font-black text-amber-800">{{ restockForm.product?.name }}</p>
-                    <p class="text-xs text-amber-500 mt-1 font-semibold">廠本 ${{ restockForm.product?.cost?.toFixed(2) }} / 件</p>
+                    <p class="font-black text-base" :class="restockForm.isInitial ? 'text-blue-800' : 'text-amber-800'">
+                        {{ restockForm.product?.name }}
+                    </p>
+                    <p class="text-xs mt-1 font-semibold" :class="restockForm.isInitial ? 'text-blue-500' : 'text-amber-500'">
+                        廠本 ${{ restockForm.product?.cost?.toFixed(2) }} / 件
+                    </p>
                 </div>
-                <!-- ★ Current stock -->
                 <div class="text-right">
-                    <p class="text-xs text-amber-600 font-bold">現有庫存</p>
-                    <p class="text-2xl font-black text-amber-700">{{ getStock(restockForm.product?.name || '') }}</p>
-                    <p class="text-xs text-amber-500 font-semibold">件</p>
+                    <p class="text-xs font-bold" :class="restockForm.isInitial ? 'text-blue-600' : 'text-amber-600'">現有庫存</p>
+                    <p class="text-3xl font-black" :class="restockForm.isInitial ? 'text-blue-700' : 'text-amber-700'">
+                        {{ getStock(restockForm.product?.name || '') }}
+                    </p>
+                    <p class="text-xs font-semibold" :class="restockForm.isInitial ? 'text-blue-400' : 'text-amber-400'">件</p>
                 </div>
             </div>
-            <!-- ★ Stock after restock preview -->
-            <div class="mt-3 pt-3 border-t border-amber-200 flex items-center justify-between">
-                <span class="text-xs font-bold text-amber-600">入貨後庫存</span>
+            <!-- 預覽：操作後庫存 -->
+            <div class="mt-3 pt-3 flex items-center justify-between"
+                :class="restockForm.isInitial ? 'border-t border-blue-200' : 'border-t border-amber-200'">
+                <span class="text-xs font-black" :class="restockForm.isInitial ? 'text-blue-600' : 'text-amber-600'">
+                    {{ restockForm.isInitial ? '設定後庫存' : '入貨後庫存' }}
+                </span>
                 <div class="flex items-center gap-2">
-                    <span class="text-sm text-amber-400 font-bold">{{ getStock(restockForm.product?.name || '') }}</span>
-                    <span class="text-amber-400">→</span>
-                    <span class="text-base font-black text-emerald-600">{{ getStock(restockForm.product?.name || '') + (restockForm.qty || 0) }}</span>
+                    <span class="text-sm font-bold" :class="restockForm.isInitial ? 'text-blue-400' : 'text-amber-400'">
+                        {{ getStock(restockForm.product?.name || '') }}
+                    </span>
+                    <span class="text-lg" :class="restockForm.isInitial ? 'text-blue-300' : 'text-amber-300'">→</span>
+                    <span class="text-xl font-black text-emerald-600">
+                        {{ restockForm.isInitial
+                            ? (restockForm.qty || 0)
+                            : getStock(restockForm.product?.name || '') + (restockForm.qty || 0) }}
+                    </span>
+                    <span class="text-xs text-slate-400 font-bold">件</span>
                 </div>
             </div>
         </div>
+
+        <!-- 數量輸入 -->
         <div>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">入貨數量</p>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">
+                {{ restockForm.isInitial ? '現有數量（直接輸入總數）' : '入貨數量' }}
+            </p>
             <div class="flex items-center gap-3">
-                <button @click="restockForm.qty = Math.max(1, (restockForm.qty || 1) - 1)"
-                    class="w-12 h-12 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 transition-transform flex-shrink-0">−</button>
-                <input type="number" v-model.number="restockForm.qty" min="1"
-                    class="flex-1 border-2 border-slate-200 p-4 rounded-2xl font-black text-2xl text-center focus:border-amber-400 outline-none">
-                <button @click="restockForm.qty = (restockForm.qty || 1) + 1"
-                    class="w-12 h-12 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 transition-transform flex-shrink-0">+</button>
+                <button @click="restockForm.qty = Math.max(0, (restockForm.qty || 0) - 1)"
+                    class="w-14 h-14 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 transition-transform flex-shrink-0 select-none">−</button>
+                <input type="number" v-model.number="restockForm.qty" min="0"
+                    class="flex-1 border-2 border-slate-200 p-4 rounded-2xl font-black text-3xl text-center focus:border-blue-400 outline-none">
+                <button @click="restockForm.qty = (restockForm.qty || 0) + 1"
+                    class="w-14 h-14 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 transition-transform flex-shrink-0 select-none">+</button>
             </div>
         </div>
-        <div class="bg-red-50 rounded-2xl p-4 border-2 border-red-100 flex justify-between items-center">
+
+        <!-- 底部資訊 -->
+        <div v-if="!restockForm.isInitial"
+            class="bg-red-50 rounded-2xl p-4 border-2 border-red-100 flex justify-between items-center">
             <div>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">總成本支出</p>
-                <p class="text-xs text-slate-400 mt-0.5">自動記入「產品採購」支出</p>
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">總採購成本</p>
+                <p class="text-xs text-slate-400 mt-0.5">自動計入「產品採購」支出</p>
             </div>
             <span class="font-black text-2xl text-red-500">
                 -${{ ((restockForm.product?.cost || 0) * (restockForm.qty || 0)).toFixed(2) }}
             </span>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-            <button @click="saveRestock('Kwan')" class="bg-slate-900 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Kwan 入貨</button>
-            <button @click="saveRestock('Cat')" class="bg-amber-600 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Cat 入貨</button>
+        <div v-else class="bg-emerald-50 rounded-2xl p-4 border-2 border-emerald-100 flex items-center gap-3">
+            <span class="text-2xl">✅</span>
+            <div>
+                <p class="text-sm font-black text-emerald-700">不記錄任何支出</p>
+                <p class="text-xs text-emerald-500 font-semibold mt-0.5">僅更新庫存數字，財務記錄不受影響</p>
+            </div>
         </div>
+
+        <!-- 確認按鈕 -->
+        <div v-if="restockForm.isInitial">
+            <button @click="saveRestock('system')"
+                class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-base shadow-lg active:scale-95 transition-transform">
+                ✅ 確認設定庫存為 {{ restockForm.qty || 0 }} 件
+            </button>
+        </div>
+        <div v-else class="grid grid-cols-2 gap-3">
+            <button @click="saveRestock('Kwan')"
+                class="bg-slate-900 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Kwan 入貨</button>
+            <button @click="saveRestock('Cat')"
+                class="bg-amber-600 text-white py-4 rounded-2xl font-black active:scale-95 transition-transform">Cat 入貨</button>
+        </div>
+
     </div>
 </div>
 
@@ -734,16 +791,16 @@ createApp({
         const clients           = ref([]);
         const finances          = ref([]);
         const products          = ref([]);
-        const cart              = ref([]); // ★ { name, cost, retail, qty }
+        const cart              = ref([]);
         const pSearch           = ref('');
         const cSearch           = ref('');
         const refSearch         = ref('');
         const passkeySupported  = ref(false);
         const passkeyRegistered = ref(false);
         const showRestockModal  = ref(false);
-        const restockForm       = ref({ product: null, qty: 1 });
+        const restockForm       = ref({ product: null, qty: 0, isInitial: false });
 
-        // ★★★ STOCK - localStorage based
+        // ─── Stock (localStorage) ────────────────────────────
         const stockData = ref({});
         const loadStock = () => {
             try { stockData.value = JSON.parse(localStorage.getItem('fwstk_v1') || '{}'); }
@@ -760,7 +817,12 @@ createApp({
             stockData.value[name] = Math.max(0, (stockData.value[name] ?? 0) + delta);
             saveStockLocal();
         };
+        const setStock = (name, qty) => {
+            stockData.value[name] = Math.max(0, qty);
+            saveStockLocal();
+        };
 
+        // ─── Tabs / Config ───────────────────────────────────
         const tabs = [
             { id:'dashboard', name:'總覽',  icon:'📊' },
             { id:'crm',       name:'客戶',  icon:'👥' },
@@ -871,7 +933,6 @@ createApp({
             finances.value = f     || [];
             products.value = prods || [];
         };
-
         const getClientName = (clientId) => {
             if (!clientId) return null;
             return clients.value.find(c => c.id === clientId)?.name || null;
@@ -901,44 +962,30 @@ createApp({
         // ─── Retail POS ──────────────────────────────────────
         const rForm = ref({ discount:'0', clientId:null });
 
-        // ★★★ getUnitProfit - DYNAMIC, based on current discount
-        // KEY FIX: 50% discount = 0 profit (sell at cost price)
         const getUnitProfit = (item) => {
             const d = parseFloat(rForm.value.discount);
-            if (d === 0.5) return 0;                    // ★ 50折 = 保本 = $0 利潤
-            return item.retail * (1 - d) - item.cost;   // normal calculation
+            if (d === 0.5) return 0;
+            return item.retail * (1 - d) - item.cost;
         };
-
-        // ★★★ getSellPrice for display
         const getSellPrice = (p) => {
             const d = parseFloat(rForm.value.discount);
             return p.retail * (1 - d);
         };
-
-        // ★★★ isLossSale - based on dynamic profit
         const isLossSale = (p) => {
             const d = parseFloat(rForm.value.discount);
-            if (d === 0.5) return false; // 50% = break even, not a loss
+            if (d === 0.5) return false;
             return p.retail * (1 - d) < p.cost;
         };
-
-        // ★★★ addToCart - merge by name ONLY (discount is global)
         const addToCart = (p) => {
             const existing = cart.value.find(item => item.name === p.name);
-            if (existing) {
-                existing.qty++;
-            } else {
-                cart.value.push({ name: p.name, cost: p.cost, retail: p.retail, qty: 1 });
-            }
+            if (existing) { existing.qty++; }
+            else { cart.value.push({ name: p.name, cost: p.cost, retail: p.retail, qty: 1 }); }
         };
-
         const increaseQty = (i) => cart.value[i].qty++;
         const decreaseQty = (i) => {
             if (cart.value[i].qty <= 1) cart.value.splice(i, 1);
             else cart.value[i].qty--;
         };
-
-        // ★★★ cartTotal - uses getUnitProfit (dynamic)
         const cartTotal = computed(() =>
             cart.value.reduce((sum, item) => sum + getUnitProfit(item) * item.qty, 0)
         );
@@ -948,22 +995,15 @@ createApp({
         const cartHasLoss = computed(() =>
             cart.value.some(item => getUnitProfit(item) < 0)
         );
-
         const saveRetail = async (person) => {
             if (cart.value.length === 0) return;
             const totalP = cartTotal.value;
             const note   = cart.value.map(item => `${item.name}×${item.qty}`).join(', ');
             const { error } = await sb.from('finances').insert({
-                user_id:   session.value.user.id,
-                type:      'income',
-                category:  '零售',
-                amount:    totalP,
-                person,
-                client_id: rForm.value.clientId,
-                note
+                user_id: session.value.user.id, type:'income', category:'零售',
+                amount: totalP, person, client_id: rForm.value.clientId, note
             });
             if (!error) {
-                // ★ Update stock
                 cart.value.forEach(item => modifyStock(item.name, -item.qty));
                 const msg = totalP === 0 ? '$0 (保本)' : (totalP > 0 ? '+$' : '-$') + Math.abs(totalP).toFixed(2);
                 cart.value = [];
@@ -974,14 +1014,26 @@ createApp({
             } else alert("錯誤：" + error.message);
         };
 
-        // ─── Restock ─────────────────────────────────────────
+        // ─── Restock ★★★ 整合版 ──────────────────────────────
         const openRestock = (p) => {
-            restockForm.value = { product: p, qty: 1 };
+            restockForm.value = { product: p, qty: 0, isInitial: false };
             showRestockModal.value = true;
         };
         const saveRestock = async (person) => {
-            const { product, qty } = restockForm.value;
-            if (!product || !qty || qty < 1) return alert("請輸入有效數量");
+            const { product, qty, isInitial } = restockForm.value;
+            if (!product) return;
+            if (qty === null || qty === undefined || qty < 0) return alert("請輸入有效數量");
+
+            // ★ 盤點模式：直接設定庫存，不記帳
+            if (isInitial) {
+                setStock(product.name, Number(qty));
+                showRestockModal.value = false;
+                alert(`✅ 庫存已設定\n${product.name}：${qty} 件\n（無支出記錄）`);
+                return;
+            }
+
+            // 入貨模式：記錄支出 + 增加庫存
+            if (qty < 1) return alert("入貨數量最少為 1");
             const amount = product.cost * Number(qty);
             const { error } = await sb.from('finances').insert({
                 user_id:  session.value.user.id,
@@ -992,12 +1044,10 @@ createApp({
                 note: `${product.name} ×${qty}`
             });
             if (!error) {
-                // ★ Update stock
                 modifyStock(product.name, Number(qty));
-                const newStock = getStock(product.name);
                 showRestockModal.value = false;
                 await loadData();
-                alert(`✅ 入貨完成\n${product.name} ×${qty}\n現有庫存：${newStock} 件`);
+                alert(`✅ 入貨完成\n${product.name} ×${qty} 件\n採購成本：-$${amount.toFixed(2)}\n現有庫存：${getStock(product.name)} 件`);
             } else alert("錯誤：" + error.message);
         };
 
@@ -1038,7 +1088,7 @@ createApp({
             else alert("錯誤：" + error.message);
         };
 
-        // ─── Dashboard computed ───────────────────────────────
+        // ─── Dashboard Computed ───────────────────────────────
         const filterByDate = (arr) => {
             const now = new Date();
             return arr.filter(f => {
@@ -1055,7 +1105,6 @@ createApp({
                 return true;
             });
         };
-
         const totalIncome = computed(() =>
             filterByDate(finances.value).filter(f => f.type === 'income')
                 .reduce((a,b) => a + Number(b.amount), 0).toFixed(2)
@@ -1064,9 +1113,9 @@ createApp({
             filterByDate(finances.value).filter(f => f.type === 'expense')
                 .reduce((a,b) => a + Number(b.amount), 0).toFixed(2)
         );
-        const totalProfit = computed(() => (parseFloat(totalIncome.value) - parseFloat(totalExpense.value)).toFixed(2));
-
-        // ★★★ 收入分類圖表
+        const totalProfit = computed(() =>
+            (parseFloat(totalIncome.value) - parseFloat(totalExpense.value)).toFixed(2)
+        );
         const incomeByCategory = computed(() => {
             const filtered = filterByDate(finances.value).filter(f => f.type === 'income');
             const total = filtered.reduce((s, f) => s + Number(f.amount), 0);
@@ -1074,9 +1123,9 @@ createApp({
             const cats = {};
             filtered.forEach(f => { cats[f.category] = (cats[f.category] || 0) + Number(f.amount); });
             const styles = {
-                '運動':           { barColor:'bg-blue-500',    textColor:'text-blue-700',    emoji:'🏋️' },
-                '零售':           { barColor:'bg-emerald-500',  textColor:'text-emerald-700', emoji:'🛍️' },
-                '其他項目(收入)': { barColor:'bg-purple-500',   textColor:'text-purple-700',  emoji:'💚' }
+                '運動':           { barColor:'bg-blue-500',   textColor:'text-blue-700',   emoji:'🏋️' },
+                '零售':           { barColor:'bg-emerald-500', textColor:'text-emerald-700', emoji:'🛍️' },
+                '其他項目(收入)': { barColor:'bg-purple-500',  textColor:'text-purple-700',  emoji:'💚' }
             };
             return Object.entries(cats)
                 .map(([name, amount]) => ({
@@ -1086,8 +1135,6 @@ createApp({
                 }))
                 .sort((a, b) => b.amount - a.amount);
         });
-
-        // ★★★ 支出分類圖表
         const expenseByCategory = computed(() => {
             const filtered = filterByDate(finances.value).filter(f => f.type === 'expense');
             const total = filtered.reduce((s, f) => s + Number(f.amount), 0);
@@ -1101,30 +1148,24 @@ createApp({
                 }))
                 .sort((a, b) => b.amount - a.amount);
         });
-
         const branchStats = computed(() => {
             const b = {'觀塘':0,'中環':0,'佐敦':0};
             clients.value.forEach(c => { if (b[c.branch] !== undefined) b[c.branch]++; });
             return b;
         });
         const recentTransactions = computed(() => finances.value.slice(0, 10));
-
-        // ★ Expiring clients (14 days)
         const expiringClients = computed(() =>
             clients.value
                 .filter(c => { const d = (new Date(c.expiry_date) - new Date()) / 86400000; return d >= 0 && d < 14; })
                 .sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date))
         );
         const daysUntilExpiry = (date) => Math.ceil((new Date(date) - new Date()) / 86400000);
-
-        // ★★★ 庫存警告 (< 5件)
         const lowStockItems = computed(() =>
             products.value
                 .map(p => ({ name: p.prod_name, stock: getStock(p.prod_name) }))
                 .filter(item => item.stock < 5)
                 .sort((a, b) => a.stock - b.stock)
         );
-
         const formatDate = (iso) => {
             const d = new Date(iso);
             return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
@@ -1132,7 +1173,7 @@ createApp({
 
         onMounted(async () => {
             await checkPasskeySupport();
-            loadStock(); // ★ load stock
+            loadStock();
             sb.auth.onAuthStateChange((event, sessionData) => {
                 if (event === 'PASSWORD_RECOVERY') { authState.value = 'recovery'; session.value = null; return; }
                 session.value = sessionData;
