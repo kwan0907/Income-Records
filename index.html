@@ -1034,7 +1034,7 @@ createApp({
       const[{data:c},{data:f},{data:prods},{data:tr}]=await Promise.all([
         sb.from('clients').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
         sb.from('finances').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
-        sb.from('products').select('*').eq('is_active',true).order('prod_seq'),
+sb.from('products').select('*').eq('is_active',true).order('prod_name'),
         sb.from('trials').select('*').eq('user_id',uid).gte('trial_date',today).order('trial_date',{ascending:true})
       ]);
       clients.value=c||[];finances.value=f||[];products.value=prods||[];trials.value=tr||[];
