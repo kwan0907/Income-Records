@@ -1053,8 +1053,12 @@ createApp({
     const setStock=async(name,qty)=>{const q=Math.max(0,qty);stockData[name]=q;await syncStockToDB(name,q);};
     const quickAdjustStock=(name,delta)=>modifyStock(name,delta);
     const stockInfo=n=>{const s=getStock(n),pct=Math.min(100,Math.round(s/20*100));if(s===0)return{text:'缺貨',badge:'bg-red-100 text-red-600 border-red-200',bar:'bg-red-400',pct,numColor:'text-red-500',cardBorder:'border-red-100'};if(s<5)return{text:'不足',badge:'bg-amber-100 text-amber-700 border-amber-200',bar:'bg-amber-400',pct,numColor:'text-amber-600',cardBorder:'border-amber-100'};if(s<10)return{text:'正常',badge:'bg-blue-100 text-blue-700 border-blue-200',bar:'bg-blue-400',pct,numColor:'text-blue-600',cardBorder:'border-slate-100'};return{text:'充足',badge:'bg-emerald-100 text-emerald-700 border-emerald-200',bar:'bg-emerald-500',pct,numColor:'text-emerald-600',cardBorder:'border-emerald-100'};};
-const cats={'內':{name:'💊 内服產品',emoji:'💊',items:[]},'外':{name:'🧴 外用產品',emoji:'🧴',items:[]}}
-    const filteredStockCategories=computed(()=>stockCategories.value.map(cat=>({...cat,items:cat.items.filter(p=>{const matchS=!stockSearch.value||p.prod_name.toLowerCase().includes(stockSearch.value.toLowerCase());const s=getStock(p.prod_name);const matchF=stockFilter.value==='all'||(stockFilter.value==='danger'&&s===0)||(stockFilter.value==='low'&&s>0&&s<5)||(stockFilter.value==='ok'&&s>=5);return matchS&&matchF;})})).filter(c=>c.items.length>0));
+// ✅ 改成 computed
+const stockCategories=computed(()=>{
+  const cats={'內':{name:'💊 内服產品',emoji:'💊',items:[]},'外':{name:'🧴 外用產品',emoji:'🧴',items:[]}};
+  products.value.forEach(p=>{if(cats[p.category])cats[p.category].items.push(p);});
+  return Object.values(cats);
+});    const filteredStockCategories=computed(()=>stockCategories.value.map(cat=>({...cat,items:cat.items.filter(p=>{const matchS=!stockSearch.value||p.prod_name.toLowerCase().includes(stockSearch.value.toLowerCase());const s=getStock(p.prod_name);const matchF=stockFilter.value==='all'||(stockFilter.value==='danger'&&s===0)||(stockFilter.value==='low'&&s>0&&s<5)||(stockFilter.value==='ok'&&s>=5);return matchS&&matchF;})})).filter(c=>c.items.length>0));
     const totalStockQty=computed(()=>products.value.reduce((s,p)=>s+getStock(p.prod_name),0));
     const totalStockValue=computed(()=>products.value.reduce((s,p)=>s+getStock(p.prod_name)*parseFloat(p.cost||0),0));
     const totalBronzeValue=computed(()=>products.value.reduce((s,p)=>{const bp=getBP(p.prod_name);return s+getStock(p.prod_name)*(bp||parseFloat(p.retail_price||0));},0));
@@ -1091,9 +1095,8 @@ const cats={'內':{name:'💊 内服產品',emoji:'💊',items:[]},'外':{name:'
       const[{data:c},{data:f},{data:prods},{data:tr}]=await Promise.all([
         sb.from('clients').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
         sb.from('finances').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
-        sb.from('products').select('*').eq('is_active',true).in('category',['內','外']).order('prod_seq')
-        sb.from('trials').select('*').eq('user_id',uid).gte('trial_date',today).order('trial_date',{ascending:true})
-      ]);
+sb.from('products').select('*').eq('is_active',true).in('category',['內','外']).order('prod_seq'),
+sb.from('trials').select('*')...
       clients.value=c||[];finances.value=f||[];products.value=prods||[];trials.value=tr||[];
     };
 
