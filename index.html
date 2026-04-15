@@ -17,19 +17,17 @@
 .bar-fill{transition:width .7s cubic-bezier(.4,0,.2,1)}
 .fade-in{animation:fadeIn .2s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.card-press{transition:transform .1s,box-shadow .1s}
 .card-press:active{transform:scale(.97)}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 .dropdown-anim{animation:dropAnim .15s ease}
 @keyframes dropAnim{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-.collapse-anim{transition:all .25s ease}
-.bronze-glow{box-shadow:0 0 0 2px #d97706}
+.tag-auto{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;background:#dbeafe;color:#1d4ed8}
+.tag-manual{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;background:#fef3c7;color:#92400e}
 </style>
 </head>
 <body class="bg-slate-100 text-slate-900 text-sm">
 <div id="app" v-cloak>
 
-<!-- Overlay to close dropdowns -->
 <div v-if="showExClientDropdown||showRtClientDropdown||showReferralDropdown"
   @click="showExClientDropdown=false;showRtClientDropdown=false;showReferralDropdown=false"
   class="fixed inset-0 z-30"></div>
@@ -45,13 +43,12 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     <div v-if="authState==='recovery'" class="bg-white rounded-3xl p-6 shadow-2xl space-y-4">
       <h2 class="font-black text-lg">設定新密碼</h2>
       <input type="password" v-model="newPassword" placeholder="輸入新密碼（最少 6 位）" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none">
-      <button @click="updatePassword" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl active:scale-95 transition-transform">確認更新密碼</button>
+      <button @click="updatePassword" class="w-full bg-emerald-600 text-white font-black py-4 rounded-2xl active:scale-95">確認更新密碼</button>
     </div>
     <div v-else class="bg-white/95 backdrop-blur rounded-3xl p-6 shadow-2xl space-y-3">
       <input type="email" v-model="authForm.email" placeholder="Email" autocomplete="username" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none bg-slate-50">
-      <input type="password" v-model="authForm.password" placeholder="Password" :autocomplete="authState==='login'?'current-password':'new-password'" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none bg-slate-50">
-      <button @click="handleAuth" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-transform">{{ authState==='login'?'登入':'建立帳號' }}</button>
-      <button v-if="authState==='login'&&passkeySupported&&passkeyRegistered" @click="loginWithPasskey" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl active:scale-95 flex items-center justify-center gap-2">🔒 Face ID / 指紋登入</button>
+      <input type="password" v-model="authForm.password" placeholder="Password" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-500 outline-none bg-slate-50">
+      <button @click="handleAuth" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95">{{ authState==='login'?'登入':'建立帳號' }}</button>
       <div class="flex justify-between pt-1">
         <button @click="authState=authState==='login'?'register':'login'" class="text-blue-600 font-bold text-sm">{{ authState==='login'?'建立帳號 →':'← 返回登入' }}</button>
         <button @click="forgotPassword" class="text-slate-400 font-semibold text-sm">忘記密碼</button>
@@ -76,15 +73,13 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
     <!-- ══ DASHBOARD ══ -->
     <section v-if="currentTab==='dashboard'" class="space-y-4 fade-in">
-      <!-- Sub-tabs -->
       <div class="flex gap-1.5 p-1.5 bg-slate-200/60 rounded-2xl">
         <button @click="dashSubTab='overview'" :class="dashSubTab==='overview'?'bg-white shadow-md text-blue-700':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📊 總覽</button>
-        <button @click="dashSubTab='analytics'" :class="dashSubTab==='analytics'?'bg-white shadow-md text-purple-700':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📈 分析</button>
+        <button @click="dashSubTab='analytics'" :class="dashSubTab==='analytics'?'bg-white shadow-md text-purple-700':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📈 月度分析</button>
       </div>
 
       <!-- ── 總覽 ── -->
       <template v-if="dashSubTab==='overview'">
-        <!-- Hero -->
         <div class="bg-gradient-to-br from-blue-900 via-blue-800 to-slate-800 rounded-3xl p-5 text-white shadow-xl">
           <div class="flex gap-2 mb-4 flex-wrap">
             <button v-for="r in dateRanges" :key="r.id" @click="dateRange=r.id" :class="dateRange===r.id?'bg-white text-blue-900':'bg-white/10 text-white/60'" class="px-3 py-1 rounded-full text-xs font-black transition-all">{{ r.name }}</button>
@@ -93,14 +88,13 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <button v-for="p in ['All','Kwan','Cat']" :key="p" @click="reportPerson=p" :class="reportPerson===p?'bg-blue-400 text-blue-900':'bg-white/10 text-white/50'" class="px-3 py-1 rounded-xl text-xs font-black transition-all">{{ p }}</button>
           </div>
           <p class="text-blue-300/80 text-xs font-bold uppercase tracking-widest">純利潤</p>
-          <p class="text-5xl font-black mt-1 tracking-tight" :class="parseFloat(totalProfit)<0?'text-red-300':''">${{ totalProfit }}</p>
+          <p class="text-5xl font-black mt-1 tracking-tight" :class="parseFloat(totalProfit)<0?'text-red-300':''"> ${{ totalProfit }}</p>
           <div class="flex gap-4 mt-3 text-xs font-semibold">
             <span class="flex items-center gap-1 text-emerald-300"><span class="w-2 h-2 bg-emerald-400 rounded-full"></span>收入 ${{ totalIncome }}</span>
             <span class="flex items-center gap-1 text-red-300"><span class="w-2 h-2 bg-red-400 rounded-full"></span>支出 ${{ totalExpense }}</span>
           </div>
         </div>
 
-        <!-- Quick stats -->
         <div class="grid grid-cols-3 gap-2.5">
           <div v-for="b in ['觀塘','中環','佐敦']" :key="b" class="bg-white rounded-2xl p-4 text-center shadow-sm border border-slate-100">
             <p class="text-2xl font-black text-blue-600">{{ branchStats[b] }}</p>
@@ -110,7 +104,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <div class="grid grid-cols-2 gap-2.5">
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
             <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">🏃 馬拉松</p>
-            <p class="text-3xl font-black text-emerald-500 mt-1">{{ marathonStats.active }}</p>
+            <p class="text-3xl font-black text-emerald-500 mt-1">{{ marathonCount }}</p>
             <p class="text-xs text-slate-300 mt-0.5">活躍成員</p>
           </div>
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
@@ -138,21 +132,19 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
 
-        <!-- ✦ 庫存警告 (可收合) -->
+        <!-- 庫存警告 (收合) -->
         <div v-if="lowStockItems.length>0" class="bg-white rounded-2xl border-2 border-amber-200 shadow-sm overflow-hidden">
-          <div @click="stockWarningExpanded=!stockWarningExpanded" class="px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 flex items-center justify-between cursor-pointer select-none">
+          <div @click="stockWarningExpanded=!stockWarningExpanded" class="px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 flex items-center justify-between cursor-pointer select-none">
             <div class="flex items-center gap-2">
               <span class="text-base">📦</span>
               <p class="font-black text-sm text-amber-700">庫存警告</p>
-              <span class="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">{{ lowStockItems.filter(i=>i.stock===0).length }} 缺貨 · {{ lowStockItems.filter(i=>i.stock>0).length }} 不足</span>
+              <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{{ lowStockItems.filter(i=>i.stock===0).length }} 缺貨</span>
+              <span class="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">{{ lowStockItems.filter(i=>i.stock>0).length }} 不足</span>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-slate-400 font-semibold">{{ stockWarningExpanded?'收起':'展開' }}</span>
-              <span class="text-slate-400 text-xs transition-transform duration-200" :class="stockWarningExpanded?'rotate-180':''">▼</span>
-            </div>
+            <span class="text-slate-400 text-xs transition-transform duration-200 font-black" :class="stockWarningExpanded?'rotate-180':''">▼</span>
           </div>
-          <div v-if="stockWarningExpanded">
-            <div v-for="(item,i) in lowStockItems" :key="item.name" :class="i<lowStockItems.length-1?'border-b border-slate-50':''" class="px-4 py-3 flex justify-between items-center cursor-pointer active:bg-amber-50" @click="currentTab='retail';retailSubTab='stock'">
+          <div v-if="stockWarningExpanded" class="divide-y divide-slate-50">
+            <div v-for="item in lowStockItems" :key="item.name" class="px-4 py-3 flex justify-between items-center cursor-pointer active:bg-amber-50" @click="currentTab='retail';retailSubTab='stock'">
               <div><p class="font-bold text-sm">{{ item.name }}</p><p class="text-xs text-slate-400 mt-0.5">點擊查看庫存</p></div>
               <span :class="item.stock===0?'bg-red-100 text-red-600 border-red-200':'bg-amber-100 text-amber-700 border-amber-200'" class="text-xs font-black px-3 py-1.5 rounded-xl border font-mono">{{ item.stock===0?'缺　貨':item.stock+' 件' }}</span>
             </div>
@@ -190,7 +182,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             </div>
             <div class="flex items-center gap-2">
               <div class="text-right"><p class="text-xs font-black text-red-500">{{ daysUntilExpiry(c.expiry_date) }}天後</p><p class="text-xs text-slate-300">{{ c.expiry_date }}</p></div>
-              <button v-if="c.phone" @click.stop="openWhatsApp(c.phone,c.name)" class="w-9 h-9 bg-green-500 text-white rounded-xl flex items-center justify-center active:scale-90 transition-transform">💬</button>
+              <button v-if="c.phone" @click.stop="openWhatsApp(c.phone,c.name)" class="w-9 h-9 bg-green-500 text-white rounded-xl flex items-center justify-center active:scale-90">💬</button>
             </div>
           </div>
         </div>
@@ -204,7 +196,11 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           <div v-if="recentTransactions.length===0" class="p-8 text-center text-slate-300"><p class="text-3xl mb-2">📋</p><p class="text-sm font-semibold">暫無記錄</p></div>
           <div v-for="(t,i) in recentTransactions" :key="t.id" :class="i<recentTransactions.length-1?'border-b border-slate-50':''" class="flex items-center gap-2 px-4 py-3">
             <div class="flex-1 min-w-0">
-              <p class="font-bold text-sm">{{ t.category }} <span class="text-xs font-normal text-slate-400">{{ t.person }}</span></p>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <p class="font-bold text-sm">{{ t.category }}</p>
+                <span v-if="t.is_renewal" class="text-xs bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded-full font-bold">續卡</span>
+                <span class="text-xs font-normal text-slate-400">{{ t.person }}</span>
+              </div>
               <p class="text-xs text-slate-300 mt-0.5">{{ formatDate(t.created_at) }}{{ t.note?' · '+t.note:'' }}</p>
             </div>
             <span :class="t.type==='income'?'text-emerald-600':'text-red-500'" class="font-black text-sm flex-shrink-0">{{ t.type==='income'?'+':'-' }}${{ Number(t.amount).toFixed(2) }}</span>
@@ -213,186 +209,225 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         </div>
       </template>
 
-      <!-- ── 分析 ── -->
+      <!-- ── 月度分析 ── -->
       <template v-if="dashSubTab==='analytics'">
-        <!-- Month selector -->
-        <div class="bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm border border-slate-100">
-          <button @click="prevAnalyticsMonth" class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black active:scale-90">‹</button>
+        <!-- Month nav -->
+        <div class="bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between shadow-sm border border-slate-100">
+          <button @click="prevAnalyticsMonth" class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-xl active:scale-90">‹</button>
           <div class="text-center">
             <p class="font-black text-base text-slate-800">{{ analyticsMonthLabel }}</p>
-            <p class="text-xs text-slate-400 font-semibold mt-0.5">月度分析報告</p>
+            <p class="text-xs text-slate-400 font-semibold mt-0.5">月度分析</p>
           </div>
-          <button @click="nextAnalyticsMonth" class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black active:scale-90">›</button>
+          <button @click="nextAnalyticsMonth" class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-xl active:scale-90">›</button>
         </div>
 
-        <!-- 廣告效益 -->
+        <!-- 說明 banner -->
+        <div class="flex items-center gap-3 px-4 py-2.5 bg-slate-50 rounded-2xl border border-slate-200">
+          <span class="tag-auto">🤖 自動</span><span class="text-xs text-slate-500 font-semibold">系統自動統計</span>
+          <span class="ml-2 tag-manual">✏️ 手動</span><span class="text-xs text-slate-500 font-semibold">需每月輸入</span>
+        </div>
+
+        <!-- ① 廣告效益 -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div class="px-4 py-3.5 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-100 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="text-lg">📢</span>
-              <p class="font-black text-sm text-orange-700">廣告效益分析</p>
-            </div>
-            <button @click="openMetricsModal" class="text-xs bg-orange-100 text-orange-700 px-2.5 py-1.5 rounded-lg font-bold active:scale-90 border border-orange-200">✏️ 更新數據</button>
-          </div>
-          <div class="p-4 grid grid-cols-2 gap-3">
-            <div class="bg-orange-50 rounded-xl p-3 border border-orange-100">
-              <p class="text-xs text-orange-500 font-semibold">廣告支出</p>
-              <p class="text-xl font-black text-orange-700 mt-1">${{ analyticsAdSpend.toFixed(0) }}</p>
-            </div>
-            <div class="bg-blue-50 rounded-xl p-3 border border-blue-100">
-              <p class="text-xs text-blue-500 font-semibold">查詢數</p>
-              <p class="text-xl font-black text-blue-700 mt-1">{{ analyticsMetrics.inquiries || 0 }} 次</p>
-            </div>
-            <div class="bg-indigo-50 rounded-xl p-3 border border-indigo-100">
-              <p class="text-xs text-indigo-500 font-semibold">廣告試堂</p>
-              <p class="text-xl font-black text-indigo-700 mt-1">{{ analyticsMetrics.ad_trials || 0 }} 次</p>
-            </div>
-            <div class="bg-purple-50 rounded-xl p-3 border border-purple-100">
-              <p class="text-xs text-purple-500 font-semibold">廣告新客</p>
-              <p class="text-xl font-black text-purple-700 mt-1">{{ analyticsNewFromAds }} 人</p>
+          <div class="px-4 py-3.5 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-100">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2"><span class="text-lg">📢</span><p class="font-black text-sm text-orange-700">廣告效益</p></div>
+              <button @click="openMetricsModal" class="flex items-center gap-1.5 text-xs bg-orange-100 text-orange-700 px-3 py-1.5 rounded-xl font-bold active:scale-90 border border-orange-200">
+                <span class="tag-manual">✏️ 手動</span> 更新查詢數
+              </button>
             </div>
           </div>
-          <!-- Derived KPIs -->
-          <div class="px-4 pb-4 space-y-2.5">
-            <div class="flex justify-between items-center py-2.5 border-t border-slate-50">
-              <span class="text-xs font-semibold text-slate-500">每次查詢成本</span>
-              <span class="font-black text-sm text-slate-700">${{ analyticsAdSpend&&analyticsMetrics.inquiries?( analyticsAdSpend/analyticsMetrics.inquiries).toFixed(0):'—' }}</span>
-            </div>
-            <div class="flex justify-between items-center py-2.5 border-t border-slate-50">
-              <span class="text-xs font-semibold text-slate-500">每新客獲取成本</span>
-              <span class="font-black text-sm" :class="analyticsNewFromAds?'text-emerald-600':'text-slate-400'">${{ analyticsNewFromAds?(analyticsAdSpend/analyticsNewFromAds).toFixed(0):'—' }}</span>
-            </div>
-            <div class="flex justify-between items-center py-2.5 border-t border-slate-50">
-              <span class="text-xs font-semibold text-slate-500">試堂 → 成客轉換率</span>
-              <div class="flex items-center gap-2">
-                <div class="w-20 h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div class="bar-fill h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500" :style="{width:analyticsConversionRate+'%'}"></div>
+          <div class="p-4">
+            <!-- Row 1: 4 stats -->
+            <div class="grid grid-cols-2 gap-2.5 mb-4">
+              <div class="bg-orange-50 rounded-2xl p-3.5 border border-orange-100">
+                <div class="flex items-center justify-between mb-1">
+                  <p class="text-xs text-orange-600 font-semibold">廣告支出</p>
+                  <span class="tag-auto">🤖 自動</span>
                 </div>
-                <span class="font-black text-sm text-emerald-600">{{ analyticsConversionRate }}%</span>
+                <p class="text-2xl font-black text-orange-700">${{ analyticsAdSpend.toFixed(0) }}</p>
+              </div>
+              <div class="bg-blue-50 rounded-2xl p-3.5 border border-blue-100">
+                <div class="flex items-center justify-between mb-1">
+                  <p class="text-xs text-blue-600 font-semibold">查詢數</p>
+                  <span class="tag-manual">✏️ 手動</span>
+                </div>
+                <p class="text-2xl font-black text-blue-700">{{ analyticsMetrics.inquiries||0 }} <span class="text-sm font-semibold text-blue-400">次</span></p>
+              </div>
+              <div class="bg-indigo-50 rounded-2xl p-3.5 border border-indigo-100">
+                <div class="flex items-center justify-between mb-1">
+                  <p class="text-xs text-indigo-600 font-semibold">廣告試堂</p>
+                  <span class="tag-manual">✏️ 手動</span>
+                </div>
+                <p class="text-2xl font-black text-indigo-700">{{ analyticsMetrics.ad_trials||0 }} <span class="text-sm font-semibold text-indigo-400">次</span></p>
+              </div>
+              <div class="bg-purple-50 rounded-2xl p-3.5 border border-purple-100">
+                <div class="flex items-center justify-between mb-1">
+                  <p class="text-xs text-purple-600 font-semibold">廣告新客</p>
+                  <span class="tag-auto">🤖 自動</span>
+                </div>
+                <p class="text-2xl font-black text-purple-700">{{ analyticsNewFromAds }} <span class="text-sm font-semibold text-purple-400">人</span></p>
+              </div>
+            </div>
+            <!-- KPIs -->
+            <div class="space-y-0 divide-y divide-slate-50 border border-slate-100 rounded-xl overflow-hidden">
+              <div class="flex justify-between items-center px-3.5 py-3 bg-slate-50/50">
+                <span class="text-xs font-semibold text-slate-500">每次查詢成本</span>
+                <span class="font-black text-sm">{{ analyticsAdSpend&&analyticsMetrics.inquiries?(analyticsAdSpend/analyticsMetrics.inquiries).toFixed(0):'—' }} <span class="text-xs text-slate-400">HKD</span></span>
+              </div>
+              <div class="flex justify-between items-center px-3.5 py-3 bg-slate-50/50">
+                <span class="text-xs font-semibold text-slate-500">每新客獲取成本</span>
+                <span class="font-black text-sm" :class="analyticsNewFromAds?'text-emerald-600':'text-slate-400'">{{ analyticsNewFromAds?(analyticsAdSpend/analyticsNewFromAds).toFixed(0):'—' }} <span class="text-xs text-slate-400">HKD</span></span>
+              </div>
+              <div class="flex justify-between items-center px-3.5 py-3 bg-slate-50/50">
+                <span class="text-xs font-semibold text-slate-500">試堂 → 新客轉換率</span>
+                <div class="flex items-center gap-2">
+                  <div class="w-16 h-2 bg-slate-200 rounded-full overflow-hidden"><div class="bar-fill h-full bg-emerald-500 rounded-full" :style="{width:analyticsConversionRate+'%'}"></div></div>
+                  <span class="font-black text-sm text-emerald-600">{{ analyticsConversionRate }}%</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 新客戶分佈 -->
+        <!-- ② 新客戶 (全自動) -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
             <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2"><span class="text-lg">👥</span><p class="font-black text-sm text-blue-700">本月新客戶</p></div>
-              <span class="text-xs bg-blue-100 text-blue-700 font-black px-2.5 py-1 rounded-full">共 {{ analyticsNewClients.length }} 人</span>
+              <div class="flex items-center gap-2">
+                <span class="text-lg">👥</span>
+                <p class="font-black text-sm text-blue-700">本月新客戶</p>
+                <span class="tag-auto">🤖 自動</span>
+              </div>
+              <span class="text-xs font-black bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full">共 {{ analyticsNewClients.length }} 人</span>
+            </div>
+          </div>
+          <div class="p-4 space-y-3">
+            <!-- by branch -->
+            <div v-for="b in ['觀塘','中環','佐敦']" :key="b">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-black text-slate-700">{{ b }}</span>
+                <span class="text-xs text-slate-500 font-semibold">{{ (newClientsByBranch[b]?.total||0) }} 人</span>
+              </div>
+              <div class="h-7 bg-slate-100 rounded-xl overflow-hidden flex">
+                <div :style="{width:Math.round((newClientsByBranch[b]?.ads||0)/Math.max(1,analyticsNewClients.length)*100)+'%'}" class="bar-fill bg-blue-500 h-full flex items-center justify-center min-w-0">
+                  <span v-if="newClientsByBranch[b]?.ads>0" class="text-xs font-black text-white px-1">{{ newClientsByBranch[b]?.ads }}</span>
+                </div>
+                <div :style="{width:Math.round((newClientsByBranch[b]?.referral||0)/Math.max(1,analyticsNewClients.length)*100)+'%'}" class="bar-fill bg-purple-400 h-full flex items-center justify-center min-w-0">
+                  <span v-if="newClientsByBranch[b]?.referral>0" class="text-xs font-black text-white px-1">{{ newClientsByBranch[b]?.referral }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- legend -->
+            <div class="flex gap-4 pt-1">
+              <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-blue-500 rounded-sm flex-shrink-0"></span><span class="text-xs text-slate-500 font-semibold">廣告 {{ analyticsNewFromAds }} 人</span></div>
+              <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-purple-400 rounded-sm flex-shrink-0"></span><span class="text-xs text-slate-500 font-semibold">轉介紹 {{ analyticsNewFromReferral }} 人</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ③ 續卡 (全自動，來自 exercise POS 標記) -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="px-4 py-3.5 bg-gradient-to-r from-teal-50 to-emerald-50 border-b border-teal-100">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🔄</span>
+                <p class="font-black text-sm text-teal-700">本月續卡</p>
+                <span class="tag-auto">🤖 自動</span>
+              </div>
+              <span class="text-xs font-black bg-teal-100 text-teal-700 px-2.5 py-1 rounded-full">共 {{ totalRenewals }} 人</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <div v-if="totalRenewals===0" class="text-center py-4 text-slate-300">
+              <p class="text-2xl mb-1">🔄</p>
+              <p class="text-xs font-semibold">本月暫無續卡記錄</p>
+              <p class="text-xs text-slate-300 mt-1">在「運動 POS」勾選「續卡」即自動記錄</p>
+            </div>
+            <div v-else class="grid grid-cols-3 gap-2.5">
+              <div v-for="(b,key) in renewalBranchMap" :key="key" class="bg-teal-50 rounded-xl p-3 border border-teal-100 text-center">
+                <p class="text-xs text-teal-600 font-semibold">{{ key }}</p>
+                <p class="text-3xl font-black text-teal-700 mt-1">{{ b }}</p>
+              </div>
+            </div>
+            <p class="text-xs text-slate-400 font-semibold mt-3 text-center">💡 在「運動 POS」記帳時勾選「🔄 續卡」即自動統計</p>
+          </div>
+        </div>
+
+        <!-- ④ 零售 (全自動) -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="px-4 py-3.5 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-100">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🛍️</span>
+                <p class="font-black text-sm text-slate-700">本月零售</p>
+                <span class="tag-auto">🤖 自動</span>
+              </div>
+              <span class="text-xs font-black text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">{{ analyticsRetailTx }} 筆</span>
             </div>
           </div>
           <div class="p-4 space-y-3">
             <div v-for="b in ['觀塘','中環','佐敦']" :key="b" class="flex items-center gap-3">
               <span class="text-xs font-black text-slate-600 w-8 flex-shrink-0">{{ b }}</span>
-              <div class="flex-1 flex items-center gap-1.5">
-                <div :style="{width:Math.round((newClientsByBranch[b]?.total||0)/Math.max(1,analyticsNewClients.length)*100)+'%'}" class="bar-fill h-5 bg-blue-100 rounded-lg min-w-0 flex items-center overflow-hidden">
-                  <div :style="{width:Math.round((newClientsByBranch[b]?.ads||0)/Math.max(1,newClientsByBranch[b]?.total||1)*100)+'%'}" class="h-full bg-blue-500 flex-shrink-0"></div>
+              <div class="flex-1 h-6 bg-slate-100 rounded-xl overflow-hidden">
+                <div :style="{width:Math.round((retailByBranch[b]?.count||0)/Math.max(1,analyticsRetailTx)*100)+'%'}" class="bar-fill h-full bg-emerald-400 rounded-xl flex items-center justify-center">
+                  <span v-if="retailByBranch[b]?.count>0" class="text-xs font-black text-white">{{ retailByBranch[b]?.count }}</span>
                 </div>
               </div>
-              <div class="flex items-center gap-1.5 flex-shrink-0">
-                <span class="text-xs font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md">廣告 {{ newClientsByBranch[b]?.ads||0 }}</span>
-                <span class="text-xs font-black text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-md">介紹 {{ newClientsByBranch[b]?.referral||0 }}</span>
-              </div>
-            </div>
-            <div class="flex gap-3 pt-2 border-t border-slate-50">
-              <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-blue-500 rounded-sm"></span><span class="text-xs text-slate-500 font-semibold">廣告 {{ analyticsNewFromAds }} 人</span></div>
-              <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-purple-400 rounded-sm"></span><span class="text-xs text-slate-500 font-semibold">轉介紹 {{ analyticsNewFromReferral }} 人</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 續卡統計 -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div class="px-4 py-3.5 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100 flex items-center justify-between">
-            <div class="flex items-center gap-2"><span class="text-lg">🔄</span><p class="font-black text-sm text-emerald-700">本月續卡</p></div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-black text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">共 {{ (analyticsMetrics.renewals_kwt||0)+(analyticsMetrics.renewals_cen||0)+(analyticsMetrics.renewals_jor||0) }} 人</span>
-              <button @click="openMetricsModal" class="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1.5 rounded-lg font-bold active:scale-90 border border-emerald-200">✏️</button>
-            </div>
-          </div>
-          <div class="p-4 grid grid-cols-3 gap-3">
-            <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 text-center">
-              <p class="text-xs text-emerald-600 font-semibold">觀塘</p>
-              <p class="text-2xl font-black text-emerald-700 mt-1">{{ analyticsMetrics.renewals_kwt||0 }}</p>
-            </div>
-            <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 text-center">
-              <p class="text-xs text-emerald-600 font-semibold">中環</p>
-              <p class="text-2xl font-black text-emerald-700 mt-1">{{ analyticsMetrics.renewals_cen||0 }}</p>
-            </div>
-            <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 text-center">
-              <p class="text-xs text-emerald-600 font-semibold">佐敦</p>
-              <p class="text-2xl font-black text-emerald-700 mt-1">{{ analyticsMetrics.renewals_jor||0 }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 零售分佈 -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div class="px-4 py-3.5 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-100">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2"><span class="text-lg">🛍️</span><p class="font-black text-sm text-slate-700">本月零售</p></div>
-              <span class="text-xs font-black text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">{{ analyticsRetailTx }} 筆</span>
-            </div>
-          </div>
-          <div class="p-4 space-y-3">
-            <div v-for="b in ['觀塘','中環','佐敦','未知']" :key="b" v-if="retailByBranch[b]?.count>0" class="flex items-center gap-3">
-              <span class="text-xs font-black text-slate-600 w-8 flex-shrink-0">{{ b }}</span>
-              <div class="flex-1 h-5 bg-slate-100 rounded-lg overflow-hidden">
-                <div :style="{width:Math.round((retailByBranch[b]?.count||0)/Math.max(1,analyticsRetailTx)*100)+'%'}" class="bar-fill h-full bg-emerald-400 rounded-lg"></div>
-              </div>
-              <span class="text-xs font-black text-slate-600 flex-shrink-0 w-14 text-right">{{ retailByBranch[b]?.count||0 }} 筆</span>
+              <span class="text-xs font-black text-emerald-600 flex-shrink-0 w-16 text-right">${{ (retailByBranch[b]?.amount||0).toFixed(0) }}</span>
             </div>
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-50">
               <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                <p class="text-xs text-slate-400 font-semibold">Kwan 零售</p>
+                <p class="text-xs text-slate-400 font-semibold">Kwan 零售利潤</p>
                 <p class="text-lg font-black text-emerald-600">${{ retailByPerson.Kwan.toFixed(0) }}</p>
               </div>
               <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                <p class="text-xs text-slate-400 font-semibold">Cat 零售</p>
+                <p class="text-xs text-slate-400 font-semibold">Cat 零售利潤</p>
                 <p class="text-lg font-black text-emerald-600">${{ retailByPerson.Cat.toFixed(0) }}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 馬拉松轉化 -->
+        <!-- ⑤ 馬拉松 (全自動) -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
             <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2"><span class="text-lg">🏃</span><p class="font-black text-sm">馬拉松成員</p></div>
-              <span class="text-sm font-black bg-white/20 px-3 py-1 rounded-full">{{ marathonStats.active }} 人</span>
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🏃</span>
+                <p class="font-black text-sm">馬拉松轉化</p>
+                <span class="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full font-bold">🤖 自動</span>
+              </div>
+              <span class="text-sm font-black bg-white/20 px-3 py-1 rounded-full">共 {{ marathonCount }} 人</span>
             </div>
           </div>
           <div class="p-4 grid grid-cols-2 gap-3">
-            <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-100 text-center">
-              <p class="text-xs text-emerald-600 font-semibold">總活躍成員</p>
-              <p class="text-3xl font-black text-emerald-700 mt-1">{{ marathonStats.active }}</p>
-              <p class="text-xs text-emerald-400 mt-0.5 font-semibold">佔客戶 {{ clients.length?Math.round(marathonStats.active/clients.length*100):0 }}%</p>
+            <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100 text-center">
+              <p class="text-xs text-emerald-600 font-semibold">活躍成員</p>
+              <p class="text-4xl font-black text-emerald-700 mt-1">{{ marathonCount }}</p>
+              <p class="text-xs text-emerald-400 mt-1 font-semibold">佔客戶 {{ clients.length?Math.round(marathonCount/clients.length*100):0 }}%</p>
             </div>
-            <div class="bg-teal-50 rounded-xl p-3 border border-teal-100 text-center">
+            <div class="bg-teal-50 rounded-xl p-4 border border-teal-100 text-center">
               <p class="text-xs text-teal-600 font-semibold">本月新加入</p>
-              <p class="text-3xl font-black text-teal-700 mt-1">{{ analyticsNewMarathon }}</p>
-              <p class="text-xs text-teal-400 mt-0.5 font-semibold">新客中 {{ analyticsNewClients.length?Math.round(analyticsNewMarathon/Math.max(1,analyticsNewClients.length)*100):0 }}%</p>
+              <p class="text-4xl font-black text-teal-700 mt-1">{{ analyticsNewMarathon }}</p>
+              <p class="text-xs text-teal-400 mt-1 font-semibold">新客中 {{ analyticsNewClients.length?Math.round(analyticsNewMarathon/Math.max(1,analyticsNewClients.length)*100):0 }}%</p>
             </div>
           </div>
-          <div v-if="clients.length>0" class="px-4 pb-4">
+          <div class="px-4 pb-4">
             <div class="flex justify-between text-xs font-semibold text-slate-500 mb-1.5">
               <span>整體馬拉松比例</span>
-              <span>{{ Math.round(marathonStats.active/clients.length*100) }}%</span>
+              <span>{{ clients.length?Math.round(marathonCount/clients.length*100):0 }}%</span>
             </div>
             <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
-              <div :style="{width:Math.round(marathonStats.active/clients.length*100)+'%'}" class="bar-fill h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+              <div :style="{width:(clients.length?Math.round(marathonCount/clients.length*100):0)+'%'}" class="bar-fill h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"></div>
             </div>
           </div>
         </div>
 
-        <!-- 備註 -->
         <div v-if="analyticsMetrics.notes" class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
           <p class="text-xs font-bold text-slate-400 mb-1.5">📝 備註</p>
           <p class="text-sm text-slate-600 font-semibold">{{ analyticsMetrics.notes }}</p>
         </div>
-        <button @click="openMetricsModal" class="w-full bg-purple-600 text-white py-4 rounded-2xl font-black shadow-lg active:scale-95 transition-transform">✏️ 更新本月數據（查詢 / 試堂 / 續卡）</button>
       </template>
     </section>
 
@@ -410,7 +445,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       </div>
       <div v-if="filteredClients.length===0" class="text-center py-12 text-slate-300"><p class="text-4xl mb-3">👥</p><p class="font-semibold">暫無客戶記錄</p></div>
       <div v-for="c in filteredClients" :key="c.id" @click="openClient(c)" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer active:bg-slate-50 card-press">
-        <div class="w-11 h-11 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center font-black text-white text-lg flex-shrink-0 shadow-sm">{{ c.name.charAt(0) }}</div>
+        <div class="w-11 h-11 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center font-black text-white text-lg flex-shrink-0">{{ c.name.charAt(0) }}</div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-1.5 flex-wrap">
             <p class="font-black text-sm">{{ c.name }}</p>
@@ -419,7 +454,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <span v-if="c.marathon" class="text-xs bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">🏃</span>
           </div>
           <p class="text-xs text-slate-400 font-semibold mt-0.5 truncate">{{ c.phone }}</p>
-          <p v-if="c.referred_by_id" class="text-xs text-purple-500 font-semibold mt-0.5 truncate">👤 {{ clients.find(r=>r.id===c.referred_by_id)?.name||'已刪除' }} 介紹</p>
         </div>
         <div class="text-right flex-shrink-0 flex items-center gap-2">
           <div><p class="text-xs font-bold text-slate-400">{{ c.branch }}</p><p class="text-xs font-bold text-blue-600 mt-0.5">{{ c.expiry_date }}</p></div>
@@ -430,22 +464,28 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
     <!-- ══ EXERCISE POS ══ -->
     <section v-if="currentTab==='exercise'" class="space-y-4 fade-in">
-      <div class="flex items-center justify-between"><h2 class="font-black text-xl text-blue-800">運動 POS</h2><span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">Exercise</span></div>
+      <div class="flex items-center justify-between"><h2 class="font-black text-xl text-blue-800">運動 POS</h2></div>
+
+      <!-- 服務類型 -->
       <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
         <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">服務類型</p>
         <div class="space-y-2">
-          <button v-for="p in exerciseItems" :key="p.id" @click="eForm.type=p.id;eForm.trialDate='';eForm.trialName='';eForm.trialPhone='';eForm.clientId=null" :class="eForm.type===p.id?'bg-blue-600 text-white border-blue-600':'bg-slate-50 border-slate-200 text-slate-700'" class="w-full p-4 rounded-xl border-2 font-bold flex justify-between items-center transition-all">
+          <button v-for="p in exerciseItems" :key="p.id" @click="eForm.type=p.id;eForm.trialDate='';eForm.trialName='';eForm.trialPhone='';eForm.isRenewal=false" :class="eForm.type===p.id?'bg-blue-600 text-white border-blue-600':'bg-slate-50 border-slate-200 text-slate-700'" class="w-full p-4 rounded-xl border-2 font-bold flex justify-between items-center transition-all">
             <div class="text-left"><span class="text-sm font-black block">{{ p.name }}</span><span class="text-xs opacity-70">{{ p.id==='trial'?'不計入客戶名單':'計入客戶記錄' }}</span></div>
             <span class="text-base font-black">${{ p.price }}</span>
           </button>
         </div>
       </div>
+
+      <!-- 試堂資料 -->
       <div v-if="eForm.type==='trial'" class="bg-white rounded-2xl p-4 border-2 border-indigo-200 shadow-sm space-y-3">
-        <div class="flex items-center gap-2"><span>🧪</span><p class="font-black text-sm text-indigo-700">試堂人資料</p><span class="ml-auto text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold">不計入客戶</span></div>
-        <input v-model="eForm.trialName" placeholder="試堂人名字 *" :class="eForm.trialName?'border-indigo-400 bg-indigo-50':'border-slate-200 bg-slate-50'" class="w-full border-2 p-3.5 rounded-xl font-bold text-sm focus:border-indigo-500 outline-none">
+        <div class="flex items-center gap-2"><span>🧪</span><p class="font-black text-sm text-indigo-700">試堂人資料</p></div>
+        <input v-model="eForm.trialName" placeholder="試堂人名字 *" class="w-full border-2 border-slate-200 p-3.5 rounded-xl font-bold text-sm focus:border-indigo-400 outline-none bg-slate-50">
         <input v-model="eForm.trialPhone" placeholder="試堂人電話（可選）" class="w-full border-2 border-slate-200 p-3.5 rounded-xl font-semibold text-sm focus:border-indigo-300 outline-none bg-slate-50">
-        <div class="bg-indigo-50 rounded-xl p-3 border border-indigo-100 flex gap-2"><span>ℹ️</span><p class="text-xs text-indigo-500 font-semibold">只加入試堂追蹤清單，不建立客戶檔案</p></div>
+        <input type="date" v-model="eForm.trialDate" :min="tomorrowDate" class="w-full border-2 border-indigo-200 p-3.5 rounded-xl font-bold text-sm focus:border-indigo-500 outline-none bg-indigo-50">
       </div>
+
+      <!-- 選客戶 (非試堂) -->
       <div v-if="eForm.type!=='trial'" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
         <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇客戶 <span class="text-red-400">*</span></p>
         <div class="relative z-40">
@@ -454,64 +494,68 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <span class="text-slate-400 text-xs ml-2 flex-shrink-0">{{ showExClientDropdown?'▲':'▼' }}</span>
           </div>
           <div v-if="showExClientDropdown" class="absolute top-full left-0 right-0 bg-white border-2 border-blue-200 rounded-2xl shadow-2xl mt-1.5 overflow-hidden dropdown-anim">
-            <div class="p-2.5 bg-blue-50 border-b border-blue-100 sticky top-0"><input v-model="exClientSearch" placeholder="🔍 搜尋..." class="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-semibold focus:outline-none bg-white" @click.stop autofocus></div>
+            <div class="p-2.5 bg-blue-50 border-b border-blue-100"><input v-model="exClientSearch" placeholder="🔍 搜尋..." class="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-semibold focus:outline-none bg-white" @click.stop autofocus></div>
             <div class="max-h-56 overflow-y-auto no-scrollbar">
-              <div @click="eForm.clientId=null;showExClientDropdown=false" class="px-4 py-3 active:bg-slate-50 cursor-pointer text-slate-400 text-sm border-b border-slate-50">-- 不選擇 --</div>
-              <div v-for="c in exFilteredClients" :key="c.id" @click="eForm.clientId=c.id;showExClientDropdown=false;exClientSearch=''" :class="eForm.clientId===c.id?'bg-blue-50 border-l-4 border-blue-500':''" class="px-4 py-3 active:bg-blue-50 cursor-pointer border-b border-slate-50">
+              <div @click="eForm.clientId=null;showExClientDropdown=false" class="px-4 py-3 text-slate-400 text-sm border-b border-slate-50 cursor-pointer active:bg-slate-50">-- 不選擇 --</div>
+              <div v-for="c in exFilteredClients" :key="c.id" @click="eForm.clientId=c.id;showExClientDropdown=false" :class="eForm.clientId===c.id?'bg-blue-50 border-l-4 border-blue-500':''" class="px-4 py-3 cursor-pointer border-b border-slate-50 active:bg-blue-50">
                 <p class="font-black text-sm">{{ c.name }}</p><p class="text-xs text-slate-400 mt-0.5">{{ c.phone }} · {{ c.branch }}</p>
               </div>
-              <div v-if="exFilteredClients.length===0" class="px-4 py-8 text-center text-slate-300 text-sm">找不到客戶</div>
             </div>
           </div>
         </div>
       </div>
-      <div v-if="eForm.type==='trial'" class="bg-white rounded-2xl p-4 border-2 border-indigo-200 shadow-sm space-y-3">
-        <div class="flex items-center gap-2"><span>📅</span><p class="font-black text-sm text-indigo-700">試堂日期排期</p></div>
-        <input type="date" v-model="eForm.trialDate" :min="tomorrowDate" class="w-full border-2 border-indigo-200 p-3.5 rounded-xl font-bold text-sm focus:border-indigo-500 outline-none bg-indigo-50 text-indigo-800">
-        <div v-if="eForm.trialDate" class="bg-indigo-50 rounded-xl p-3 border border-indigo-100 flex gap-2.5">
-          <span>📧</span>
-          <div><p class="font-black text-sm text-indigo-700">Email 提醒</p><p class="text-xs text-indigo-500 mt-0.5">將於 <strong>{{ reminderDate }}</strong> 早上 9 點提醒</p></div>
-        </div>
-      </div>
-      <div v-if="eForm.type!=='trial'" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">優惠選項</p>
+
+      <!-- 選項 (非試堂) -->
+      <div v-if="eForm.type!=='trial'" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-3">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">交易屬性</p>
+        <!-- ✦ 續卡 toggle - 最重要放最上 -->
+        <label :class="eForm.isRenewal?'bg-teal-50 border-teal-400':'bg-slate-50 border-slate-200'" class="flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all">
+          <div class="flex items-center gap-3">
+            <span class="text-xl">🔄</span>
+            <div>
+              <p class="font-black text-sm" :class="eForm.isRenewal?'text-teal-700':'text-slate-700'">這是續卡</p>
+              <p class="text-xs text-slate-400 mt-0.5">勾選後自動計入續卡統計</p>
+            </div>
+          </div>
+          <div :class="eForm.isRenewal?'bg-teal-500':'bg-slate-200'" class="w-12 h-6 rounded-full transition-colors flex items-center px-1">
+            <div :class="eForm.isRenewal?'translate-x-6':'translate-x-0'" class="w-5 h-5 bg-white rounded-full shadow transition-transform"></div>
+          </div>
+          <input type="checkbox" v-model="eForm.isRenewal" class="hidden">
+        </label>
         <div class="grid grid-cols-2 gap-2">
-          <label :class="eForm.isNew?'bg-amber-50 border-amber-300':'bg-slate-50 border-slate-200'" class="flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer">
+          <label :class="eForm.isNew?'bg-amber-50 border-amber-300':'bg-slate-50 border-slate-200'" class="flex items-center gap-2 p-3.5 rounded-xl border-2 cursor-pointer">
             <input type="checkbox" v-model="eForm.isNew" class="w-4 h-4 accent-amber-500"><div><p class="text-xs font-black">新客優惠</p><p class="text-xs text-slate-400">-$98</p></div>
           </label>
-          <label :class="eForm.isReferral?'bg-purple-50 border-purple-300':'bg-slate-50 border-slate-200'" class="flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer">
+          <label :class="eForm.isReferral?'bg-purple-50 border-purple-300':'bg-slate-50 border-slate-200'" class="flex items-center gap-2 p-3.5 rounded-xl border-2 cursor-pointer">
             <input type="checkbox" v-model="eForm.isReferral" class="w-4 h-4 accent-purple-500"><div><p class="text-xs font-black">轉介紹</p><p class="text-xs text-slate-400">免費</p></div>
           </label>
         </div>
       </div>
+
       <div class="grid grid-cols-2 gap-3">
         <button @click="saveExercise('Kwan')" class="bg-slate-900 text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95">💰 Kwan 收款</button>
         <button @click="saveExercise('Cat')" class="bg-blue-600 text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95">💰 Cat 收款</button>
       </div>
     </section>
 
-    <!-- ══ RETAIL POS + 庫存 ══ -->
+    <!-- ══ RETAIL ══ -->
     <section v-if="currentTab==='retail'" class="space-y-4 fade-in">
       <div class="flex gap-1.5 p-1.5 bg-slate-200/60 rounded-2xl">
         <button @click="retailSubTab='pos'" :class="retailSubTab==='pos'?'bg-white shadow-md text-emerald-700':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">🛒 POS 結帳</button>
-        <button @click="retailSubTab='stock'" :class="retailSubTab==='stock'?'bg-white shadow-md text-blue-700':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📦 庫存<span v-if="lowStockItems.length>0" class="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{{ lowStockItems.length }}</span></button>
+        <button @click="retailSubTab='stock'" :class="retailSubTab==='stock'?'bg-white shadow-md text-blue-700':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📦 庫存 <span v-if="lowStockItems.length>0" class="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">{{ lowStockItems.length }}</span></button>
       </div>
 
       <!-- POS -->
       <template v-if="retailSubTab==='pos'">
-        <!-- ✦ 價格模式 (含銅級) -->
         <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
           <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2.5">價格模式</p>
           <div class="grid grid-cols-2 gap-2">
-            <button v-for="opt in priceOptions" :key="opt.value" @click="rForm.discount=opt.value"
-              :class="[rForm.discount===opt.value?opt.activeClass:'bg-slate-50 border-slate-200 text-slate-600','border-2 py-3 px-3 rounded-xl font-bold text-xs transition-all active:scale-95 text-left']">
+            <button v-for="opt in priceOptions" :key="opt.value" @click="rForm.discount=opt.value" :class="[rForm.discount===opt.value?opt.activeClass:'bg-slate-50 border-slate-200 text-slate-600','border-2 py-3 px-3 rounded-xl font-bold text-xs transition-all active:scale-95 text-left']">
               <span class="font-black text-sm block">{{ opt.label }}</span>
               <span class="opacity-70 text-xs">{{ opt.desc }}</span>
             </button>
           </div>
         </div>
-
-        <!-- 搜尋客戶 -->
         <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
           <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇購買客戶</p>
           <div class="relative z-40">
@@ -522,21 +566,18 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <div v-if="showRtClientDropdown" class="absolute top-full left-0 right-0 bg-white border-2 border-emerald-200 rounded-2xl shadow-2xl mt-1.5 overflow-hidden dropdown-anim">
               <div class="p-2.5 bg-emerald-50 border-b border-emerald-100"><input v-model="rtClientSearch" placeholder="🔍 搜尋..." class="w-full px-3 py-2.5 border border-emerald-200 rounded-xl text-sm font-semibold focus:outline-none bg-white" @click.stop autofocus></div>
               <div class="max-h-56 overflow-y-auto no-scrollbar">
-                <div @click="rForm.clientId=null;showRtClientDropdown=false" class="px-4 py-3 active:bg-slate-50 cursor-pointer text-slate-400 text-sm border-b border-slate-50">-- 不選擇 --</div>
-                <div v-for="c in rtFilteredClients" :key="c.id" @click="rForm.clientId=c.id;showRtClientDropdown=false;rtClientSearch=''" :class="rForm.clientId===c.id?'bg-emerald-50 border-l-4 border-emerald-500':''" class="px-4 py-3 active:bg-emerald-50 cursor-pointer border-b border-slate-50">
+                <div @click="rForm.clientId=null;showRtClientDropdown=false" class="px-4 py-3 text-slate-400 text-sm border-b border-slate-50 cursor-pointer">-- 不選擇 --</div>
+                <div v-for="c in rtFilteredClients" :key="c.id" @click="rForm.clientId=c.id;showRtClientDropdown=false" :class="rForm.clientId===c.id?'bg-emerald-50 border-l-4 border-emerald-500':''" class="px-4 py-3 cursor-pointer border-b border-slate-50 active:bg-emerald-50">
                   <p class="font-black text-sm">{{ c.name }}</p><p class="text-xs text-slate-400 mt-0.5">{{ c.phone }} · {{ c.branch }}</p>
                 </div>
-                <div v-if="rtFilteredClients.length===0" class="px-4 py-8 text-center text-slate-300 text-sm">找不到客戶</div>
               </div>
             </div>
           </div>
         </div>
-
         <div class="relative">
           <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
           <input v-model="pSearch" placeholder="搜尋產品..." class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400">
         </div>
-
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden max-h-72 overflow-y-auto no-scrollbar">
           <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex justify-between items-center sticky top-0">
             <span class="text-xs text-slate-400 font-bold">產品</span>
@@ -544,28 +585,18 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
           <div v-if="filteredProducts.length===0" class="p-6 text-center text-slate-300 text-sm">找不到產品</div>
           <div v-for="(p,i) in filteredProducts" :key="p.name" :class="i<filteredProducts.length-1?'border-b border-slate-50':''" class="flex items-center gap-2 pr-3">
-            <div @click="addToCart(p)" class="flex-1 px-4 py-3.5 flex items-center gap-2 cursor-pointer active:bg-emerald-50 transition-colors min-w-0">
+            <div @click="addToCart(p)" class="flex-1 px-4 py-3.5 flex items-center gap-2 cursor-pointer active:bg-emerald-50 min-w-0">
               <span class="font-semibold text-sm flex-1 truncate">{{ p.name }}</span>
               <span :class="getStock(p.name)===0?'bg-red-100 text-red-600 border-red-200':getStock(p.name)<=3?'bg-amber-100 text-amber-700 border-amber-200':'bg-slate-100 text-slate-500 border-slate-200'" class="text-xs font-black px-2 py-0.5 rounded-lg border font-mono flex-shrink-0">{{ getStock(p.name)===0?'缺貨':'庫'+getStock(p.name) }}</span>
-              <span :class="rForm.discount==='bronze'?'text-amber-600 font-black':isLossSale(p)?'text-red-500':'text-emerald-600'" class="font-black text-sm flex-shrink-0">
-                ${{ getSellPrice(p).toFixed(0) }}
-                <span v-if="rForm.discount==='bronze'&&getBronzePrice(p.name)" class="text-xs text-amber-400">銅</span>
-              </span>
+              <span :class="rForm.discount==='bronze'?'text-amber-600 font-black':isLossSale(p)?'text-red-500':'text-emerald-600'" class="font-black text-sm flex-shrink-0">${{ getSellPrice(p).toFixed(0) }}</span>
             </div>
             <button @click.stop="openRestock({name:p.name,cost:p.cost,retail:p.retail})" class="flex-shrink-0 bg-amber-100 text-amber-700 text-xs font-black px-2.5 py-1.5 rounded-lg active:scale-90 border border-amber-200">入貨</button>
           </div>
         </div>
-
         <div v-if="cart.length>0" class="bg-slate-900 rounded-2xl p-5 text-white">
           <div class="flex items-center justify-between mb-4">
-            <div>
-              <p class="text-xs font-bold text-slate-400 uppercase">購物車</p>
-              <p class="text-xs text-slate-500 mt-0.5">{{ cartItemCount }} 件 · {{ cart.length }} 款</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <span v-if="rForm.discount==='bronze'" class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-lg font-bold">銅級價</span>
-              <button @click="cart=[]" class="text-xs text-slate-600 font-semibold hover:text-red-400 px-2 py-1">清空</button>
-            </div>
+            <div><p class="text-xs font-bold text-slate-400 uppercase">購物車</p><p class="text-xs text-slate-500 mt-0.5">{{ cartItemCount }} 件 · {{ cart.length }} 款</p></div>
+            <button @click="cart=[]" class="text-xs text-slate-600 font-semibold hover:text-red-400">清空</button>
           </div>
           <div v-for="(item,i) in cart" :key="item.name" class="py-3 border-b border-slate-800 last:border-0">
             <div class="flex items-center gap-2">
@@ -593,11 +624,11 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <div v-else class="text-center py-8 text-slate-300"><p class="text-4xl mb-2">🛒</p><p class="text-sm font-semibold">點擊產品加入購物車</p></div>
       </template>
 
-      <!-- 庫存總覽 -->
+      <!-- Stock tab -->
       <template v-if="retailSubTab==='stock'">
         <div class="grid grid-cols-2 gap-2.5">
           <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-            <p class="text-xs text-slate-400 font-semibold uppercase">總庫存件數</p>
+            <p class="text-xs text-slate-400 font-semibold uppercase">總庫存</p>
             <p class="text-3xl font-black text-blue-700 mt-1">{{ totalStockQty }}</p>
             <p class="text-xs text-slate-300 mt-0.5">件 · {{ products.length }} 款</p>
           </div>
@@ -616,10 +647,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           <button @click="triggerImport" class="flex-shrink-0 bg-blue-700 text-white rounded-xl px-3.5 py-2.5 font-black text-xs min-w-max active:scale-95">📤 匯入</button>
           <input id="stockImportInput" type="file" accept=".csv,.txt" @change="importStockCSV" class="hidden">
         </div>
-        <div class="bg-blue-50 border border-blue-200 rounded-2xl px-4 py-3 flex items-start gap-2">
-          <span>📋</span>
-          <div><p class="text-xs font-black text-blue-700">CSV 格式</p><p class="text-xs text-blue-500 mt-0.5">每行：<span class="font-mono bg-white px-1 rounded">產品名稱,數量</span></p></div>
-        </div>
         <div class="relative">
           <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
           <input v-model="stockSearch" placeholder="搜尋產品..." class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-blue-400">
@@ -632,7 +659,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <span>{{ cat.emoji }}</span>
             <h3 class="font-black text-sm text-slate-700">{{ cat.name }}</h3>
             <span class="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full font-bold">{{ cat.items.length }} 款</span>
-            <span class="text-xs text-blue-500 font-bold ml-auto">{{ cat.items.reduce((s,p)=>s+getStock(p.prod_name),0) }} 件</span>
           </div>
           <div v-for="p in cat.items" :key="p.prod_name" class="bg-white rounded-2xl border shadow-sm overflow-hidden" :class="stockInfo(p.prod_name).cardBorder">
             <div class="px-4 pt-4 pb-2 flex justify-between items-start">
@@ -674,7 +700,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <button @click="financeSubTab='history'" :class="financeSubTab==='history'?'bg-white shadow-md text-slate-800':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📋 全部記錄</button>
       </div>
       <template v-if="financeSubTab==='add'">
-        <h2 class="font-black text-lg text-slate-800 px-1">快速記帳</h2>
         <div class="grid grid-cols-2 gap-3">
           <button v-for="c in expCats" :key="c" @click="openExp(c)" :class="c.includes('收入')?'border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 text-emerald-700':'border-slate-200 bg-white text-slate-700'" class="p-4 border-2 rounded-2xl font-bold text-left shadow-sm active:scale-95 card-press">
             <span class="text-2xl block mb-2">{{ c.includes('廣告')?'📢':c.includes('租金')?'🏢':c.includes('採購')?'📦':c.includes('馬拉松')?'🏃':c.includes('收入')?'💚':'📌' }}</span>
@@ -684,13 +709,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       </template>
       <template v-if="financeSubTab==='history'">
         <div class="flex items-center gap-2">
-          <div class="relative flex-1">
-            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
-            <input v-model="txSearch" placeholder="搜尋..." class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl font-semibold text-sm shadow-sm focus:outline-none focus:border-blue-400">
-          </div>
-          <select v-model="txTypeFilter" class="bg-white border border-slate-200 px-3 py-3 rounded-2xl font-bold text-xs focus:outline-none shadow-sm">
-            <option value="all">全部</option><option value="income">收入</option><option value="expense">支出</option>
-          </select>
+          <div class="relative flex-1"><span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span><input v-model="txSearch" placeholder="搜尋..." class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl font-semibold text-sm shadow-sm focus:outline-none"></div>
+          <select v-model="txTypeFilter" class="bg-white border border-slate-200 px-3 py-3 rounded-2xl font-bold text-xs focus:outline-none shadow-sm"><option value="all">全部</option><option value="income">收入</option><option value="expense">支出</option></select>
         </div>
         <div v-if="groupedTransactions.length===0" class="text-center py-10 text-slate-300"><p class="text-4xl mb-2">📋</p><p class="font-semibold">暫無記錄</p></div>
         <div v-for="group in groupedTransactions" :key="group.date" class="space-y-1.5">
@@ -702,7 +722,11 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <div v-for="(t,i) in group.items" :key="t.id" :class="i<group.items.length-1?'border-b border-slate-50':''" class="flex items-center gap-2 px-4 py-3">
               <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm" :class="t.type==='income'?'bg-emerald-100':'bg-red-100'">{{ t.type==='income'?'↑':'↓' }}</div>
               <div class="flex-1 min-w-0">
-                <p class="font-bold text-sm">{{ t.category }} <span class="text-xs font-normal text-slate-400">{{ t.person }}</span></p>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <p class="font-bold text-sm">{{ t.category }}</p>
+                  <span v-if="t.is_renewal" class="text-xs bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded-full font-bold">續卡</span>
+                  <span class="text-xs text-slate-400 font-normal">{{ t.person }}</span>
+                </div>
                 <p class="text-xs text-slate-300 truncate mt-0.5">{{ t.note||'無備註' }}</p>
               </div>
               <span :class="t.type==='income'?'text-emerald-600':'text-red-500'" class="font-black text-sm flex-shrink-0">{{ t.type==='income'?'+':'-' }}${{ Number(t.amount).toFixed(2) }}</span>
@@ -725,61 +749,78 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </nav>
 </div>
 
-<!-- ═══ MODAL: Monthly Metrics ═══ -->
+<!-- ═══ MODAL: 手動月度數據 ═══ -->
+<!-- ✦ Redesigned: only 2 manual inputs, no overflow -->
 <div v-if="showMetricsModal" class="modal-overlay" @click.self="showMetricsModal=false">
-  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-screen overflow-y-auto no-scrollbar">
-    <div class="flex justify-between items-center">
-      <div><h3 class="font-black text-lg">📈 更新月度數據</h3><p class="text-xs text-slate-400 font-semibold mt-0.5">{{ analyticsMonthLabel }}</p></div>
-      <button @click="showMetricsModal=false" class="text-slate-300 font-black text-2xl">×</button>
-    </div>
-    <div class="bg-orange-50 border-2 border-orange-100 rounded-2xl p-4">
-      <p class="font-black text-sm text-orange-700 mb-3">📢 廣告數據</p>
-      <div class="grid grid-cols-2 gap-3">
+  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl overflow-hidden">
+    <!-- Header -->
+    <div class="px-6 pt-6 pb-4 border-b border-slate-100">
+      <div class="flex justify-between items-start">
         <div>
-          <p class="text-xs font-bold text-slate-500 mb-1.5">查詢數</p>
-          <div class="flex items-center gap-2">
-            <button @click="metricsForm.inquiries=Math.max(0,(metricsForm.inquiries||0)-1)" class="w-9 h-9 bg-slate-100 rounded-xl font-black flex items-center justify-center active:scale-90">−</button>
-            <input type="number" v-model.number="metricsForm.inquiries" min="0" class="flex-1 border-2 border-orange-200 py-2 rounded-xl font-black text-xl text-center focus:border-orange-400 outline-none bg-orange-50">
-            <button @click="metricsForm.inquiries=(metricsForm.inquiries||0)+1" class="w-9 h-9 bg-slate-100 rounded-xl font-black flex items-center justify-center active:scale-90">+</button>
-          </div>
+          <h3 class="font-black text-lg text-slate-800">✏️ 手動月度數據</h3>
+          <p class="text-xs text-slate-400 font-semibold mt-1">{{ analyticsMonthLabel }} · 每月輸入 1-2 次</p>
         </div>
-        <div>
-          <p class="text-xs font-bold text-slate-500 mb-1.5">廣告試堂數</p>
-          <div class="flex items-center gap-2">
-            <button @click="metricsForm.ad_trials=Math.max(0,(metricsForm.ad_trials||0)-1)" class="w-9 h-9 bg-slate-100 rounded-xl font-black flex items-center justify-center active:scale-90">−</button>
-            <input type="number" v-model.number="metricsForm.ad_trials" min="0" class="flex-1 border-2 border-indigo-200 py-2 rounded-xl font-black text-xl text-center focus:border-indigo-400 outline-none bg-indigo-50">
-            <button @click="metricsForm.ad_trials=(metricsForm.ad_trials||0)+1" class="w-9 h-9 bg-slate-100 rounded-xl font-black flex items-center justify-center active:scale-90">+</button>
-          </div>
-        </div>
+        <button @click="showMetricsModal=false" class="text-slate-300 font-black text-2xl mt-1 flex-shrink-0">×</button>
+      </div>
+      <!-- 說明 -->
+      <div class="mt-3 bg-blue-50 rounded-xl px-3.5 py-2.5 flex items-start gap-2">
+        <span class="text-sm">💡</span>
+        <p class="text-xs text-blue-600 font-semibold">廣告支出請在「財務→記帳」輸入，系統會自動統計。<br>其餘（新客/續卡/零售/馬拉松）全部自動計算。</p>
       </div>
     </div>
-    <div class="bg-emerald-50 border-2 border-emerald-100 rounded-2xl p-4">
-      <p class="font-black text-sm text-emerald-700 mb-3">🔄 本月續卡人數</p>
-      <div class="grid grid-cols-3 gap-2">
-        <div v-for="(b,key) in {觀塘:'renewals_kwt',中環:'renewals_cen',佐敦:'renewals_jor'}" :key="key">
-          <p class="text-xs font-bold text-slate-500 mb-1.5 text-center">{{ key }}</p>
-          <div class="space-y-1.5">
-            <button @click="metricsForm[b]=Math.max(0,(metricsForm[b]||0)+1)" class="w-full py-2 bg-emerald-100 text-emerald-700 rounded-xl font-black text-lg active:scale-90">+</button>
-            <div class="bg-white border-2 border-emerald-200 rounded-xl py-2 font-black text-2xl text-center text-emerald-700">{{ metricsForm[b]||0 }}</div>
-            <button @click="metricsForm[b]=Math.max(0,(metricsForm[b]||0)-1)" class="w-full py-2 bg-slate-100 text-slate-500 rounded-xl font-black text-lg active:scale-90">−</button>
+    <!-- Body -->
+    <div class="px-6 py-5 space-y-4">
+      <!-- 查詢數 -->
+      <div>
+        <div class="flex items-center justify-between mb-2.5">
+          <div>
+            <p class="font-black text-sm text-slate-700">📞 查詢數</p>
+            <p class="text-xs text-slate-400 font-semibold mt-0.5">本月收到的潛在客戶查詢</p>
           </div>
+          <span class="tag-manual">✏️ 手動</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button @click="metricsForm.inquiries=Math.max(0,(metricsForm.inquiries||0)-5)" class="w-12 h-12 bg-slate-100 rounded-2xl font-black text-lg flex items-center justify-center active:scale-90 select-none text-slate-500">-5</button>
+          <button @click="metricsForm.inquiries=Math.max(0,(metricsForm.inquiries||0)-1)" class="w-12 h-12 bg-slate-100 rounded-2xl font-black text-xl flex items-center justify-center active:scale-90 select-none">−</button>
+          <input type="number" v-model.number="metricsForm.inquiries" min="0" class="flex-1 border-2 border-blue-200 py-3.5 rounded-2xl font-black text-3xl text-center focus:border-blue-500 outline-none bg-blue-50 text-blue-700">
+          <button @click="metricsForm.inquiries=(metricsForm.inquiries||0)+1" class="w-12 h-12 bg-slate-100 rounded-2xl font-black text-xl flex items-center justify-center active:scale-90 select-none">+</button>
+          <button @click="metricsForm.inquiries=(metricsForm.inquiries||0)+5" class="w-12 h-12 bg-slate-100 rounded-2xl font-black text-lg flex items-center justify-center active:scale-90 select-none text-slate-500">+5</button>
         </div>
       </div>
+      <!-- 廣告試堂 -->
+      <div>
+        <div class="flex items-center justify-between mb-2.5">
+          <div>
+            <p class="font-black text-sm text-slate-700">🧪 廣告帶來試堂數</p>
+            <p class="text-xs text-slate-400 font-semibold mt-0.5">專指因廣告而來的試堂（非轉介紹）</p>
+          </div>
+          <span class="tag-manual">✏️ 手動</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button @click="metricsForm.ad_trials=Math.max(0,(metricsForm.ad_trials||0)-5)" class="w-12 h-12 bg-slate-100 rounded-2xl font-black text-lg flex items-center justify-center active:scale-90 select-none text-slate-500">-5</button>
+          <button @click="metricsForm.ad_trials=Math.max(0,(metricsForm.ad_trials||0)-1)" class="w-12 h-12 bg-slate-100 rounded-2xl font-black text-xl flex items-center justify-center active:scale-90 select-none">−</button>
+          <input type="number" v-model.number="metricsForm.ad_trials" min="0" class="flex-1 border-2 border-indigo-200 py-3.5 rounded-2xl font-black text-3xl text-center focus:border-indigo-500 outline-none bg-indigo-50 text-indigo-700">
+          <button @click="metricsForm.ad_trials=(metricsForm.ad_trials||0)+1" class="w-12 h-12 bg-slate-100 rounded-2xl font-black text-xl flex items-center justify-center active:scale-90 select-none">+</button>
+          <button @click="metricsForm.ad_trials=(metricsForm.ad_trials||0)+5" class="w-12 h-12 bg-slate-100 rounded-2xl font-black text-lg flex items-center justify-center active:scale-90 select-none text-slate-500">+5</button>
+        </div>
+      </div>
+      <!-- 備註 -->
+      <div>
+        <p class="text-xs font-bold text-slate-400 mb-2">📝 備註（可選）</p>
+        <textarea v-model="metricsForm.notes" placeholder="例如：4月有節慶活動加推..." rows="2" class="w-full border-2 border-slate-200 p-3.5 rounded-2xl font-semibold resize-none focus:outline-none focus:border-blue-400 bg-slate-50 text-sm"></textarea>
+      </div>
     </div>
-    <div>
-      <p class="text-xs font-bold text-slate-400 mb-2">備註（可選）</p>
-      <textarea v-model="metricsForm.notes" placeholder="例如：節慶活動加推..." class="w-full border-2 border-slate-200 p-3 rounded-2xl font-semibold h-16 resize-none focus:outline-none focus:border-blue-400 bg-slate-50 text-sm"></textarea>
-    </div>
-    <div class="grid grid-cols-2 gap-3">
-      <button @click="showMetricsModal=false" class="py-4 bg-slate-100 rounded-2xl font-black active:scale-95">取消</button>
-      <button @click="saveMonthlyMetrics" class="py-4 bg-purple-600 text-white rounded-2xl font-black shadow-lg active:scale-95">✅ 儲存數據</button>
+    <!-- Footer -->
+    <div class="px-6 pb-8 grid grid-cols-2 gap-3">
+      <button @click="showMetricsModal=false" class="py-4 bg-slate-100 rounded-2xl font-black active:scale-95 text-slate-700">取消</button>
+      <button @click="saveMonthlyMetrics" class="py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg active:scale-95">✅ 儲存</button>
     </div>
   </div>
 </div>
 
 <!-- ═══ MODAL: Client ═══ -->
 <div v-if="showClientModal" class="modal-overlay" @click.self="showClientModal=false;showReferralDropdown=false">
-  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-screen overflow-y-auto no-scrollbar">
+  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar">
     <div class="flex justify-between items-center">
       <h2 class="text-lg font-black">{{ clientForm.id?'✏️ 修改客戶':'➕ 新增客戶' }}</h2>
       <button @click="showClientModal=false;showReferralDropdown=false" class="text-slate-300 font-black text-2xl">×</button>
@@ -787,12 +828,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     <input v-model="clientForm.name" placeholder="客戶姓名 *" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50">
     <input v-model="clientForm.phone" placeholder="電話號碼" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50">
     <div class="grid grid-cols-2 gap-3">
-      <select v-model="clientForm.branch" class="border-2 border-slate-200 p-3 rounded-xl font-bold focus:outline-none focus:border-blue-400 bg-slate-50">
-        <option>觀塘</option><option>中環</option><option>佐敦</option>
-      </select>
-      <select v-model="clientForm.source" class="border-2 border-slate-200 p-3 rounded-xl font-bold focus:outline-none focus:border-blue-400 bg-slate-50">
-        <option>廣告</option><option>轉介紹</option>
-      </select>
+      <select v-model="clientForm.branch" class="border-2 border-slate-200 p-3 rounded-xl font-bold focus:outline-none bg-slate-50"><option>觀塘</option><option>中環</option><option>佐敦</option></select>
+      <select v-model="clientForm.source" class="border-2 border-slate-200 p-3 rounded-xl font-bold focus:outline-none bg-slate-50"><option>廣告</option><option>轉介紹</option></select>
     </div>
     <div>
       <p class="text-xs font-bold text-slate-400 mb-1.5 pl-1">介紹人（可選）</p>
@@ -804,18 +841,12 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <div v-if="showReferralDropdown" class="absolute top-full left-0 right-0 bg-white border-2 border-purple-200 rounded-2xl shadow-2xl mt-1.5 overflow-hidden dropdown-anim">
           <div class="p-2.5 bg-purple-50 border-b border-purple-100"><input v-model="referralSearch" placeholder="🔍 搜尋介紹人..." class="w-full px-3 py-2.5 border border-purple-200 rounded-xl text-sm font-semibold focus:outline-none bg-white" @click.stop autofocus></div>
           <div class="max-h-44 overflow-y-auto no-scrollbar">
-            <div @click="clientForm.referred_by_id=null;showReferralDropdown=false" class="px-4 py-3 active:bg-slate-50 cursor-pointer text-slate-400 text-sm border-b border-slate-50">-- 直接（無介紹人）--</div>
-            <div v-for="c in referralFilteredClients" :key="c.id" @click="clientForm.referred_by_id=c.id;showReferralDropdown=false;referralSearch=''" :class="clientForm.referred_by_id===c.id?'bg-purple-50 border-l-4 border-purple-500':''" class="px-4 py-3 active:bg-purple-50 cursor-pointer border-b border-slate-50">
-              <div class="flex items-center gap-2"><p class="font-black text-sm">{{ c.name }}</p><span class="text-xs px-1.5 py-0.5 rounded-full font-bold" :class="genLabel(c.id).cls">{{ genLabel(c.id).label }}</span></div>
-              <p class="text-xs text-slate-400 mt-0.5">{{ c.branch }} · {{ c.phone }}</p>
+            <div @click="clientForm.referred_by_id=null;showReferralDropdown=false" class="px-4 py-3 text-slate-400 text-sm border-b border-slate-50 cursor-pointer">-- 直接（無介紹人）--</div>
+            <div v-for="c in referralFilteredClients" :key="c.id" @click="clientForm.referred_by_id=c.id;showReferralDropdown=false" :class="clientForm.referred_by_id===c.id?'bg-purple-50 border-l-4 border-purple-500':''" class="px-4 py-3 cursor-pointer border-b border-slate-50 active:bg-purple-50">
+              <p class="font-black text-sm">{{ c.name }}</p><p class="text-xs text-slate-400 mt-0.5">{{ c.branch }} · {{ c.phone }}</p>
             </div>
-            <div v-if="referralFilteredClients.length===0" class="px-4 py-6 text-center text-slate-300 text-sm">找不到客戶</div>
           </div>
         </div>
-      </div>
-      <div v-if="clientForm.referred_by_id" class="mt-2 flex items-center gap-2 px-1">
-        <span class="text-xs text-purple-600 font-semibold">此客戶將被記為</span>
-        <span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-black">{{ getClientGeneration(clientForm.referred_by_id)+1 }}代轉介紹</span>
       </div>
     </div>
     <label :class="clientForm.marathon?'bg-emerald-50 border-emerald-300':'bg-slate-50 border-slate-200'" class="flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer">
@@ -840,11 +871,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <h3 class="font-black text-lg" :class="expForm.category.includes('收入')?'text-emerald-600':'text-slate-800'">{{ expForm.category }}</h3>
       <button @click="showExpModal=false" class="text-slate-300 font-black text-2xl">×</button>
     </div>
-    <div class="relative">
-      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">HK$</span>
-      <input type="number" v-model="expForm.amount" placeholder="0" class="w-full border-2 border-slate-200 pl-14 pr-4 py-4 rounded-2xl font-black text-2xl focus:border-blue-400 outline-none bg-slate-50">
-    </div>
-    <textarea v-model="expForm.note" placeholder="備註（可選）..." class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold h-20 resize-none focus:outline-none focus:border-blue-400 bg-slate-50"></textarea>
+    <div class="relative"><span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">HK$</span><input type="number" v-model="expForm.amount" placeholder="0" class="w-full border-2 border-slate-200 pl-14 pr-4 py-4 rounded-2xl font-black text-2xl focus:border-blue-400 outline-none bg-slate-50"></div>
+    <textarea v-model="expForm.note" placeholder="備註（可選）..." class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold h-20 resize-none focus:outline-none bg-slate-50"></textarea>
     <div class="grid grid-cols-2 gap-3">
       <button @click="saveExp('Kwan')" class="bg-slate-900 text-white py-4 rounded-2xl font-black active:scale-95">Kwan</button>
       <button @click="saveExp('Cat')" :class="expForm.category.includes('收入')?'bg-emerald-500':'bg-red-500'" class="text-white py-4 rounded-2xl font-black active:scale-95">Cat</button>
@@ -854,17 +882,15 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
 <!-- ═══ MODAL: Restock ═══ -->
 <div v-if="showRestockModal" class="modal-overlay" @click.self="showRestockModal=false">
-  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-screen overflow-y-auto no-scrollbar">
+  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar">
     <div class="flex justify-between items-center"><h3 class="font-black text-lg text-amber-700">📦 入貨記錄</h3><button @click="showRestockModal=false" class="text-slate-300 font-black text-2xl">×</button></div>
     <div class="flex gap-1.5 p-1.5 bg-slate-100 rounded-2xl">
       <button @click="restockForm.isInitial=false" :class="!restockForm.isInitial?'bg-amber-500 text-white shadow-md':'text-slate-500'" class="flex-1 py-3 rounded-xl font-black text-xs active:scale-95">📦 入貨<br><span class="font-semibold opacity-80">記錄支出</span></button>
       <button @click="restockForm.isInitial=true" :class="restockForm.isInitial?'bg-blue-600 text-white shadow-md':'text-slate-500'" class="flex-1 py-3 rounded-xl font-black text-xs active:scale-95">📋 盤點<br><span class="font-semibold opacity-80">不記帳</span></button>
     </div>
-    <div class="rounded-2xl p-4 border-2 bg-amber-50 border-amber-100">
-      <div class="flex justify-between items-start">
-        <div><p class="font-black text-base text-amber-800">{{ restockForm.product?.name }}</p><p class="text-xs mt-1 font-semibold text-amber-500">廠本 ${{ restockForm.product?.cost?.toFixed(2) }}</p></div>
-        <div class="text-right"><p class="text-xs font-bold text-amber-600">現有庫存</p><p class="text-3xl font-black text-amber-700">{{ getStock(restockForm.product?.name||'') }}</p></div>
-      </div>
+    <div class="rounded-2xl p-4 border-2 bg-amber-50 border-amber-100 flex justify-between items-center">
+      <div><p class="font-black text-base text-amber-800">{{ restockForm.product?.name }}</p><p class="text-xs mt-1 font-semibold text-amber-500">廠本 ${{ restockForm.product?.cost?.toFixed(2) }}</p></div>
+      <div class="text-right"><p class="text-xs font-bold text-amber-600">現有庫存</p><p class="text-3xl font-black text-amber-700">{{ getStock(restockForm.product?.name||'') }}</p></div>
     </div>
     <div>
       <p class="text-xs font-bold text-slate-400 uppercase mb-2">{{ restockForm.isInitial?'現有數量':'入貨數量' }}</p>
@@ -890,7 +916,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
 <!-- ═══ MODAL: 編輯交易 ═══ -->
 <div v-if="showEditTxModal" class="modal-overlay" @click.self="showEditTxModal=false">
-  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-screen overflow-y-auto no-scrollbar">
+  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto no-scrollbar">
     <div class="flex justify-between items-center"><h3 class="font-black text-lg">✏️ 修改記錄</h3><button @click="showEditTxModal=false" class="text-slate-300 font-black text-2xl">×</button></div>
     <div class="flex gap-1.5 p-1.5 bg-slate-100 rounded-2xl">
       <button @click="editTxForm.type='income'" :class="editTxForm.type==='income'?'bg-emerald-500 text-white shadow':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-sm">↑ 收入</button>
@@ -918,7 +944,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4">
     <div class="flex justify-between items-center"><h3 class="font-black text-lg text-blue-700">🔧 庫存修正</h3><button @click="showStockCorrectionModal=false" class="text-slate-300 font-black text-2xl">×</button></div>
     <div class="bg-blue-50 border-2 border-blue-100 rounded-2xl p-4 flex justify-between items-center">
-      <div><p class="font-black text-base text-blue-800">{{ stockCorrectionForm.productName }}</p><p class="text-xs text-blue-400 mt-0.5">系統記錄</p></div>
+      <div><p class="font-black text-base text-blue-800">{{ stockCorrectionForm.productName }}</p></div>
       <div class="text-right"><p class="text-4xl font-black text-blue-700">{{ stockCorrectionForm.currentStock }}</p><p class="text-xs text-blue-400">件</p></div>
     </div>
     <div class="grid grid-cols-2 gap-2">
@@ -953,10 +979,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <p class="font-bold text-sm break-all text-slate-700">{{ session.user.email }}</p>
     </div>
     <button @click="triggerReset" class="w-full p-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-sm active:scale-95">📧 修改密碼</button>
-    <div v-if="passkeySupported">
-      <button v-if="!passkeyRegistered" @click="registerPasskey" class="w-full p-4 bg-slate-800 text-white rounded-2xl font-bold text-sm active:scale-95">🔒 綁定 Face ID / 指紋</button>
-      <button v-else @click="removePasskey" class="w-full p-4 bg-slate-100 rounded-2xl font-bold text-sm text-slate-500 active:scale-95">移除生物識別登入</button>
-    </div>
     <button @click="handleLogout" class="w-full p-4 bg-slate-900 text-white rounded-2xl font-black active:scale-95">登出帳號</button>
   </div>
 </div>
@@ -964,105 +986,43 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 </div>
 
 <script>
-const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
-const SUPA_URL = "https://ajnunehxtiofcphdyhqn.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
-const SITE_URL = "https://incomesapp.netlify.app/";
-const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+const{createApp,ref,reactive,computed,onMounted,watch}=Vue;
+const SUPA_URL="https://ajnunehxtiofcphdyhqn.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
+const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
-// ✦ Bronze (銅級) price table
-const BRONZE_PRICES = {
-  '營養蛋白素-雲呢拿':400.4,'營養蛋白素-野草莓':400.4,'營養蛋白素-朱古力':400.4,
-  '營養蛋白素-曲奇妙趣':400.4,'營養蛋白素-薄荷朱古力':400.4,'營養蛋白素-鮮奶咖啡':400.4,
-  '營養蛋白素-紅豆薏仁':400.4,'濃縮蘆薈汁-原味':384.8,'濃縮蘆薈汁-柑橘味':384.8,
-  '濃縮蘆薈汁-葡萄味':384.8,'天然瓜拉拿茶':278.75,'即溶草本飲品50克-桃味':327.1,
-  '即溶草本飲品102克':578.2,'即溶草本飲品102克-蘋果甘菊味':578.2,'佳能蛋白質粉':318.45,
-  '營養纖維粉(蘋果味)':361.55,'營養纖維粉(原味)':361.55,'夜寧新營養飲品':1427.2,
-  '膠原蛋白美肌飲料':828.45,'BC30 益生菌':323.55,
-  'Liftoff能量飲品 - 檸檬-青檸味':258.9,'Liftoff能量飲品 - 香橙味':258.9,
-  '消脂片':239.9,'抗脂片':315.75,'甲殼纖維素':478.95,'美纖片':468.6,
-  '莓之寶':239.9,'香蒜片':239.05,'露思抗氧化精華':366.8,'深海魚油':401.25,
-  '南極磷蝦油':546.15,'多種維他命':317.6,'女士之選':490.15,'關捷寶':717,
-  '複合鈣片':186.45,'營養蛋白素 24 - 雲尼拿味':668.8,'補水24':330.05,
-  '健體 24 - 朱古力味':1028.55,'CR7 水健力':408.1,'速備24':1175.25,
-  '雲尼拿杏仁味蛋白棒':196.3,'一口蛋白棒':234.55,'營養蛋白素-精選配方 雲呢拿':402.95,
-  '醒腦靈':501.35,'五味子精華':284.7,'鋅維思':164.75,'禦之寶 -黑加侖子味':167.45,
-  '朱古力咖啡':418.55,'蘆薈舒緩潔面乳':270.1,'活養草本爽膚水 - 150ML':517.8,
-  '抗皺精華霜':602.3,'注顏修護日霜':454.7,'盈亮緊緻眼部啫喱':421.95,
-  '深層滋潤眼霜':421.95,'修護晚霜':454.7,'防曬日霜 SPF30/PA+++':454.7,
-  '維他命面膜 – 保濕':149.1,'蘆薈滋潤沐浴露 250 毫升':125.05,
-  '蘆薈潤膚啫喱 200 毫升':125.05,'蘆薈滋潤乳霜 200 毫升':125.05,
-  '日日強韌蘆薈護髮乳':125.05,'日日強韌蘆薈洗髮露':125.05,
-  '康寶萊事業套裝':428,'優惠客戶尊尚套裝':178,
-  '康寶萊事業套裝(適用於優惠客戶轉為會員購買)':428,'會藉服務年費':93
-};
-const getBronzePriceByName = (name) => BRONZE_PRICES[name?.trim()] ?? BRONZE_PRICES[name] ?? null;
-
-function base64urlToUint8Array(b64url){const b64=b64url.replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from(atob(b64),c=>c.charCodeAt(0));}
-function uint8ArrayToBase64url(arr){return btoa(Array.from(arr,b=>String.fromCharCode(b)).join('')).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
-function getPasskeyKey(email){return 'pk_cred_'+email;}
+const BRONZE_PRICES={'營養蛋白素-雲呢拿':400.4,'營養蛋白素-野草莓':400.4,'營養蛋白素-朱古力':400.4,'營養蛋白素-曲奇妙趣':400.4,'營養蛋白素-薄荷朱古力':400.4,'營養蛋白素-鮮奶咖啡':400.4,'營養蛋白素-紅豆薏仁':400.4,'濃縮蘆薈汁-原味':384.8,'濃縮蘆薈汁-柑橘味':384.8,'濃縮蘆薈汁-葡萄味':384.8,'天然瓜拉拿茶':278.75,'即溶草本飲品50克-桃味':327.1,'即溶草本飲品102克':578.2,'即溶草本飲品102克-蘋果甘菊味':578.2,'佳能蛋白質粉':318.45,'營養纖維粉(蘋果味)':361.55,'營養纖維粉(原味)':361.55,'夜寧新營養飲品':1427.2,'膠原蛋白美肌飲料':828.45,'BC30 益生菌':323.55,'Liftoff能量飲品 - 檸檬-青檸味':258.9,'Liftoff能量飲品 - 香橙味':258.9,'消脂片':239.9,'抗脂片':315.75,'甲殼纖維素':478.95,'美纖片':468.6,'莓之寶':239.9,'香蒜片':239.05,'露思抗氧化精華':366.8,'深海魚油':401.25,'南極磷蝦油':546.15,'多種維他命':317.6,'女士之選':490.15,'關捷寶':717,'複合鈣片':186.45,'營養蛋白素 24 - 雲尼拿味':668.8,'補水24':330.05,'健體 24 - 朱古力味':1028.55,'CR7 水健力':408.1,'速備24':1175.25,'雲尼拿杏仁味蛋白棒':196.3,'一口蛋白棒':234.55,'營養蛋白素-精選配方 雲呢拿':402.95,'醒腦靈':501.35,'五味子精華':284.7,'鋅維思':164.75,'禦之寶 -黑加侖子味':167.45,'朱古力咖啡':418.55,'蘆薈舒緩潔面乳':270.1,'活養草本爽膚水 - 150ML':517.8,'抗皺精華霜':602.3,'注顏修護日霜':454.7,'盈亮緊緻眼部啫喱':421.95,'深層滋潤眼霜':421.95,'修護晚霜':454.7,'防曬日霜 SPF30/PA+++':454.7,'維他命面膜 – 保濕':149.1,'蘆薈滋潤沐浴露 250 毫升':125.05,'蘆薈潤膚啫喱 200 毫升':125.05,'蘆薈滋潤乳霜 200 毫升':125.05,'日日強韌蘆薈護髮乳':125.05,'日日強韌蘆薈洗髮露':125.05,'康寶萊事業套裝':428,'優惠客戶尊尚套裝':178,'康寶萊事業套裝(適用於優惠客戶轉為會員購買)':428,'會藉服務年費':93};
+const getBP=n=>BRONZE_PRICES[n?.trim()]??null;
 
 createApp({
   setup(){
-    // ── Auth ──
     const session=ref(null),authState=ref('login'),authForm=ref({email:'',password:''}),newPassword=ref('');
-    const passkeySupported=ref(false),passkeyRegistered=ref(false),showProfile=ref(false);
-
-    // ── Navigation ──
-    const currentTab=ref('dashboard'),retailSubTab=ref('pos'),financeSubTab=ref('add');
-    const dashSubTab=ref('overview');
+    const showProfile=ref(false);
+    const currentTab=ref('dashboard'),retailSubTab=ref('pos'),financeSubTab=ref('add'),dashSubTab=ref('overview');
     const dateRange=ref('month'),reportPerson=ref('All');
-
-    // ── Data ──
     const clients=ref([]),finances=ref([]),products=ref([]),trials=ref([]),cart=ref([]);
-    const monthlyMetrics=ref({inquiries:0,ad_trials:0,renewals_kwt:0,renewals_cen:0,renewals_jor:0,notes:''});
-
-    // ── Search / filter ──
+    const monthlyMetrics=ref({inquiries:0,ad_trials:0,notes:''});
     const pSearch=ref(''),cSearch=ref(''),crmBranchFilter=ref('全部'),stockSearch=ref(''),stockFilter=ref('all'),txSearch=ref(''),txTypeFilter=ref('all');
     const showExClientDropdown=ref(false),exClientSearch=ref(''),showRtClientDropdown=ref(false),rtClientSearch=ref('');
     const showReferralDropdown=ref(false),referralSearch=ref('');
-
-    // ── Modals ──
     const showClientModal=ref(false),showExpModal=ref(false),showRestockModal=ref(false);
     const showEditTxModal=ref(false),showStockCorrectionModal=ref(false),showDeleteConfirm=ref(false);
     const showMetricsModal=ref(false);
-
-    // ── Forms ──
     const clientForm=ref({}),expForm=ref({category:'',amount:0,note:''}),restockForm=ref({product:null,qty:0,isInitial:false});
     const editTxForm=ref({}),stockCorrectionForm=ref({productName:'',currentStock:0,newStock:0,reason:'盤點更正'});
-    const eForm=ref({clientId:null,type:'35pt',isNew:false,isReferral:false,trialDate:'',trialName:'',trialPhone:''});
+    // ✦ isRenewal added
+    const eForm=ref({clientId:null,type:'35pt',isNew:false,isReferral:false,isRenewal:false,trialDate:'',trialName:'',trialPhone:''});
     const rForm=ref({discount:'0',clientId:null});
-    const metricsForm=ref({inquiries:0,ad_trials:0,renewals_kwt:0,renewals_cen:0,renewals_jor:0,notes:''});
-
-    const stockWarningExpanded=ref(false);
-    const stockSyncing=ref(false);
+    const metricsForm=ref({inquiries:0,ad_trials:0,notes:''});
+    const stockWarningExpanded=ref(false),stockSyncing=ref(false);
     const correctionReasons=['盤點更正','損耗/破損','內部使用','系統錯誤','其他'];
-
-    // ── Analytics month ──
     const analyticsMonth=ref(new Date().toISOString().slice(0,7));
-    const analyticsMonthLabel=computed(()=>{
-      const[y,m]=analyticsMonth.value.split('-').map(Number);
-      return y+'年'+m+'月';
-    });
-    const prevAnalyticsMonth=()=>{
-      const[y,m]=analyticsMonth.value.split('-').map(Number);
-      const d=new Date(y,m-2,1);
-      analyticsMonth.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    };
-    const nextAnalyticsMonth=()=>{
-      const[y,m]=analyticsMonth.value.split('-').map(Number);
-      const d=new Date(y,m,1);
-      analyticsMonth.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    };
 
-    // ── Static config ──
     const tabs=[{id:'dashboard',name:'總覽',icon:'📊'},{id:'crm',name:'客戶',icon:'👥'},{id:'exercise',name:'運動',icon:'🏋️'},{id:'retail',name:'零售',icon:'🛍️'},{id:'finance',name:'財務',icon:'💰'}];
     const dateRanges=[{id:'today',name:'今日'},{id:'week',name:'本週'},{id:'month',name:'本月'},{id:'year',name:'全年'}];
     const stockFilters=[{id:'all',name:'全部'},{id:'danger',name:'❌ 缺貨'},{id:'low',name:'⚠️ 不足'},{id:'ok',name:'✅ 正常'}];
     const expCats=['Fitwork廣告','FZb廣告','中環租金','觀塘租金','產品採購','馬拉松成本','其他項目(收入)','其他項目(支出)'];
     const exerciseItems=[{id:'trial',name:'試堂',price:98},{id:'10pt',name:'10點套票',price:850},{id:'35pt',name:'35點套票',price:2550}];
-
-    // ✦ Price mode options
     const priceOptions=[
       {value:'0',label:'原價',desc:'完整零售價',activeClass:'bg-slate-900 text-white border-slate-900'},
       {value:'bronze',label:'🥉 銅級',desc:'會員優惠價',activeClass:'bg-amber-500 text-white border-amber-500'},
@@ -1071,143 +1031,60 @@ createApp({
       {value:'0.5',label:'廠本',desc:'成本價（±$0）',activeClass:'bg-rose-500 text-white border-rose-500'},
     ];
 
-    // ── Date helpers ──
     const todayDate=computed(()=>new Date().toISOString().split('T')[0]);
     const tomorrowDate=computed(()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0];});
-    const reminderDate=computed(()=>{if(!eForm.value.trialDate)return '';const d=new Date(eForm.value.trialDate);d.setDate(d.getDate()-1);return d.toISOString().split('T')[0];});
 
-    // ── ✦ Stock: Supabase-backed ──
+    // ── Stock (Supabase) ──
     const stockData=reactive({});
-
     const loadStockFromDB=async()=>{
       if(!session.value)return;
       const{data}=await sb.from('stock').select('prod_name,quantity').eq('user_id',session.value.user.id);
-      if(data){
-        Object.keys(stockData).forEach(k=>delete stockData[k]);
-        data.forEach(r=>{stockData[r.prod_name]=r.quantity;});
-      }
+      if(data){Object.keys(stockData).forEach(k=>delete stockData[k]);data.forEach(r=>{stockData[r.prod_name]=r.quantity;});}
     };
-
     const syncStockToDB=async(name,qty)=>{
       if(!session.value)return;
       stockSyncing.value=true;
-      try{
-        await sb.from('stock').upsert({user_id:session.value.user.id,prod_name:name,quantity:qty,updated_at:new Date().toISOString()},{onConflict:'user_id,prod_name'});
-      }finally{stockSyncing.value=false;}
+      try{await sb.from('stock').upsert({user_id:session.value.user.id,prod_name:name,quantity:qty,updated_at:new Date().toISOString()},{onConflict:'user_id,prod_name'});}
+      finally{stockSyncing.value=false;}
     };
-
-    const getStock=(name)=>(!name?0:stockData[name]??0);
-
-    const modifyStock=async(name,delta)=>{
-      const newQty=Math.max(0,(stockData[name]??0)+delta);
-      stockData[name]=newQty;
-      await syncStockToDB(name,newQty);
-    };
-
-    const setStock=async(name,qty)=>{
-      const newQty=Math.max(0,qty);
-      stockData[name]=newQty;
-      await syncStockToDB(name,newQty);
-    };
-
+    const getStock=n=>(!n?0:stockData[n]??0);
+    const modifyStock=async(name,delta)=>{const q=Math.max(0,(stockData[name]??0)+delta);stockData[name]=q;await syncStockToDB(name,q);};
+    const setStock=async(name,qty)=>{const q=Math.max(0,qty);stockData[name]=q;await syncStockToDB(name,q);};
     const quickAdjustStock=(name,delta)=>modifyStock(name,delta);
-
-    const stockInfo=(name)=>{
-      const s=getStock(name),pct=Math.min(100,Math.round(s/20*100));
-      if(s===0)return{text:'缺貨',badge:'bg-red-100 text-red-600 border-red-200',bar:'bg-red-400',pct,numColor:'text-red-500',cardBorder:'border-red-100'};
-      if(s<5)return{text:'不足',badge:'bg-amber-100 text-amber-700 border-amber-200',bar:'bg-amber-400',pct,numColor:'text-amber-600',cardBorder:'border-amber-100'};
-      if(s<10)return{text:'正常',badge:'bg-blue-100 text-blue-700 border-blue-200',bar:'bg-blue-400',pct,numColor:'text-blue-600',cardBorder:'border-slate-100'};
-      return{text:'充足',badge:'bg-emerald-100 text-emerald-700 border-emerald-200',bar:'bg-emerald-500',pct,numColor:'text-emerald-600',cardBorder:'border-emerald-100'};
-    };
-
-    const stockCategories=computed(()=>{
-      const cats={'内':{name:'💊 内服產品',emoji:'💊',items:[]},'外':{name:'🧴 外用產品',emoji:'🧴',items:[]}};
-      products.value.forEach(p=>{if(cats[p.category])cats[p.category].items.push(p);else{if(!cats.other)cats.other={name:'📦 其他',emoji:'📦',items:[]};cats.other.items.push(p);}});
-      return Object.values(cats).filter(c=>c.items.length>0);
-    });
-
+    const stockInfo=n=>{const s=getStock(n),pct=Math.min(100,Math.round(s/20*100));if(s===0)return{text:'缺貨',badge:'bg-red-100 text-red-600 border-red-200',bar:'bg-red-400',pct,numColor:'text-red-500',cardBorder:'border-red-100'};if(s<5)return{text:'不足',badge:'bg-amber-100 text-amber-700 border-amber-200',bar:'bg-amber-400',pct,numColor:'text-amber-600',cardBorder:'border-amber-100'};if(s<10)return{text:'正常',badge:'bg-blue-100 text-blue-700 border-blue-200',bar:'bg-blue-400',pct,numColor:'text-blue-600',cardBorder:'border-slate-100'};return{text:'充足',badge:'bg-emerald-100 text-emerald-700 border-emerald-200',bar:'bg-emerald-500',pct,numColor:'text-emerald-600',cardBorder:'border-emerald-100'};};
+    const stockCategories=computed(()=>{const cats={内:{name:'💊 内服產品',emoji:'💊',items:[]},外:{name:'🧴 外用產品',emoji:'🧴',items:[]}};products.value.forEach(p=>{if(cats[p.category])cats[p.category].items.push(p);});return Object.values(cats).filter(c=>c.items.length>0);});
     const filteredStockCategories=computed(()=>stockCategories.value.map(cat=>({...cat,items:cat.items.filter(p=>{const matchS=!stockSearch.value||p.prod_name.toLowerCase().includes(stockSearch.value.toLowerCase());const s=getStock(p.prod_name);const matchF=stockFilter.value==='all'||(stockFilter.value==='danger'&&s===0)||(stockFilter.value==='low'&&s>0&&s<5)||(stockFilter.value==='ok'&&s>=5);return matchS&&matchF;})})).filter(c=>c.items.length>0));
-
     const totalStockQty=computed(()=>products.value.reduce((s,p)=>s+getStock(p.prod_name),0));
     const totalStockValue=computed(()=>products.value.reduce((s,p)=>s+getStock(p.prod_name)*parseFloat(p.cost||0),0));
-    const totalRetailValue=computed(()=>products.value.reduce((s,p)=>s+getStock(p.prod_name)*parseFloat(p.retail_price||0),0));
-    const totalBronzeValue=computed(()=>products.value.reduce((s,p)=>{const bp=getBronzePriceByName(p.prod_name);return s+getStock(p.prod_name)*(bp||parseFloat(p.retail_price||0));},0));
+    const totalBronzeValue=computed(()=>products.value.reduce((s,p)=>{const bp=getBP(p.prod_name);return s+getStock(p.prod_name)*(bp||parseFloat(p.retail_price||0));},0));
     const stockSummary=computed(()=>{let o=0,l=0,n=0,a=0;products.value.forEach(p=>{const s=getStock(p.prod_name);if(s===0)o++;else if(s<5)l++;else if(s<10)n++;else a++;});return{outOfStock:o,lowStock:l,normal:n,abundant:a};});
     const lowStockItems=computed(()=>products.value.map(p=>({name:p.prod_name,stock:getStock(p.prod_name)})).filter(i=>i.stock<5).sort((a,b)=>a.stock-b.stock));
+    const openStockCorrection=p=>{stockCorrectionForm.value={productName:p.prod_name,currentStock:getStock(p.prod_name),newStock:getStock(p.prod_name),reason:'盤點更正'};showStockCorrectionModal.value=true;};
+    const saveStockCorrection=async()=>{await setStock(stockCorrectionForm.value.productName,Number(stockCorrectionForm.value.newStock));showStockCorrectionModal.value=false;};
+    const getBronzePrice=n=>getBP(n);
 
-    const openStockCorrection=(p)=>{stockCorrectionForm.value={productName:p.prod_name,currentStock:getStock(p.prod_name),newStock:getStock(p.prod_name),reason:'盤點更正'};showStockCorrectionModal.value=true;};
-    const saveStockCorrection=async()=>{const{productName,newStock}=stockCorrectionForm.value;if(newStock<0)return;await setStock(productName,Number(newStock));showStockCorrectionModal.value=false;};
-
-    // ✦ Bronze price helpers
-    const getBronzePrice=(name)=>getBronzePriceByName(name);
-
-    // ── CSV Export/Import ──
-    const exportStockCSV=()=>{
-      if(!products.value.length)return;
-      const now=new Date();
-      const rows=[['FITWORKHK 庫存清單'],[`匯出：${now.toLocaleDateString('zh-HK')}`],[],['產品名稱','類別','庫存(件)','廠本($)','銅級($)','零售($)','狀態']];
-      products.value.forEach(p=>{const s=getStock(p.prod_name),cost=parseFloat(p.cost||0),retail=parseFloat(p.retail_price||0),bronze=getBronzePriceByName(p.prod_name);rows.push([p.prod_name,p.category==='内'?'内服':'外用',s,cost.toFixed(2),bronze?bronze.toFixed(2):'',retail.toFixed(2),s===0?'缺貨':s<5?'不足':s<10?'正常':'充足']);});
-      const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
-      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-      a.href=url;a.download=`FITWORKHK_庫存_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;
-      document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-    };
-
+    // CSV
+    const exportStockCSV=()=>{if(!products.value.length)return;const now=new Date();const rows=[['產品名稱','庫存','廠本','銅級','零售','狀態']];products.value.forEach(p=>{const s=getStock(p.prod_name),bp=getBP(p.prod_name);rows.push([p.prod_name,s,parseFloat(p.cost||0).toFixed(2),bp?bp.toFixed(2):'',parseFloat(p.retail_price||0).toFixed(2),s===0?'缺貨':s<5?'不足':s<10?'正常':'充足']);});const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`FITWORKHK_庫存_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);};
     const triggerImport=()=>{const el=document.getElementById('stockImportInput');if(el)el.click();};
-    const importStockCSV=async(event)=>{
-      const file=event.target.files[0];if(!file)return;
-      const reader=new FileReader();
-      reader.onload=async(e)=>{
-        const text=e.target.result.replace(/^\uFEFF/,'');
-        const lines=text.split(/\r?\n/).filter(l=>l.trim());
-        let imported=0,skipped=0;
-        for(const line of lines){
-          const parts=line.split(',').map(p=>p.trim().replace(/^["'`]|["'`]$/g,''));
-          if(parts.length<2)continue;
-          const name=parts[0].trim();
-          if(!name||['產品名稱','FITWORKHK','匯出','類別'].some(h=>name.startsWith(h)))continue;
-          const qtyStr=parts.length>=6?parts[2]:parts[1];
-          const qty=parseInt(qtyStr.replace(/[^0-9]/g,''),10);
-          if(!isNaN(qty)&&qty>=0){await setStock(name,qty);imported++;}else skipped++;
-        }
-        event.target.value='';
-        alert(`✅ 匯入完成\n✓ 已更新 ${imported} 款\n⚠ 跳過 ${skipped} 行`);
-      };
-      reader.readAsText(file,'UTF-8');
-    };
+    const importStockCSV=async event=>{const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async e=>{const text=e.target.result.replace(/^\uFEFF/,'');const lines=text.split(/\r?\n/).filter(l=>l.trim());let imported=0,skipped=0;for(const line of lines){const parts=line.split(',').map(p=>p.trim().replace(/^["'`]|["'`]$/g,''));if(parts.length<2)continue;const name=parts[0].trim();if(!name||['產品名稱','FITWORKHK','匯出','類別'].some(h=>name.startsWith(h)))continue;const qty=parseInt(parts[1].replace(/[^0-9]/g,''),10);if(!isNaN(qty)&&qty>=0){await setStock(name,qty);imported++;}else skipped++;}event.target.value='';alert(`✅ 匯入完成\n✓ ${imported} 款\n⚠ 跳過 ${skipped} 行`);};reader.readAsText(file,'UTF-8');};
 
-    // ── Referral / Generation ──
-    const getClientGeneration=(clientId)=>{
-      let gen=0,current=clients.value.find(c=>c.id===clientId);
-      const visited=new Set();
-      while(current&&current.referred_by_id){if(visited.has(current.id)||gen>10)break;visited.add(current.id);current=clients.value.find(c=>c.id===current.referred_by_id);gen++;}
-      return gen;
-    };
-    const genLabel=(clientId)=>{
-      const g=getClientGeneration(clientId);
-      if(g===0)return{label:'直接',cls:'bg-slate-100 text-slate-500'};
-      if(g===1)return{label:'1代',cls:'bg-blue-100 text-blue-600'};
-      if(g===2)return{label:'2代',cls:'bg-purple-100 text-purple-600'};
-      return{label:g+'代',cls:'bg-indigo-100 text-indigo-600'};
-    };
+    // ── Referral ──
+    const getClientGeneration=cid=>{let gen=0,c=clients.value.find(x=>x.id===cid);const v=new Set();while(c&&c.referred_by_id){if(v.has(c.id)||gen>10)break;v.add(c.id);c=clients.value.find(x=>x.id===c.referred_by_id);gen++;}return gen;};
+    const genLabel=cid=>{const g=getClientGeneration(cid);if(g===0)return{label:'直接',cls:'bg-slate-100 text-slate-500'};if(g===1)return{label:'1代',cls:'bg-blue-100 text-blue-600'};if(g===2)return{label:'2代',cls:'bg-purple-100 text-purple-600'};return{label:g+'代',cls:'bg-indigo-100 text-indigo-600'};};
 
-    // ── Searchable dropdowns ──
+    // ── Dropdowns ──
     const exFilteredClients=computed(()=>{const q=exClientSearch.value.toLowerCase();return clients.value.filter(c=>!q||(c.name+(c.phone||'')).toLowerCase().includes(q)).slice(0,40);});
     const rtFilteredClients=computed(()=>{const q=rtClientSearch.value.toLowerCase();return clients.value.filter(c=>!q||(c.name+(c.phone||'')).toLowerCase().includes(q)).slice(0,40);});
     const referralFilteredClients=computed(()=>{const q=referralSearch.value.toLowerCase(),cid=clientForm.value.id;return clients.value.filter(c=>c.id!==cid&&(!q||(c.name+(c.phone||'')).toLowerCase().includes(q))).slice(0,40);});
 
-    // ── Auth functions ──
+    // ── Auth ──
     const handleAuth=async()=>{const{email,password}=authForm.value;const res=authState.value==='login'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});if(res.error)alert(res.error.message);};
-    const forgotPassword=async()=>{const e=prompt("輸入已註冊的 Email：");if(!e)return;const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:SITE_URL+'reset-password.html'});if(!error)alert("重設郵件已發送！");else alert(error.message);};
+    const forgotPassword=async()=>{const e=prompt("輸入已註冊的 Email：");if(!e)return;const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:'https://incomesapp.netlify.app/'});if(!error)alert("重設郵件已發送！");else alert(error.message);};
     const updatePassword=async()=>{if(!newPassword.value||newPassword.value.length<6)return alert("密碼最少 6 個字元");const{error}=await sb.auth.updateUser({password:newPassword.value});if(!error){alert("✅ 密碼更新成功！");await sb.auth.signOut();authState.value='login';session.value=null;}else alert(error.message);};
     const handleLogout=async()=>{await sb.auth.signOut();session.value=null;showProfile.value=false;};
-    const checkPasskeySupport=async()=>{if(window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable)passkeySupported.value=await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();};
-    const checkPasskeyRegistered=(email)=>{passkeyRegistered.value=!!localStorage.getItem(getPasskeyKey(email));};
-    const registerPasskey=async()=>{if(!session.value)return;const{email,id:userId}=session.value.user;try{const credential=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:"FITWORKHK",id:window.location.hostname},user:{id:base64urlToUint8Array(btoa(userId)),name:email,displayName:email},pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}],authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required"},timeout:60000}});localStorage.setItem(getPasskeyKey(email),JSON.stringify({credId:uint8ArrayToBase64url(new Uint8Array(credential.rawId)),email}));passkeyRegistered.value=true;alert("✅ 已綁定！");}catch(e){if(e.name!=='NotAllowedError')alert("綁定失敗："+e.message);}};
-    const loginWithPasskey=async()=>{const email=authForm.value.email||prompt("請輸入 Email：");if(!email)return;const saved=localStorage.getItem(getPasskeyKey(email));if(!saved){alert("此 Email 未綁定");return;}try{const{credId}=JSON.parse(saved);await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:"public-key",id:base64urlToUint8Array(credId)}],userVerification:"required",timeout:60000}});const{error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false}});if(error)alert("發送失敗");else alert("✅ Magic Link 已發送至 "+email);}catch(e){if(e.name!=='NotAllowedError')alert("驗證失敗："+e.message);}};
-    const removePasskey=()=>{if(!session.value)return;localStorage.removeItem(getPasskeyKey(session.value.user.email));passkeyRegistered.value=false;alert("已移除");};
+    const triggerReset=()=>{showProfile.value=false;forgotPassword();};
 
-    // ── Data loading ──
+    // ── Load data ──
     const loadData=async()=>{
       const uid=session.value.user.id,today=new Date().toISOString().split('T')[0];
       const[{data:c},{data:f},{data:prods},{data:tr}]=await Promise.all([
@@ -1219,229 +1096,140 @@ createApp({
       clients.value=c||[];finances.value=f||[];products.value=prods||[];trials.value=tr||[];
     };
 
-    // ── Monthly Metrics ──
+    // ── Monthly metrics ──
     const loadMonthlyMetrics=async()=>{
       if(!session.value)return;
       const{data}=await sb.from('monthly_metrics').select('*').eq('user_id',session.value.user.id).eq('metric_month',analyticsMonth.value).single();
-      monthlyMetrics.value=data||{inquiries:0,ad_trials:0,renewals_kwt:0,renewals_cen:0,renewals_jor:0,notes:''};
+      monthlyMetrics.value=data||{inquiries:0,ad_trials:0,notes:''};
     };
-    const analyticsMetrics=computed(()=>monthlyMetrics.value);
-
-    const openMetricsModal=()=>{metricsForm.value={...analyticsMetrics.value};showMetricsModal.value=true;};
+    watch(analyticsMonth,loadMonthlyMetrics);
+    const analyticsMonthLabel=computed(()=>{const[y,m]=analyticsMonth.value.split('-').map(Number);return y+'年'+m+'月';});
+    const prevAnalyticsMonth=()=>{const[y,m]=analyticsMonth.value.split('-').map(Number);const d=new Date(y,m-2,1);analyticsMonth.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
+    const nextAnalyticsMonth=()=>{const[y,m]=analyticsMonth.value.split('-').map(Number);const d=new Date(y,m,1);analyticsMonth.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
+    const openMetricsModal=()=>{metricsForm.value={inquiries:monthlyMetrics.value.inquiries||0,ad_trials:monthlyMetrics.value.ad_trials||0,notes:monthlyMetrics.value.notes||''};showMetricsModal.value=true;};
     const saveMonthlyMetrics=async()=>{
       const payload={user_id:session.value.user.id,metric_month:analyticsMonth.value,...metricsForm.value,updated_at:new Date().toISOString()};
       const{error}=await sb.from('monthly_metrics').upsert(payload,{onConflict:'user_id,metric_month'});
       if(!error){showMetricsModal.value=false;await loadMonthlyMetrics();}else alert(error.message);
     };
+    const analyticsMetrics=computed(()=>monthlyMetrics.value);
 
-    watch(analyticsMonth,loadMonthlyMetrics);
-
-    // ── Analytics computed ──
+    // ── Analytics (all auto except inquiries/ad_trials) ──
     const analyticsFinances=computed(()=>finances.value.filter(f=>f.created_at.startsWith(analyticsMonth.value)));
-    const analyticsAdSpend=computed(()=>analyticsFinances.value.filter(f=>f.type==='expense'&&(f.category.includes('廣告'))).reduce((s,f)=>s+Number(f.amount),0));
+    // 廣告支出: auto from finance categories
+    const analyticsAdSpend=computed(()=>analyticsFinances.value.filter(f=>f.type==='expense'&&f.category.includes('廣告')).reduce((s,f)=>s+Number(f.amount),0));
+    // 新客戶: auto from clients table
     const analyticsNewClients=computed(()=>clients.value.filter(c=>c.created_at&&c.created_at.startsWith(analyticsMonth.value)));
     const analyticsNewFromAds=computed(()=>analyticsNewClients.value.filter(c=>c.source==='廣告').length);
     const analyticsNewFromReferral=computed(()=>analyticsNewClients.value.filter(c=>c.source==='轉介紹'||c.referred_by_id).length);
-    const analyticsConversionRate=computed(()=>{const trials=analyticsMetrics.value.ad_trials;return trials?Math.round(analyticsNewFromAds.value/trials*100):0;});
+    const analyticsConversionRate=computed(()=>{const t=analyticsMetrics.value.ad_trials;return t?Math.round(analyticsNewFromAds.value/t*100):0;});
+    const newClientsByBranch=computed(()=>{const r={觀塘:{total:0,ads:0,referral:0},中環:{total:0,ads:0,referral:0},佐敦:{total:0,ads:0,referral:0}};analyticsNewClients.value.forEach(c=>{if(r[c.branch]){r[c.branch].total++;if(c.source==='廣告')r[c.branch].ads++;else if(c.source==='轉介紹'||c.referred_by_id)r[c.branch].referral++;}});return r;});
+    // 續卡: auto from is_renewal tagged finance records
+    const analyticsRenewals=computed(()=>analyticsFinances.value.filter(f=>f.is_renewal===true&&f.type==='income'));
+    const totalRenewals=computed(()=>analyticsRenewals.value.length);
+    const renewalBranchMap=computed(()=>{const r={觀塘:0,中環:0,佐敦:0};analyticsRenewals.value.forEach(f=>{const c=f.client_id?clients.value.find(x=>x.id===f.client_id):null;const b=c?.branch;if(b&&r[b]!==undefined)r[b]++;});return r;});
+    // 零售: auto
     const analyticsRetailTx=computed(()=>analyticsFinances.value.filter(f=>f.category==='零售').length);
+    const retailByBranch=computed(()=>{const r={觀塘:{count:0,amount:0},中環:{count:0,amount:0},佐敦:{count:0,amount:0}};analyticsFinances.value.filter(f=>f.category==='零售').forEach(tx=>{const c=tx.client_id?clients.value.find(x=>x.id===tx.client_id):null;const b=c?.branch;if(b&&r[b]){r[b].count++;r[b].amount+=Number(tx.amount);}});return r;});
+    const retailByPerson=computed(()=>{const r={Kwan:0,Cat:0};analyticsFinances.value.filter(f=>f.category==='零售').forEach(f=>{if(r[f.person]!==undefined)r[f.person]+=Number(f.amount);});return r;});
+    // 馬拉松: auto
+    const marathonCount=computed(()=>clients.value.filter(c=>c.marathon).length);
     const analyticsNewMarathon=computed(()=>analyticsNewClients.value.filter(c=>c.marathon).length);
 
-    const newClientsByBranch=computed(()=>{
-      const r={觀塘:{total:0,ads:0,referral:0},中環:{total:0,ads:0,referral:0},佐敦:{total:0,ads:0,referral:0}};
-      analyticsNewClients.value.forEach(c=>{if(r[c.branch]){r[c.branch].total++;if(c.source==='廣告')r[c.branch].ads++;else if(c.source==='轉介紹'||c.referred_by_id)r[c.branch].referral++;}});
-      return r;
-    });
-
-    const retailByBranch=computed(()=>{
-      const r={觀塘:{count:0,amount:0},中環:{count:0,amount:0},佐敦:{count:0,amount:0},未知:{count:0,amount:0}};
-      analyticsFinances.value.filter(f=>f.category==='零售').forEach(tx=>{
-        const client=tx.client_id?clients.value.find(c=>c.id===tx.client_id):null;
-        const branch=client?.branch||'未知';
-        if(r[branch]){r[branch].count++;r[branch].amount+=Number(tx.amount);}
-      });
-      return r;
-    });
-
-    const retailByPerson=computed(()=>{
-      const r={Kwan:0,Cat:0};
-      analyticsFinances.value.filter(f=>f.category==='零售').forEach(f=>{if(r[f.person]!==undefined)r[f.person]+=Number(f.amount);});
-      return r;
-    });
-
     // ── CRM ──
-    const openClient=(c)=>{clientForm.value=c?{...c}:{name:'',phone:'',branch:'觀塘',source:'廣告',marathon:false,expiry_date:new Date(new Date().setFullYear(new Date().getFullYear()+1)).toISOString().split('T')[0],referred_by_id:null};showReferralDropdown.value=false;referralSearch.value='';showClientModal.value=true;};
-    const saveClient=async()=>{
-      if(!clientForm.value.name)return alert("請輸入客戶姓名");
-      const payload={...clientForm.value,user_id:session.value.user.id};
-      if(!payload.referred_by_id)payload.referred_by_id=null;
-      const res=clientForm.value.id?await sb.from('clients').update(payload).eq('id',clientForm.value.id):await sb.from('clients').insert([payload]);
-      if(!res.error){showClientModal.value=false;showReferralDropdown.value=false;await loadData();}else alert(res.error.message);
-    };
+    const openClient=c=>{clientForm.value=c?{...c}:{name:'',phone:'',branch:'觀塘',source:'廣告',marathon:false,expiry_date:new Date(new Date().setFullYear(new Date().getFullYear()+1)).toISOString().split('T')[0],referred_by_id:null};showReferralDropdown.value=false;referralSearch.value='';showClientModal.value=true;};
+    const saveClient=async()=>{if(!clientForm.value.name)return alert("請輸入客戶姓名");const payload={...clientForm.value,user_id:session.value.user.id};if(!payload.referred_by_id)payload.referred_by_id=null;const res=clientForm.value.id?await sb.from('clients').update(payload).eq('id',clientForm.value.id):await sb.from('clients').insert([payload]);if(!res.error){showClientModal.value=false;showReferralDropdown.value=false;await loadData();}else alert(res.error.message);};
     const filteredClients=computed(()=>clients.value.filter(c=>(c.name+(c.phone||'')).toLowerCase().includes(cSearch.value.toLowerCase())&&(crmBranchFilter.value==='全部'||c.branch===crmBranchFilter.value)));
 
     // ── Finance ──
-    const openExp=(c)=>{expForm.value={category:c,amount:0,note:''};showExpModal.value=true;};
-    const saveExp=async(person)=>{const isInc=expForm.value.category.includes('收入');const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:isInc?'income':'expense',category:expForm.value.category,amount:Number(expForm.value.amount),person,note:expForm.value.note});if(!error){showExpModal.value=false;await loadData();currentTab.value='dashboard';}else alert("錯誤："+error.message);};
-    const openEditTx=(t)=>{editTxForm.value={...t};showEditTxModal.value=true;};
+    const openExp=c=>{expForm.value={category:c,amount:0,note:''};showExpModal.value=true;};
+    const saveExp=async person=>{const isInc=expForm.value.category.includes('收入');const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:isInc?'income':'expense',category:expForm.value.category,amount:Number(expForm.value.amount),person,note:expForm.value.note});if(!error){showExpModal.value=false;await loadData();currentTab.value='dashboard';}else alert("錯誤："+error.message);};
+    const openEditTx=t=>{editTxForm.value={...t};showEditTxModal.value=true;};
     const saveEditTx=async()=>{const{id,type,category,amount,note,person}=editTxForm.value;const{error}=await sb.from('finances').update({type,category,amount:Number(amount),note,person}).eq('id',id).eq('user_id',session.value.user.id);if(!error){showEditTxModal.value=false;await loadData();}else alert(error.message);};
     const deleteTx=()=>{showEditTxModal.value=false;showDeleteConfirm.value=true;};
     const confirmDeleteTx=async()=>{const{error}=await sb.from('finances').delete().eq('id',editTxForm.value.id).eq('user_id',session.value.user.id);if(!error){showDeleteConfirm.value=false;await loadData();}else alert(error.message);};
+    const groupedTransactions=computed(()=>{let arr=finances.value;if(txTypeFilter.value!=='all')arr=arr.filter(t=>t.type===txTypeFilter.value);if(txSearch.value){const q=txSearch.value.toLowerCase();arr=arr.filter(t=>(t.category+t.note+t.person+String(t.amount)).toLowerCase().includes(q));}const groups={},order=[];arr.forEach(t=>{const d=new Date(t.created_at),key=d.toLocaleDateString('zh-HK',{year:'numeric',month:'long',day:'numeric',weekday:'short'});if(!groups[key]){groups[key]=[];order.push(key);}groups[key].push(t);});return order.map(k=>({date:k,items:groups[k],dayTotal:groups[k].reduce((s,t)=>s+(t.type==='income'?1:-1)*Number(t.amount),0)}));});
 
-    const groupedTransactions=computed(()=>{
-      let arr=finances.value;
-      if(txTypeFilter.value!=='all')arr=arr.filter(t=>t.type===txTypeFilter.value);
-      if(txSearch.value){const q=txSearch.value.toLowerCase();arr=arr.filter(t=>(t.category+t.note+t.person+String(t.amount)).toLowerCase().includes(q));}
-      const groups={},order=[];
-      arr.forEach(t=>{const d=new Date(t.created_at),key=d.toLocaleDateString('zh-HK',{year:'numeric',month:'long',day:'numeric',weekday:'short'});if(!groups[key]){groups[key]=[];order.push(key);}groups[key].push(t);});
-      return order.map(k=>({date:k,items:groups[k],dayTotal:groups[k].reduce((s,t)=>s+(t.type==='income'?1:-1)*Number(t.amount),0)}));
-    });
-
-    // ── Exercise POS ──
-    const saveExercise=async(person)=>{
-      const{type,isNew,isReferral,clientId,trialDate,trialName,trialPhone}=eForm.value;
+    // ── Exercise POS (with isRenewal) ──
+    const saveExercise=async person=>{
+      const{type,isNew,isReferral,isRenewal,clientId,trialDate,trialName,trialPhone}=eForm.value;
       if(type==='trial'){if(!trialName.trim())return alert("請輸入試堂人名字");}else{if(!clientId)return alert("請先選擇客戶");}
-      let profit=0;
-      if(type==='trial')profit=98;
-      else if(type==='10pt')profit=isReferral?413:465;
-      else if(type==='35pt')profit=isNew?1250.50:1277.50;
-      const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'運動',amount:profit,person,client_id:type==='trial'?null:clientId,note:type});
+      let profit=type==='trial'?98:type==='10pt'?(isReferral?413:465):(isNew?1250.50:1277.50);
+      const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'運動',amount:profit,person,client_id:type==='trial'?null:clientId,note:type,is_renewal:type!=='trial'&&isRenewal});
       if(error)return alert("錯誤："+error.message);
-      if(type==='trial'){
-        const trialPayload={user_id:session.value.user.id,client_id:null,client_name:trialName.trim(),trial_date:trialDate||null,paid_date:todayDate.value,amount:profit,person,reminded:false};
-        if(trialPhone.trim())trialPayload.trial_phone=trialPhone.trim();
-        await sb.from('trials').insert([trialPayload]);
-      }
+      if(type==='trial'){await sb.from('trials').insert([{user_id:session.value.user.id,client_id:null,client_name:trialName.trim(),trial_date:trialDate||null,paid_date:todayDate.value,amount:profit,person,reminded:false,trial_phone:trialPhone.trim()||null}]);}
       await loadData();
-      alert(type==='trial'&&trialDate?`✅ +$${profit.toFixed(2)}\n📅 試堂：${trialDate}\n🔔 提醒：${reminderDate.value}`:`✅ +$${profit.toFixed(2)}`);
-      eForm.value={clientId:null,type:'35pt',isNew:false,isReferral:false,trialDate:'',trialName:'',trialPhone:''};
+      alert(`✅ +$${profit.toFixed(2)}${isRenewal?' (續卡)':''}`);
+      eForm.value={clientId:null,type:'35pt',isNew:false,isReferral:false,isRenewal:false,trialDate:'',trialName:'',trialPhone:''};
       currentTab.value='dashboard';
     };
 
-    // ── Retail POS (with bronze) ──
-    const getBronzePrice2=(name)=>getBronzePriceByName(name);
-    const getSellPrice=(p)=>{
-      const d=rForm.value.discount;
-      if(d==='bronze'){const bp=getBronzePriceByName(p.name);return bp!==null?bp:p.retail;}
-      return p.retail*(1-parseFloat(d));
-    };
-    const getUnitProfit=(item)=>{
-      const d=rForm.value.discount;
-      if(d==='0.5')return 0;
-      if(d==='bronze'){const bp=getBronzePriceByName(item.name);return(bp!==null?bp:item.retail)-item.cost;}
-      return item.retail*(1-parseFloat(d))-item.cost;
-    };
-    const isLossSale=(p)=>{const d=rForm.value.discount;if(d==='0.5'||d==='bronze')return false;return p.retail*(1-parseFloat(d))<p.cost;};
-    const addToCart=(p)=>{const ex=cart.value.find(i=>i.name===p.name);if(ex)ex.qty++;else cart.value.push({name:p.name,cost:p.cost,retail:p.retail,qty:1});};
-    const increaseQty=(i)=>cart.value[i].qty++;
-    const decreaseQty=(i)=>{if(cart.value[i].qty<=1)cart.value.splice(i,1);else cart.value[i].qty--;};
+    // ── Retail POS ──
+    const getSellPrice=p=>{const d=rForm.value.discount;if(d==='bronze'){const bp=getBP(p.name);return bp!==null?bp:p.retail;}return p.retail*(1-parseFloat(d));};
+    const getUnitProfit=item=>{const d=rForm.value.discount;if(d==='0.5')return 0;if(d==='bronze'){const bp=getBP(item.name);return(bp!==null?bp:item.retail)-item.cost;}return item.retail*(1-parseFloat(d))-item.cost;};
+    const isLossSale=p=>{const d=rForm.value.discount;if(d==='0.5'||d==='bronze')return false;return p.retail*(1-parseFloat(d))<p.cost;};
+    const addToCart=p=>{const ex=cart.value.find(i=>i.name===p.name);if(ex)ex.qty++;else cart.value.push({name:p.name,cost:p.cost,retail:p.retail,qty:1});};
+    const increaseQty=i=>cart.value[i].qty++;
+    const decreaseQty=i=>{if(cart.value[i].qty<=1)cart.value.splice(i,1);else cart.value[i].qty--;};
     const cartTotal=computed(()=>cart.value.reduce((s,item)=>s+getUnitProfit(item)*item.qty,0));
     const cartItemCount=computed(()=>cart.value.reduce((s,item)=>s+item.qty,0));
-    const saveRetail=async(person)=>{
-      if(!cart.value.length)return;
-      const totalP=cartTotal.value,note=cart.value.map(i=>`${i.name}×${i.qty}`).join(', ');
-      const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'零售',amount:totalP,person,client_id:rForm.value.clientId,note});
-      if(!error){
-        await Promise.all(cart.value.map(item=>modifyStock(item.name,-item.qty)));
-        cart.value=[];rForm.value.clientId=null;showRtClientDropdown.value=false;
-        await loadData();
-        alert("✅ 結帳成功\n利潤："+(totalP===0?'$0':(totalP>0?'+$':'-$')+Math.abs(totalP).toFixed(2)));
-        currentTab.value='dashboard';
-      }else alert("錯誤："+error.message);
-    };
-
-    const openRestock=(p,forceInitial=false)=>{restockForm.value={product:p,qty:0,isInitial:forceInitial};showRestockModal.value=true;};
-    const saveRestock=async(person)=>{
-      const{product,qty,isInitial}=restockForm.value;if(!product)return;
-      if(isInitial){await setStock(product.name,Number(qty));showRestockModal.value=false;alert(`✅ ${product.name}：${qty} 件`);return;}
-      if(qty<1)return alert("入貨最少 1 件");
-      const amount=product.cost*Number(qty);
-      const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'expense',category:'產品採購',amount,person,note:`${product.name} ×${qty}`});
-      if(!error){await modifyStock(product.name,Number(qty));showRestockModal.value=false;await loadData();alert(`✅ ${product.name} ×${qty} 件`);}else alert("錯誤："+error.message);
-    };
+    const saveRetail=async person=>{if(!cart.value.length)return;const totalP=cartTotal.value,note=cart.value.map(i=>`${i.name}×${i.qty}`).join(', ');const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'零售',amount:totalP,person,client_id:rForm.value.clientId,note});if(!error){await Promise.all(cart.value.map(item=>modifyStock(item.name,-item.qty)));cart.value=[];rForm.value.clientId=null;await loadData();alert("✅ 結帳成功\n利潤："+(totalP===0?'$0':(totalP>0?'+$':'-$')+Math.abs(totalP).toFixed(2)));currentTab.value='dashboard';}else alert("錯誤："+error.message);};
+    const openRestock=p=>{restockForm.value={product:p,qty:0,isInitial:false};showRestockModal.value=true;};
+    const saveRestock=async person=>{const{product,qty,isInitial}=restockForm.value;if(!product)return;if(isInitial){await setStock(product.name,Number(qty));showRestockModal.value=false;return;}if(qty<1)return alert("入貨最少 1 件");const amount=product.cost*Number(qty);const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'expense',category:'產品採購',amount,person,note:`${product.name} ×${qty}`});if(!error){await modifyStock(product.name,Number(qty));showRestockModal.value=false;await loadData();}else alert("錯誤："+error.message);};
 
     // ── Dashboard ──
-    const filterByDate=(arr)=>{
-      const now=new Date();
-      return arr.filter(f=>{
-        const matchP=reportPerson.value==='All'||f.person===reportPerson.value;if(!matchP)return false;
-        const d=new Date(f.created_at);
-        if(dateRange.value==='today')return d.toDateString()===now.toDateString();
-        if(dateRange.value==='week'){const s=new Date(now);s.setDate(now.getDate()-now.getDay());s.setHours(0,0,0,0);return d>=s;}
-        if(dateRange.value==='month')return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
-        if(dateRange.value==='year')return d.getFullYear()===now.getFullYear();
-        return true;
-      });
-    };
+    const filterByDate=arr=>{const now=new Date();return arr.filter(f=>{const matchP=reportPerson.value==='All'||f.person===reportPerson.value;if(!matchP)return false;const d=new Date(f.created_at);if(dateRange.value==='today')return d.toDateString()===now.toDateString();if(dateRange.value==='week'){const s=new Date(now);s.setDate(now.getDate()-now.getDay());s.setHours(0,0,0,0);return d>=s;}if(dateRange.value==='month')return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();if(dateRange.value==='year')return d.getFullYear()===now.getFullYear();return true;});};
     const totalIncome=computed(()=>filterByDate(finances.value).filter(f=>f.type==='income').reduce((a,b)=>a+Number(b.amount),0).toFixed(2));
     const totalExpense=computed(()=>filterByDate(finances.value).filter(f=>f.type==='expense').reduce((a,b)=>a+Number(b.amount),0).toFixed(2));
     const totalProfit=computed(()=>(parseFloat(totalIncome.value)-parseFloat(totalExpense.value)).toFixed(2));
-
-    const incomeByCategory=computed(()=>{
-      const filtered=filterByDate(finances.value).filter(f=>f.type==='income');
-      const total=filtered.reduce((s,f)=>s+Number(f.amount),0);if(!total)return[];
-      const cats={};filtered.forEach(f=>{cats[f.category]=(cats[f.category]||0)+Number(f.amount);});
-      const styles={'運動':{barColor:'bg-blue-500',textColor:'text-blue-700',emoji:'🏋️'},'零售':{barColor:'bg-emerald-500',textColor:'text-emerald-700',emoji:'🛍️'},'其他項目(收入)':{barColor:'bg-purple-500',textColor:'text-purple-700',emoji:'💚'}};
-      return Object.entries(cats).map(([name,amount])=>({name,amount,pct:Math.round(amount/total*100),...(styles[name]||{barColor:'bg-slate-400',textColor:'text-slate-600',emoji:'📌'})})).sort((a,b)=>b.amount-a.amount);
-    });
-
+    const incomeByCategory=computed(()=>{const filtered=filterByDate(finances.value).filter(f=>f.type==='income');const total=filtered.reduce((s,f)=>s+Number(f.amount),0);if(!total)return[];const cats={};filtered.forEach(f=>{cats[f.category]=(cats[f.category]||0)+Number(f.amount);});const styles={'運動':{barColor:'bg-blue-500',textColor:'text-blue-700',emoji:'🏋️'},'零售':{barColor:'bg-emerald-500',textColor:'text-emerald-700',emoji:'🛍️'},'其他項目(收入)':{barColor:'bg-purple-500',textColor:'text-purple-700',emoji:'💚'}};return Object.entries(cats).map(([name,amount])=>({name,amount,pct:Math.round(amount/total*100),...(styles[name]||{barColor:'bg-slate-400',textColor:'text-slate-600',emoji:'📌'})})).sort((a,b)=>b.amount-a.amount);});
     const branchStats=computed(()=>{const b={觀塘:0,中環:0,佐敦:0};clients.value.forEach(c=>{if(b[c.branch]!==undefined)b[c.branch]++;});return b;});
     const recentTransactions=computed(()=>finances.value.slice(0,10));
     const expiringClients=computed(()=>clients.value.filter(c=>{const d=(new Date(c.expiry_date)-new Date())/86400000;return d>=0&&d<14;}).sort((a,b)=>new Date(a.expiry_date)-new Date(b.expiry_date)));
-    const daysUntilExpiry=(date)=>Math.ceil((new Date(date)-new Date())/86400000);
+    const daysUntilExpiry=date=>Math.ceil((new Date(date)-new Date())/86400000);
     const upcomingTrials=computed(()=>{const today=new Date();today.setHours(0,0,0,0);const in30=new Date(today);in30.setDate(today.getDate()+30);return trials.value.filter(t=>{const d=new Date(t.trial_date);d.setHours(0,0,0,0);return d>=today&&d<=in30;});});
-    const daysUntilTrial=(date)=>{const today=new Date();today.setHours(0,0,0,0);const d=new Date(date);d.setHours(0,0,0,0);return Math.round((d-today)/86400000);};
+    const daysUntilTrial=date=>{const today=new Date();today.setHours(0,0,0,0);const d=new Date(date);d.setHours(0,0,0,0);return Math.round((d-today)/86400000);};
     const filteredProducts=computed(()=>products.value.filter(p=>p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase())).map(p=>({name:p.prod_name,retail:parseFloat(p.retail_price),cost:parseFloat(p.cost)})));
-    const formatDate=(iso)=>{if(!iso)return '';const d=new Date(iso);return`${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;};
-    const openWhatsApp=(phone,name)=>{if(!phone)return;const clean=phone.replace(/[^0-9]/g,''),hk=clean.startsWith('852')?clean:'852'+clean;window.open(`https://wa.me/${hk}?text=${encodeURIComponent('你好 '+name+'！你的 FITWORKHK 會籍即將到期，請盡快聯繫我們續期 💪')}`, '_blank');};
-    const isExpiring=(d)=>(new Date(d)-new Date())/86400000<14;
+    const formatDate=iso=>{if(!iso)return '';const d=new Date(iso);return`${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;};
+    const openWhatsApp=(phone,name)=>{if(!phone)return;const clean=phone.replace(/[^0-9]/g,''),hk=clean.startsWith('852')?clean:'852'+clean;window.open(`https://wa.me/${hk}?text=${encodeURIComponent('你好 '+name+'！你的 FITWORKHK 會籍即將到期，請盡快聯繫我們續期 💪')}`,'_blank');};
+    const isExpiring=d=>(new Date(d)-new Date())/86400000<14;
 
     onMounted(async()=>{
-      await checkPasskeySupport();
       sb.auth.onAuthStateChange(async(event,sessionData)=>{
         if(event==='PASSWORD_RECOVERY'){authState.value='recovery';session.value=null;return;}
         session.value=sessionData;
-        if(sessionData){
-          await loadData();
-          await loadStockFromDB();
-          await loadMonthlyMetrics();
-          checkPasskeyRegistered(sessionData.user.email);
-        }
+        if(sessionData){await loadData();await loadStockFromDB();await loadMonthlyMetrics();}
       });
       if(window.location.hash.includes('type=recovery'))authState.value='recovery';
     });
 
     return{
-      session,authState,authForm,newPassword,handleAuth,forgotPassword,updatePassword,handleLogout,
-      passkeySupported,passkeyRegistered,registerPasskey,loginWithPasskey,removePasskey,
-      currentTab,retailSubTab,financeSubTab,dashSubTab,tabs,dateRange,dateRanges,reportPerson,
-      clients,finances,products,trials,cart,monthlyMetrics,
+      session,authState,authForm,newPassword,handleAuth,forgotPassword,updatePassword,handleLogout,triggerReset,
+      showProfile,currentTab,retailSubTab,financeSubTab,dashSubTab,tabs,dateRange,dateRanges,reportPerson,
+      clients,finances,products,trials,cart,
       pSearch,cSearch,crmBranchFilter,stockSearch,stockFilter,stockFilters,txSearch,txTypeFilter,
       showExClientDropdown,exClientSearch,exFilteredClients,showRtClientDropdown,rtClientSearch,rtFilteredClients,
-      showReferralDropdown,referralSearch,referralFilteredClients,
-      getClientGeneration,genLabel,
+      showReferralDropdown,referralSearch,referralFilteredClients,genLabel,getClientGeneration,
       showClientModal,clientForm,openClient,saveClient,filteredClients,
       showExpModal,expForm,openExp,saveExp,expCats,
       showRestockModal,restockForm,openRestock,saveRestock,
       showEditTxModal,editTxForm,openEditTx,saveEditTx,deleteTx,
       showDeleteConfirm,confirmDeleteTx,
       showStockCorrectionModal,stockCorrectionForm,openStockCorrection,saveStockCorrection,correctionReasons,
-      showProfile,showMetricsModal,metricsForm,openMetricsModal,saveMonthlyMetrics,
+      showMetricsModal,metricsForm,openMetricsModal,saveMonthlyMetrics,
+      analyticsMetrics,analyticsMonthLabel,analyticsMonth,prevAnalyticsMonth,nextAnalyticsMonth,
+      analyticsAdSpend,analyticsNewClients,analyticsNewFromAds,analyticsNewFromReferral,analyticsConversionRate,
+      newClientsByBranch,analyticsRenewals,totalRenewals,renewalBranchMap,
+      analyticsRetailTx,retailByBranch,retailByPerson,marathonCount,analyticsNewMarathon,
       stockWarningExpanded,stockSyncing,
-      exerciseItems,eForm,saveExercise,
-      priceOptions,rForm,addToCart,increaseQty,decreaseQty,getUnitProfit,getSellPrice,isLossSale,
-      cartTotal,cartItemCount,saveRetail,getBronzePrice,getBronzePrice2,
-      getStock,stockInfo,quickAdjustStock,exportStockCSV,importStockCSV,triggerImport,
-      stockCategories,filteredStockCategories,totalStockQty,totalStockValue,totalRetailValue,totalBronzeValue,stockSummary,lowStockItems,
-      upcomingTrials,daysUntilTrial,todayDate,tomorrowDate,reminderDate,
+      exerciseItems,eForm,saveExercise,priceOptions,rForm,
+      addToCart,increaseQty,decreaseQty,getUnitProfit,getSellPrice,isLossSale,cartTotal,cartItemCount,saveRetail,
+      getBronzePrice,getStock,stockInfo,quickAdjustStock,exportStockCSV,importStockCSV,triggerImport,
+      stockCategories,filteredStockCategories,totalStockQty,totalStockValue,totalBronzeValue,stockSummary,lowStockItems,
+      upcomingTrials,daysUntilTrial,todayDate,tomorrowDate,
       expiringClients,daysUntilExpiry,openWhatsApp,isExpiring,
       incomeByCategory,filteredProducts,groupedTransactions,recentTransactions,
-      totalProfit,totalIncome,totalExpense,branchStats,
-      marathonStats:computed(()=>({active:clients.value.filter(c=>c.marathon).length})),
-      analyticsMonth,analyticsMonthLabel,prevAnalyticsMonth,nextAnalyticsMonth,
-      analyticsMetrics,analyticsAdSpend,analyticsNewClients,analyticsNewFromAds,analyticsNewFromReferral,
-      analyticsConversionRate,analyticsRetailTx,analyticsNewMarathon,
-      newClientsByBranch,retailByBranch,retailByPerson,
-      triggerReset:()=>{showProfile.value=false;forgotPassword();},formatDate
+      totalProfit,totalIncome,totalExpense,branchStats,formatDate
     };
   }
 }).mount('#app');
