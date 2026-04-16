@@ -1043,22 +1043,25 @@ createApp({
   
   let error;
   if(clientForm.value.id){
-    const res = await sb.from('clients').update(fieldsToSave).eq('id',clientForm.value.id).eq('user_id',session.value.user.id);
+    const res = await sb.from('clients').update(fieldsToSave)
+      .eq('id', clientForm.value.id)
+      .eq('user_id', session.value.user.id);
     error = res.error;
+    console.log('3️⃣ update 結果:', res);
   } else {
     const res = await sb.from('clients').insert([fieldsToSave]);
     error = res.error;
-    console.log('3️⃣ insert 結果:', res); // 加這行
+    console.log('3️⃣ insert 結果:', res);
   }
   
   console.log('4️⃣ error:', error);
   
   if(!error){
-    showClientModal.value=false;
-    showReferralDropdown.value=false;
+    showClientModal.value = false;
+    showReferralDropdown.value = false;
     await loadData();
   } else {
-    alert("儲存失敗："+error.message);
+    alert("儲存失敗：" + error.message);
   }
 };
 
