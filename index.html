@@ -586,7 +586,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
                 <div class="flex items-center bg-slate-100 rounded-xl overflow-hidden">
                   <button @click="modifyStock(p.prod_name,-1)" class="w-8 h-8 flex items-center justify-center font-black text-slate-600 active:bg-slate-200 select-none">−</button>
                   <span class="text-sm font-black text-slate-800 w-8 text-center select-none">{{ getStock(p.prod_name) }}</span>
-                  <button @click="modifyStock(p.prod_name,1)"" class="w-8 h-8 flex items-center justify-center font-black text-slate-600 active:bg-slate-200 select-none">+</button>
+                  <button @click="modifyStock(p.prod_name,1)" class="w-8 h-8 flex items-center justify-center font-black text-slate-600 active:bg-slate-200 select-none">+</button>
                 </div>
                 <button @click="openRestock({name:p.prod_name,cost:parseFloat(p.cost||0),retail:parseFloat(p.retail_price||0)})" class="text-xs font-black bg-amber-100 text-amber-700 px-3 py-2 rounded-xl border border-amber-200 active:scale-90">📦 入貨</button>
                 <button @click="openStockCorrection(p)" class="text-xs font-black bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-200 active:scale-90">✏️</button>
