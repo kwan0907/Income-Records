@@ -1116,7 +1116,9 @@ createApp({
     const daysUntilExpiry=date=>Math.ceil((new Date(date)-new Date())/86400000);
     const upcomingTrials=computed(()=>{const today=new Date();today.setHours(0,0,0,0);const in30=new Date(today);in30.setDate(today.getDate()+30);return trials.value.filter(t=>{const d=new Date(t.trial_date);d.setHours(0,0,0,0);return d>=today&&d<=in30;});});
     const daysUntilTrial=date=>{const today=new Date();today.setHours(0,0,0,0);const d=new Date(date);d.setHours(0,0,0,0);return Math.round((d-today)/86400000);};
-    const filteredProducts=computed(()=>products.value.filter(p=>p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase())).map(p=>({name:p.prod_name,retail:parseFloat(p.retail_price||0),cost:parseFloat(p.cost||0)})));
+const filteredProducts=computed(()=>products.value
+  .filter(p=>p.prod_name && p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase()))
+  .map(p=>({name:p.prod_name,retail:parseFloat(p.retail_price||0),cost:parseFloat(p.cost||0)})));
     const formatDate=iso=>{if(!iso)return '';const d=new Date(iso);return`${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;};
     const openWhatsApp=(phone,name)=>{if(!phone)return;const clean=phone.replace(/[^0-9]/g,''),hk=clean.startsWith('852')?clean:'852'+clean;window.open(`https://wa.me/${hk}?text=${encodeURIComponent('你好 '+name+'！你的 FITWORKHK 會籍即將到期，請盡快聯繫我們續期 💪')}`,'_blank');};
     const isExpiring=d=>(new Date(d)-new Date())/86400000<14;
