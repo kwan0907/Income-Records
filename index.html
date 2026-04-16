@@ -584,9 +584,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
               <span class="text-xs font-black px-2.5 py-1 rounded-lg border" :class="stockInfo(p.prod_name).badge">{{ stockInfo(p.prod_name).text }}</span>
               <div class="flex items-center gap-2">
                 <div class="flex items-center bg-slate-100 rounded-xl overflow-hidden">
-                  <button @click="quickAdjustStock(p.prod_name,-1)" class="w-8 h-8 flex items-center justify-center font-black text-slate-600 active:bg-slate-200 select-none">−</button>
+                  <button @click="modifyStock(p.prod_name,-1)" class="w-8 h-8 flex items-center justify-center font-black text-slate-600 active:bg-slate-200 select-none">−</button>
                   <span class="text-sm font-black text-slate-800 w-8 text-center select-none">{{ getStock(p.prod_name) }}</span>
-                  <button @click="quickAdjustStock(p.prod_name,1)" class="w-8 h-8 flex items-center justify-center font-black text-slate-600 active:bg-slate-200 select-none">+</button>
+                  <button @click="modifyStock(p.prod_name,1)"" class="w-8 h-8 flex items-center justify-center font-black text-slate-600 active:bg-slate-200 select-none">+</button>
                 </div>
                 <button @click="openRestock({name:p.prod_name,cost:parseFloat(p.cost||0),retail:parseFloat(p.retail_price||0)})" class="text-xs font-black bg-amber-100 text-amber-700 px-3 py-2 rounded-xl border border-amber-200 active:scale-90">📦 入貨</button>
                 <button @click="openStockCorrection(p)" class="text-xs font-black bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-200 active:scale-90">✏️</button>
@@ -932,7 +932,6 @@ createApp({
     const getStock=n=>(!n?0:stockData[n]??0);
     const modifyStock=async(name,delta)=>{const q=Math.max(0,(stockData[name]??0)+delta);stockData[name]=q;await syncStockToDB(name,q);};
     const setStock=async(name,qty)=>{const q=Math.max(0,qty);stockData[name]=q;await syncStockToDB(name,q);};
-    const quickAdjustStock=(name,delta)=>modifyStock(name,delta);
     const stockInfo=n=>{const s=getStock(n),pct=Math.min(100,Math.round(s/20*100));if(s===0)return{text:'缺貨',badge:'bg-red-100 text-red-600 border-red-200',bar:'bg-red-400',pct,numColor:'text-red-500',cardBorder:'border-red-100'};if(s<5)return{text:'不足',badge:'bg-amber-100 text-amber-700 border-amber-200',bar:'bg-amber-400',pct,numColor:'text-amber-600',cardBorder:'border-amber-100'};if(s<10)return{text:'正常',badge:'bg-blue-100 text-blue-700 border-blue-200',bar:'bg-blue-400',pct,numColor:'text-blue-600',cardBorder:'border-slate-100'};return{text:'充足',badge:'bg-emerald-100 text-emerald-700 border-emerald-200',bar:'bg-emerald-500',pct,numColor:'text-emerald-600',cardBorder:'border-emerald-100'};};
 
     // ✅ 從資料庫欄位讀取銅級價
@@ -967,13 +966,23 @@ createApp({
     // ============ Referral ============
     const getClientGeneration=cid=>{let gen=0,c=clients.value.find(x=>x.id===cid);const v=new Set();while(c&&c.referred_by_id){if(v.has(c.id)||gen>10)break;v.add(c.id);c=clients.value.find(x=>x.id===c.referred_by_id);gen++;}return gen;};
     const genLabel=cid=>{const g=getClientGeneration(cid);if(g===0)return{label:'直接',cls:'bg-slate-100 text-slate-500'};if(g===1)return{label:'1代',cls:'bg-blue-100 text-blue-600'};if(g===2)return{label:'2代',cls:'bg-purple-100 text-purple-600'};return{label:g+'代',cls:'bg-indigo-100 text-indigo-600'};};
-    const exFilteredClients=computed(()=>{const q=exClientSearch.value.toLowerCase();return clients.value.filter(c=>!q||(c.name+(c.phone||'')).toLowerCase().includes(q)).slice(0,40);});
-    const rtFilteredClients=computed(()=>{const q=rtClientSearch.value.toLowerCase();return clients.value.filter(c=>!q||(c.name+(c.phone||'')).toLowerCase().includes(q)).slice(0,40);});
+    const filterClients=(searchRef)=>computed(()=>{
+  const q=searchRef.value.toLowerCase();
+  return clients.value.filter(c=>!q||(c.name+(c.phone||'')).toLowerCase().includes(q)).slice(0,40);
+});
+const exFilteredClients=filterClients(exClientSearch);
+const rtFilteredClients=filterClients(rtClientSearch);
     const referralFilteredClients=computed(()=>{const q=referralSearch.value.toLowerCase(),cid=clientForm.value.id;return clients.value.filter(c=>c.id!==cid&&(!q||(c.name+(c.phone||'')).toLowerCase().includes(q))).slice(0,40);});
 
     // ============ Auth ============
     const handleAuth=async()=>{const{email,password}=authForm.value;const res=authState.value==='login'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});if(res.error)alert(res.error.message);};
-    const forgotPassword=async()=>{const e=prompt("輸入已註冊的 Email：");if(!e)return;const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:'https://incomesapp.netlify.app/'});if(!error)alert("重設郵件已發送！");else alert(error.message);};
+    const forgotPassword=async()=>{
+  const e=authForm.value.email;
+  if(!e)return alert("請先在 Email 欄位輸入你的 Email");
+  const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:'https://incomesapp.netlify.app/'});
+  if(!error)alert("重設郵件已發送到 "+e);
+  else alert(error.message);
+};
     const updatePassword=async()=>{if(!newPassword.value||newPassword.value.length<6)return alert("密碼最少 6 個字元");const{error}=await sb.auth.updateUser({password:newPassword.value});if(!error){alert("✅ 密碼更新成功！");await sb.auth.signOut();authState.value='login';session.value=null;}else alert(error.message);};
     const handleLogout=async()=>{await sb.auth.signOut();session.value=null;showProfile.value=false;};
     const triggerReset=()=>{showProfile.value=false;forgotPassword();};
@@ -1168,7 +1177,7 @@ createApp({
       clients,finances,products,trials,cart,
       pSearch,cSearch,crmBranchFilter,stockSearch,stockFilter,stockFilters,txSearch,txTypeFilter,
       showExClientDropdown,exClientSearch,exFilteredClients,showRtClientDropdown,rtClientSearch,rtFilteredClients,
-      showReferralDropdown,referralSearch,referralFilteredClients,genLabel,getClientGeneration,
+      showReferralDropdown,referralSearch,referralFilteredClients,
       showClientModal,clientForm,openClient,saveClient,filteredClients,
       showExpModal,expForm,openExp,saveExp,expCats,
       showRestockModal,restockForm,openRestock,saveRestock,
@@ -1183,7 +1192,7 @@ createApp({
       stockWarningExpanded,stockSyncing,
       exerciseItems,eForm,saveExercise,priceOptions,rForm,
       addToCart,increaseQty,decreaseQty,getUnitProfit,getSellPrice,isLossSale,cartTotal,cartItemCount,saveRetail,
-      getBronzePrice,getStock,stockInfo,quickAdjustStock,exportStockCSV,importStockCSV,triggerImport,
+      getBronzePrice,getStock,stockInfo,modifyStock,exportStockCSV,importStockCSV,triggerImport,
       stockCategories,filteredStockCategories,totalStockQty,totalStockValue,totalBronzeValue,stockSummary,lowStockItems,
       upcomingTrials,daysUntilTrial,todayDate,tomorrowDate,
       expiringClients,daysUntilExpiry,openWhatsApp,isExpiring,
