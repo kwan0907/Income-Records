@@ -1024,29 +1024,43 @@ createApp({
     };
 
     // ✅ 修正版 saveClient
-    const saveClient=async()=>{
-      if(!clientForm.value.name)return alert("請輸入客戶姓名");
-      const fieldsToSave={
-        name:clientForm.value.name,
-        phone:clientForm.value.phone||null,
-        branch:clientForm.value.branch,
-        source:clientForm.value.source,
-        marathon:clientForm.value.marathon||false,
-        expiry_date:clientForm.value.expiry_date||null,
-        referred_by_id:clientForm.value.referred_by_id||null,
-        user_id:session.value.user.id
-      };
-      let error;
-      if(clientForm.value.id){
-        const res=await sb.from('clients').update(fieldsToSave).eq('id',clientForm.value.id).eq('user_id',session.value.user.id);
-        error=res.error;
-      }else{
-        const res=await sb.from('clients').insert([fieldsToSave]);
-        error=res.error;
-      }
-      if(!error){showClientModal.value=false;showReferralDropdown.value=false;await loadData();}
-      else alert("儲存失敗："+error.message);
-    };
+    const saveClient = async () => {
+  console.log('1️⃣ saveClient 被呼叫');
+  if(!clientForm.value.name) return alert("請輸入客戶姓名");
+  
+  const fieldsToSave = {
+    name: clientForm.value.name,
+    phone: clientForm.value.phone||null,
+    branch: clientForm.value.branch,
+    source: clientForm.value.source,
+    marathon: clientForm.value.marathon||false,
+    expiry_date: clientForm.value.expiry_date||null,
+    referred_by_id: clientForm.value.referred_by_id||null,
+    user_id: session.value.user.id
+  };
+  
+  console.log('2️⃣ 準備儲存:', JSON.stringify(fieldsToSave));
+  
+  let error;
+  if(clientForm.value.id){
+    const res = await sb.from('clients').update(fieldsToSave).eq('id',clientForm.value.id).eq('user_id',session.value.user.id);
+    error = res.error;
+  } else {
+    const res = await sb.from('clients').insert([fieldsToSave]);
+    error = res.error;
+    console.log('3️⃣ insert 結果:', res); // 加這行
+  }
+  
+  console.log('4️⃣ error:', error);
+  
+  if(!error){
+    showClientModal.value=false;
+    showReferralDropdown.value=false;
+    await loadData();
+  } else {
+    alert("儲存失敗："+error.message);
+  }
+};
 
     const filteredClients=computed(()=>clients.value.filter(c=>(c.name+(c.phone||'')).toLowerCase().includes(cSearch.value.toLowerCase())&&(crmBranchFilter.value==='全部'||c.branch===crmBranchFilter.value)));
 
