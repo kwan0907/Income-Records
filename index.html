@@ -481,61 +481,24 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             </div>
           </div>
         </div>
-       <div class="relative">
-  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
-  <input
-    v-model="pSearch"
-    placeholder="搜尋產品..."
-    class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400"
-  >
-</div>
-
-<div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden max-h-72 overflow-y-auto no-scrollbar">
-  <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex justify-between items-center sticky top-0">
-    <span class="text-xs text-slate-400 font-bold">產品</span>
-    <span class="text-xs text-slate-400 font-bold">庫存 / 售價</span>
-  </div>
-
-  <div v-if="filteredProducts.length === 0" class="p-6 text-center text-slate-300 text-sm">
-    找不到產品
-  </div>
-
-  <div
-    v-for="(p, i) in filteredProducts"
-    :key="p.id"
-    :class="i < filteredProducts.length - 1 ? 'border-b border-slate-50' : ''"
-    class="flex items-center gap-2 pr-3"
-  >
-    <div
-      @click="addToCart(p)"
-      class="flex-1 px-4 py-3.5 flex items-center gap-2 cursor-pointer active:bg-emerald-50 min-w-0"
-    >
-      <span class="font-semibold text-sm flex-1 truncate">{{ p.prod_name }}</span>
-
-      <span
-        :class="p.stock_no === 0
-          ? 'bg-red-100 text-red-600 border-red-200'
-          : p.stock_no <= 3
-            ? 'bg-amber-100 text-amber-700 border-amber-200'
-            : 'bg-slate-100 text-slate-500 border-slate-200'"
-        class="text-xs font-black px-2 py-0.5 rounded-lg border font-mono flex-shrink-0"
-      >
-        {{ p.stock_no === 0 ? '缺貨' : '庫' + p.stock_no }}
-      </span>
-
-      <span
-        :class="rForm.discount === 'bronze'
-          ? 'text-amber-600 font-black'
-          : isLossSale(p)
-            ? 'text-red-500'
-            : 'text-emerald-600'"
-        class="font-black text-sm flex-shrink-0"
-      >
-        ${{ p.price.toFixed(0) }}
-      </span>
-    </div>
-  </div>
-</div>
+        <div class="relative">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
+          <input v-model="pSearch" placeholder="搜尋產品..." class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400">
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden max-h-72 overflow-y-auto no-scrollbar">
+          <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex justify-between items-center sticky top-0">
+            <span class="text-xs text-slate-400 font-bold">產品</span><span class="text-xs text-slate-400 font-bold">庫存 / 售價</span>
+          </div>
+          <div v-if="filteredProducts.length===0" class="p-6 text-center text-slate-300 text-sm">找不到產品</div>
+          <div v-for="(p,i) in filteredProducts" :key="p.name" :class="i<filteredProducts.length-1?'border-b border-slate-50':''" class="flex items-center gap-2 pr-3">
+            <div @click="addToCart(p)" class="flex-1 px-4 py-3.5 flex items-center gap-2 cursor-pointer active:bg-emerald-50 min-w-0">
+              <span class="font-semibold text-sm flex-1 truncate">{{ p.name }}</span>
+              <span :class="getStock(p.name)===0?'bg-red-100 text-red-600 border-red-200':getStock(p.name)<=3?'bg-amber-100 text-amber-700 border-amber-200':'bg-slate-100 text-slate-500 border-slate-200'" class="text-xs font-black px-2 py-0.5 rounded-lg border font-mono flex-shrink-0">{{ getStock(p.name)===0?'缺貨':'庫'+getStock(p.name) }}</span>
+              <span :class="rForm.discount==='bronze'?'text-amber-600 font-black':isLossSale(p)?'text-red-500':'text-emerald-600'" class="font-black text-sm flex-shrink-0">${{ getSellPrice(p).toFixed(0) }}</span>
+            </div>
+            <button @click.stop="openRestock({name:p.name,cost:p.cost,retail:p.retail})" class="flex-shrink-0 bg-amber-100 text-amber-700 text-xs font-black px-2.5 py-1.5 rounded-lg active:scale-90 border border-amber-200">入貨</button>
+          </div>
+        </div>
         <div v-if="cart.length>0" class="bg-slate-900 rounded-2xl p-5 text-white">
           <div class="flex items-center justify-between mb-4">
             <div><p class="text-xs font-bold text-slate-400 uppercase">購物車</p><p class="text-xs text-slate-500 mt-0.5">{{ cartItemCount }} 件 · {{ cart.length }} 款</p></div>
@@ -910,15 +873,10 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 </div>
 
 <script>
-const {createApp,ref,reactive,computed,onMounted,watch}=Vue;
-// Supabase 初始化（用你自己的URL和KEY）
-const SUPA_URL = "https://ajjunextiofcpdhyqn.supabase.co";
-const SUPA_KEY = "const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
-const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-
-// 全局产品相关变量
-const pSearch = ref(''); // 搜索关键词
-const products = ref([]); // 存储Supabase产品数据
+const{createApp,ref,reactive,computed,onMounted,watch}=Vue;
+const SUPA_URL="https://ajnunehxtiofcphdyhqn.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
+const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 
 const BRONZE_PRICES={'營養蛋白素-雲呢拿':400.4,'營養蛋白素-野草莓':400.4,'營養蛋白素-朱古力':400.4,'營養蛋白素-曲奇妙趣':400.4,'營養蛋白素-薄荷朱古力':400.4,'營養蛋白素-鮮奶咖啡':400.4,'營養蛋白素-紅豆薏仁':400.4,'濃縮蘆薈汁-原味':384.8,'濃縮蘆薈汁-柑橘味':384.8,'濃縮蘆薈汁-葡萄味':384.8,'天然瓜拿拿茶':278.75,'即溶草本飲品50克-桃味':327.1,'即溶草本飲品102克':578.2,'即溶草本飲品102克-蘋果甘菊味':578.2,'佳能蛋白質粉':318.45,'營養纖維粉(蘋果味)':361.55,'營養纖維粉(原味)':361.55,'夜寧新營養飲品':1427.2,'膠原蛋白美肌飲料':828.45,'BC30 益生菌':323.55,'Liftoff能量飲品 - 檸檬-青檸味':258.9,'Liftoff能量飲品 - 香橙味':258.9,'消脂片':239.9,'抗脂片':315.75,'甲殼纖維素':478.95,'美纖片':468.6,'莓之寶':239.9,'香蒜片':239.05,'露思抗氧化精華':366.8,'深海魚油':401.25,'南極磷蝦油':546.15,'多種維他命':317.6,'女士之選':490.15,'關捷寶':717,'複合鈣片':186.45,'營養蛋白素 24 - 雲尼拿味':668.8,'補水24':330.05,'健體 24 - 朱古力味':1028.55,'CR7 水健力':408.1,'速備24':1175.25,'雲尼拿杏仁味蛋白棒':196.3,'一口蛋白棒':234.55,'營養蛋白素-精選配方 雲呢拿':402.95,'醒腦靈':501.35,'五味子精華':284.7,'鋅維思':164.75,'禦之寶 -黑加侖子味':167.45,'朱古力咖啡':418.55,'蘆薈舒緩潔面乳':270.1,'活養草本爽膚水 - 150ML':517.8,'抗皺精華霜':602.3,'注顏修護日霜':454.7,'盈亮緊緻眼部啫喱':421.95,'深層滋潤眼霜':421.95,'修護晚霜':454.7,'防曬日霜 SPF30/PA+++':454.7,'維他命面膜 – 保濕':149.1,'蘆薈滋潤沐浴露 250 毫升':125.05,'蘆薈潤膚啫喱 200 毫升':125.05,'蘆薈滋潤乳霜 200 毫升':125.05,'日日強韌蘆薈護髮乳':125.05,'日日強韌蘆薈洗髮露':125.05,'康寶萊事業套裝':428,'優惠客戶尊尚套裝':178,'康寶萊事業套裝(適用於優惠客戶轉為會員購買)':428,'會藉服務年費':93};
 const getBP=n=>BRONZE_PRICES[n?.trim()]??null;
@@ -1012,15 +970,19 @@ createApp({
     const handleLogout=async()=>{await sb.auth.signOut();session.value=null;showProfile.value=false;};
     const triggerReset=()=>{showProfile.value=false;forgotPassword();};
 
-    // Data
+    // ✅ 修正1: loadData - 移除 is_active 過濾，改為載入所有產品
     const loadData=async()=>{
       const uid=session.value.user.id,today=new Date().toISOString().split('T')[0];
-      const[{data:c},{data:f},{data:prods},{data:tr}]=await Promise.all([
+      const[{data:c,error:ce},{data:f,error:fe},{data:prods,error:pe},{data:tr,error:te}]=await Promise.all([
         sb.from('clients').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
         sb.from('finances').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
-        sb.from('products').select('*').eq('is_active',true).order('prod_name'),
+        sb.from('products').select('*').order('prod_name'), // ✅ 移除 eq('is_active',true)
         sb.from('trials').select('*').eq('user_id',uid).gte('trial_date',today).order('trial_date',{ascending:true})
       ]);
+      if(ce)console.error('clients error:',ce.message);
+      if(fe)console.error('finances error:',fe.message);
+      if(pe)console.error('products error:',pe.message);
+      if(te)console.error('trials error:',te.message);
       clients.value=c||[];finances.value=f||[];products.value=prods||[];trials.value=tr||[];
     };
 
@@ -1065,41 +1027,40 @@ createApp({
       showReferralDropdown.value=false;referralSearch.value='';showClientModal.value=true;
     };
 
-    // ✅ 修正版 saveClient
-   const saveClient = async () => {
-  try {
-    console.log('1️⃣ saveClient 被呼叫');
-    if(!clientForm.value.name) return alert("請輸入客戶姓名");
-    
-    const fieldsToSave = {
-      name: clientForm.value.name,
-      phone: clientForm.value.phone||null,
-      branch: clientForm.value.branch,
-      source: clientForm.value.source,
-      marathon: clientForm.value.marathon||false,
-      expiry_date: clientForm.value.expiry_date||null,
-      referred_by_id: clientForm.value.referred_by_id||null,
-      user_id: session.value.user.id
+    // ✅ 修正2: saveClient - 同時支援 INSERT（新增）和 UPDATE（修改）
+    const saveClient=async()=>{
+      try{
+        if(!clientForm.value.name||!clientForm.value.name.trim())return alert('請輸入客戶姓名');
+        const fieldsToSave={
+          name:clientForm.value.name.trim(),
+          phone:clientForm.value.phone||null,
+          branch:clientForm.value.branch,
+          source:clientForm.value.source,
+          marathon:!!clientForm.value.marathon,
+          expiry_date:clientForm.value.expiry_date||null,
+          referred_by_id:clientForm.value.referred_by_id||null,
+          user_id:session.value.user.id
+        };
+        let error;
+        if(clientForm.value.id){
+          // 修改現有客戶
+          ({error}=await sb.from('clients').update(fieldsToSave).eq('id',clientForm.value.id).eq('user_id',session.value.user.id));
+        }else{
+          // 新增客戶
+          ({error}=await sb.from('clients').insert([fieldsToSave]));
+        }
+        if(!error){
+          showClientModal.value=false;
+          showReferralDropdown.value=false;
+          await loadData();
+          alert(clientForm.value.id?'✅ 客戶資料已更新！':'✅ 客戶新增成功！');
+        }else{
+          alert('儲存失敗：'+error.message+'\n\n如果顯示 row-level security，\n請到 Supabase → Table Editor → clients → Disable RLS');
+        }
+      }catch(e){
+        alert('系統錯誤：'+e.message);
+      }
     };
-    
-    console.log('2️⃣ 準備儲存:', JSON.stringify(fieldsToSave));
-    
-    const res = await sb.from('clients').insert([fieldsToSave]);
-    
-    console.log('3️⃣ 完整結果:', JSON.stringify(res));
-    
-    if(!res.error){
-      showClientModal.value = false;
-      await loadData();
-    } else {
-      alert("儲存失敗：" + res.error.message);
-    }
-    
-  } catch(e) {
-    console.error('💥 例外錯誤:', e); // 這裡會顯示真正原因
-    alert('例外：' + e.message);
-  }
-};
 
     const filteredClients=computed(()=>clients.value.filter(c=>(c.name+(c.phone||'')).toLowerCase().includes(cSearch.value.toLowerCase())&&(crmBranchFilter.value==='全部'||c.branch===crmBranchFilter.value)));
 
