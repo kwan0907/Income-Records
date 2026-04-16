@@ -940,7 +940,11 @@ createApp({
     const stockInfo=n=>{const s=getStock(n),pct=Math.min(100,Math.round(s/20*100));if(s===0)return{text:'缺貨',badge:'bg-red-100 text-red-600 border-red-200',bar:'bg-red-400',pct,numColor:'text-red-500',cardBorder:'border-red-100'};if(s<5)return{text:'不足',badge:'bg-amber-100 text-amber-700 border-amber-200',bar:'bg-amber-400',pct,numColor:'text-amber-600',cardBorder:'border-amber-100'};if(s<10)return{text:'正常',badge:'bg-blue-100 text-blue-700 border-blue-200',bar:'bg-blue-400',pct,numColor:'text-blue-600',cardBorder:'border-slate-100'};return{text:'充足',badge:'bg-emerald-100 text-emerald-700 border-emerald-200',bar:'bg-emerald-500',pct,numColor:'text-emerald-600',cardBorder:'border-emerald-100'};};
     const stockCategories=computed(()=>{
       const cats={'內':{name:'💊 内服產品',emoji:'💊',items:[]},'外':{name:'🧴 外用產品',emoji:'🧴',items:[]}};
-      products.value.forEach(p=>{const key=cats[p.category]?p.category:'內';cats[key].items.push(p);});
+      products.value.forEach(p=>{
+  if(!p.prod_name) return;
+  const key=cats[p.category]?p.category:'內';
+  cats[key].items.push(p);
+});
       return Object.values(cats).filter(c=>c.items.length>0);
     });
     const filteredStockCategories=computed(()=>stockCategories.value.map(cat=>({...cat,items:cat.items.filter(p=>{const matchS=!stockSearch.value||p.prod_name.toLowerCase().includes(stockSearch.value.toLowerCase());const s=getStock(p.prod_name);const matchF=stockFilter.value==='all'||(stockFilter.value==='danger'&&s===0)||(stockFilter.value==='low'&&s>0&&s<5)||(stockFilter.value==='ok'&&s>=5);return matchS&&matchF;})})).filter(c=>c.items.length>0));
