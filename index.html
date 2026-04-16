@@ -481,24 +481,61 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             </div>
           </div>
         </div>
-        <div class="relative">
-          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
-          <input v-model="pSearch" placeholder="搜尋產品..." class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400">
-        </div>
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden max-h-72 overflow-y-auto no-scrollbar">
-          <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex justify-between items-center sticky top-0">
-            <span class="text-xs text-slate-400 font-bold">產品</span><span class="text-xs text-slate-400 font-bold">庫存 / 售價</span>
-          </div>
-          <div v-if="filteredProducts.length===0" class="p-6 text-center text-slate-300 text-sm">找不到產品</div>
-          <div v-for="(p,i) in filteredProducts" :key="p.name" :class="i<filteredProducts.length-1?'border-b border-slate-50':''" class="flex items-center gap-2 pr-3">
-            <div @click="addToCart(p)" class="flex-1 px-4 py-3.5 flex items-center gap-2 cursor-pointer active:bg-emerald-50 min-w-0">
-              <span class="font-semibold text-sm flex-1 truncate">{{ p.name }}</span>
-              <span :class="getStock(p.name)===0?'bg-red-100 text-red-600 border-red-200':getStock(p.name)<=3?'bg-amber-100 text-amber-700 border-amber-200':'bg-slate-100 text-slate-500 border-slate-200'" class="text-xs font-black px-2 py-0.5 rounded-lg border font-mono flex-shrink-0">{{ getStock(p.name)===0?'缺貨':'庫'+getStock(p.name) }}</span>
-              <span :class="rForm.discount==='bronze'?'text-amber-600 font-black':isLossSale(p)?'text-red-500':'text-emerald-600'" class="font-black text-sm flex-shrink-0">${{ getSellPrice(p).toFixed(0) }}</span>
-            </div>
-            <button @click.stop="openRestock({name:p.name,cost:p.cost,retail:p.retail})" class="flex-shrink-0 bg-amber-100 text-amber-700 text-xs font-black px-2.5 py-1.5 rounded-lg active:scale-90 border border-amber-200">入貨</button>
-          </div>
-        </div>
+       <div class="relative">
+  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300">🔍</span>
+  <input
+    v-model="pSearch"
+    placeholder="搜尋產品..."
+    class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400"
+  >
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden max-h-72 overflow-y-auto no-scrollbar">
+  <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex justify-between items-center sticky top-0">
+    <span class="text-xs text-slate-400 font-bold">產品</span>
+    <span class="text-xs text-slate-400 font-bold">庫存 / 售價</span>
+  </div>
+
+  <div v-if="filteredProducts.length === 0" class="p-6 text-center text-slate-300 text-sm">
+    找不到產品
+  </div>
+
+  <div
+    v-for="(p, i) in filteredProducts"
+    :key="p.id"
+    :class="i < filteredProducts.length - 1 ? 'border-b border-slate-50' : ''"
+    class="flex items-center gap-2 pr-3"
+  >
+    <div
+      @click="addToCart(p)"
+      class="flex-1 px-4 py-3.5 flex items-center gap-2 cursor-pointer active:bg-emerald-50 min-w-0"
+    >
+      <span class="font-semibold text-sm flex-1 truncate">{{ p.prod_name }}</span>
+
+      <span
+        :class="p.stock_no === 0
+          ? 'bg-red-100 text-red-600 border-red-200'
+          : p.stock_no <= 3
+            ? 'bg-amber-100 text-amber-700 border-amber-200'
+            : 'bg-slate-100 text-slate-500 border-slate-200'"
+        class="text-xs font-black px-2 py-0.5 rounded-lg border font-mono flex-shrink-0"
+      >
+        {{ p.stock_no === 0 ? '缺貨' : '庫' + p.stock_no }}
+      </span>
+
+      <span
+        :class="rForm.discount === 'bronze'
+          ? 'text-amber-600 font-black'
+          : isLossSale(p)
+            ? 'text-red-500'
+            : 'text-emerald-600'"
+        class="font-black text-sm flex-shrink-0"
+      >
+        ${{ p.price.toFixed(0) }}
+      </span>
+    </div>
+  </div>
+</div>
         <div v-if="cart.length>0" class="bg-slate-900 rounded-2xl p-5 text-white">
           <div class="flex items-center justify-between mb-4">
             <div><p class="text-xs font-bold text-slate-400 uppercase">購物車</p><p class="text-xs text-slate-500 mt-0.5">{{ cartItemCount }} 件 · {{ cart.length }} 款</p></div>
