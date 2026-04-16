@@ -1809,22 +1809,41 @@ createApp({
       showClientModal.value = true;
     };
     const saveClient = async () => {
-      if (!clientForm.value.name) return alert("請輸入客戶姓名");
-      const { id, ...rest } = clientForm.value;
-      const payload = { ...rest, user_id: session.value.user.id };
-      if (!payload.referred_by_id) payload.referred_by_id = null;
-      const res = id
-        ? await sb.from('clients').update(payload).eq('id', id)
-        : await sb.from('clients').insert([payload]);
-      if (!res.error) { showClientModal.value = false; showReferralDropdown.value = false; await loadData(); }
-      else alert(res.error.message);
-    };
-    const filteredClients = computed(() =>
-      clients.value.filter(c =>
-        (c.name + (c.phone || '')).toLowerCase().includes(cSearch.value.toLowerCase()) &&
-        (crmBranchFilter.value === '全部' || c.branch === crmBranchFilter.value)
-      )
-    );
+  if (!clientForm.value.name) return alert("請輸入客戶姓名");
+
+  const fieldsToSave = {
+    name:            clientForm.value.name,
+    phone:           clientForm.value.phone     || null,
+    branch:          clientForm.value.branch,
+    source:          clientForm.value.source,
+    marathon:        clientForm.value.marathon  || false,
+    expiry_date:     clientForm.value.expiry_date || null,
+    referred_by_id:  clientForm.value.referred_by_id || null,
+    user_id:         session.value.user.id
+  };
+
+  let error;
+  if (clientForm.value.id) {
+    // 更新：加 user_id 條件雙重保護 RLS
+    const res = await sb.from('clients')
+      .update(fieldsToSave)
+      .eq('id', clientForm.value.id)
+      .eq('user_id', session.value.user.id);
+    error = res.error;
+  } else {
+    // 新增
+    const res = await sb.from('clients').insert([fieldsToSave]);
+    error = res.error;
+  }
+
+  if (!error) {
+    showClientModal.value = false;
+    showReferralDropdown.value = false;
+    await loadData();
+  } else {
+    alert("儲存失敗：" + error.message);
+  }
+};
 
     // ════════════════════════════════
     // FINANCE
