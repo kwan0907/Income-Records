@@ -941,10 +941,10 @@ createApp({
     const stockCategories=computed(()=>{
       const cats={'內':{name:'💊 内服產品',emoji:'💊',items:[]},'外':{name:'🧴 外用產品',emoji:'🧴',items:[]}};
       products.value.forEach(p=>{
-  if(!p.prod_name) return;
-  const key=cats[p.category]?p.category:'內';
-  cats[key].items.push(p);
-});
+        if(!p.prod_name) return;
+        const key=cats[p.category]?p.category:'內';
+        cats[key].items.push(p);
+      });
       return Object.values(cats).filter(c=>c.items.length>0);
     });
     const filteredStockCategories=computed(()=>stockCategories.value.map(cat=>({...cat,items:cat.items.filter(p=>{const matchS=!stockSearch.value||p.prod_name.toLowerCase().includes(stockSearch.value.toLowerCase());const s=getStock(p.prod_name);const matchF=stockFilter.value==='all'||(stockFilter.value==='danger'&&s===0)||(stockFilter.value==='low'&&s>0&&s<5)||(stockFilter.value==='ok'&&s>=5);return matchS&&matchF;})})).filter(c=>c.items.length>0));
@@ -958,7 +958,7 @@ createApp({
     const getBronzePrice=n=>getBP(n);
     const exportStockCSV=()=>{if(!products.value.length)return;const now=new Date();const rows=[['產品名稱','庫存','廠本','銅級','零售','狀態']];products.value.forEach(p=>{const s=getStock(p.prod_name),bp=getBP(p.prod_name);rows.push([p.prod_name,s,parseFloat(p.cost||0).toFixed(2),bp?bp.toFixed(2):'',parseFloat(p.retail_price||0).toFixed(2),s===0?'缺貨':s<5?'不足':s<10?'正常':'充足']);});const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`FITWORKHK_庫存_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);};
     const triggerImport=()=>{const el=document.getElementById('stockImportInput');if(el)el.click();};
-    const importStockCSV=async event=>{const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async e=>{const text=e.target.result.replace(/^\uFEFF/,'');const lines=text.split(/\r?\n/).filter(l=>l.trim());let imported=0,skipped=0;for(const line of lines){const parts=line.split(',').map(p=>p.trim().replace(/^["'`]|["'`]$/g,''));if(parts.length<2)continue;const name=parts[0].trim();if(!name||['產品名稱','FITWORKHK','匯出','類別'].some(h=>name.startsWith(h)))continue;const qty=parseInt(parts[1].replace(/[^0-9]/g,''),10);if(!isNaN(qty)&&qty>=0){await setStock(name,qty);imported++;}else skipped++;}event.target.value='';alert(`✅ 匯入完成\n✓ ${imported} 款\n⚠ 跳過 ${skipped} 行`);};reader.readAsText(file,'UTF-8');};
+    const importStockCSV=async event=>{const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async e=>{const text=e.target.result.replace(/^\uFEFF/,'');const lines=text.split(/\r?\n/).filter(l=>l.trim());let imported=0,skipped=0;for(const line of lines){const parts=line.split(',').map(p=>p.trim().replace(/^["'`]|["'`]$/g,''));if(parts.length<2)continue;const name=parts[0].trim();if(!name||['產品名稱','FITWORKHK','匯出','類別'].some(h=>name.startsWith(h)))continue;const qty=parseInt(parts[1].replace(/[^0-9]/g,''),10);if(!isNaN(qty)&&qty>=0){await setStock(name,qty);imported++;}else skipped++;}event.target.value='';};reader.readAsText(file,'UTF-8');};
 
     // Referral
     const getClientGeneration=cid=>{let gen=0,c=clients.value.find(x=>x.id===cid);const v=new Set();while(c&&c.referred_by_id){if(v.has(c.id)||gen>10)break;v.add(c.id);c=clients.value.find(x=>x.id===c.referred_by_id);gen++;}return gen;};
@@ -974,13 +974,12 @@ createApp({
     const handleLogout=async()=>{await sb.auth.signOut();session.value=null;showProfile.value=false;};
     const triggerReset=()=>{showProfile.value=false;forgotPassword();};
 
-    // ✅ 修正1: loadData - 移除 is_active 過濾，改為載入所有產品
     const loadData=async()=>{
       const uid=session.value.user.id,today=new Date().toISOString().split('T')[0];
       const[{data:c,error:ce},{data:f,error:fe},{data:prods,error:pe},{data:tr,error:te}]=await Promise.all([
         sb.from('clients').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
         sb.from('finances').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
-        sb.from('products').select('*').order('prod_name'), // ✅ 移除 eq('is_active',true)
+        sb.from('products').select('*').order('prod_name'),
         sb.from('trials').select('*').eq('user_id',uid).gte('trial_date',today).order('trial_date',{ascending:true})
       ]);
       if(ce)console.error('clients error:',ce.message);
@@ -1031,40 +1030,36 @@ createApp({
       showReferralDropdown.value=false;referralSearch.value='';showClientModal.value=true;
     };
 
-  // ✅ 修正2: saveClient - 同時支援 INSERT（新增）和 UPDATE（修改）
-const saveClient=async()=>{
-  try{
-    if(!clientForm.value.name||!clientForm.value.name.trim())return alert('請輸入客戶姓名');
-    const fieldsToSave={
-      name:clientForm.value.name.trim(),
-      phone:clientForm.value.phone||null,
-      branch:clientForm.value.branch,
-      source:clientForm.value.source,
-      marathon:!!clientForm.value.marathon,
-      expiry_date:clientForm.value.expiry_date||null,
-      referred_by_id:clientForm.value.referred_by_id||null,
-      user_id:session.value.user.id  // ✅ user_id 已包含
+    const saveClient=async()=>{
+      try{
+        if(!clientForm.value.name||!clientForm.value.name.trim())return alert('請輸入客戶姓名');
+        const fieldsToSave={
+          name:clientForm.value.name.trim(),
+          phone:clientForm.value.phone||null,
+          branch:clientForm.value.branch,
+          source:clientForm.value.source,
+          marathon:!!clientForm.value.marathon,
+          expiry_date:clientForm.value.expiry_date||null,
+          referred_by_id:clientForm.value.referred_by_id||null,
+          user_id:session.value.user.id
+        };
+        let error;
+        if(clientForm.value.id){
+          ({error}=await sb.from('clients').update(fieldsToSave).eq('id',clientForm.value.id).eq('user_id',session.value.user.id));
+        }else{
+          ({error}=await sb.from('clients').insert([fieldsToSave]));
+        }
+        if(!error){
+          showClientModal.value=false;
+          showReferralDropdown.value=false;
+          await loadData();
+        }else{
+          alert('儲存失敗：'+error.message);
+        }
+      }catch(e){
+        alert('系統錯誤：'+e.message);
+      }
     };
-    let error;
-    if(clientForm.value.id){
-      // 修改現有客戶
-      ({error}=await sb.from('clients').update(fieldsToSave).eq('id',clientForm.value.id).eq('user_id',session.value.user.id));
-    }else{
-      // 新增客戶
-      ({error}=await sb.from('clients').insert([fieldsToSave]));
-    }
-    if(!error){
-      showClientModal.value=false;
-      showReferralDropdown.value=false;
-      await loadData();
-      alert(clientForm.value.id?'✅ 客戶資料已更新！':'✅ 客戶新增成功！');
-    }else{
-      alert('儲存失敗：'+error.message);
-    }
-  }catch(e){
-    alert('系統錯誤：'+e.message);
-  }
-};
 
     const filteredClients=computed(()=>clients.value.filter(c=>(c.name+(c.phone||'')).toLowerCase().includes(cSearch.value.toLowerCase())&&(crmBranchFilter.value==='全部'||c.branch===crmBranchFilter.value)));
 
@@ -1090,7 +1085,6 @@ const saveClient=async()=>{
       if(error)return alert("錯誤："+error.message);
       if(type==='trial'){await sb.from('trials').insert([{user_id:session.value.user.id,client_id:null,client_name:trialName.trim(),trial_date:trialDate||null,paid_date:todayDate.value,amount:profit,person,reminded:false,trial_phone:trialPhone.trim()||null}]);}
       await loadData();
-      alert(`✅ +$${profit.toFixed(2)}${isRenewal?' (續卡)':''}`);
       eForm.value={clientId:null,type:'35pt',isNew:false,isReferral:false,isRenewal:false,trialDate:'',trialName:'',trialPhone:''};
       currentTab.value='dashboard';
     };
@@ -1104,7 +1098,7 @@ const saveClient=async()=>{
     const decreaseQty=i=>{if(cart.value[i].qty<=1)cart.value.splice(i,1);else cart.value[i].qty--;};
     const cartTotal=computed(()=>cart.value.reduce((s,item)=>s+getUnitProfit(item)*item.qty,0));
     const cartItemCount=computed(()=>cart.value.reduce((s,item)=>s+item.qty,0));
-    const saveRetail=async person=>{if(!cart.value.length)return;const totalP=cartTotal.value,note=cart.value.map(i=>`${i.name}×${i.qty}`).join(', ');const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'零售',amount:totalP,person,client_id:rForm.value.clientId,note});if(!error){await Promise.all(cart.value.map(item=>modifyStock(item.name,-item.qty)));cart.value=[];rForm.value.clientId=null;await loadData();alert("✅ 結帳成功\n利潤："+(totalP===0?'$0':(totalP>0?'+$':'-$')+Math.abs(totalP).toFixed(2)));currentTab.value='dashboard';}else alert("錯誤："+error.message);};
+    const saveRetail=async person=>{if(!cart.value.length)return;const totalP=cartTotal.value,note=cart.value.map(i=>`${i.name}×${i.qty}`).join(', ');const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'零售',amount:totalP,person,client_id:rForm.value.clientId,note});if(!error){await Promise.all(cart.value.map(item=>modifyStock(item.name,-item.qty)));cart.value=[];rForm.value.clientId=null;await loadData();currentTab.value='dashboard';}else alert("錯誤："+error.message);};
     const openRestock=p=>{restockForm.value={product:p,qty:0,isInitial:false};showRestockModal.value=true;};
     const saveRestock=async person=>{const{product,qty,isInitial}=restockForm.value;if(!product)return;if(isInitial){await setStock(product.name,Number(qty));showRestockModal.value=false;return;}if(qty<1)return alert("入貨最少 1 件");const amount=product.cost*Number(qty);const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'expense',category:'產品採購',amount,person,note:`${product.name} ×${qty}`});if(!error){await modifyStock(product.name,Number(qty));showRestockModal.value=false;await loadData();}else alert("錯誤："+error.message);};
 
@@ -1120,9 +1114,9 @@ const saveClient=async()=>{
     const daysUntilExpiry=date=>Math.ceil((new Date(date)-new Date())/86400000);
     const upcomingTrials=computed(()=>{const today=new Date();today.setHours(0,0,0,0);const in30=new Date(today);in30.setDate(today.getDate()+30);return trials.value.filter(t=>{const d=new Date(t.trial_date);d.setHours(0,0,0,0);return d>=today&&d<=in30;});});
     const daysUntilTrial=date=>{const today=new Date();today.setHours(0,0,0,0);const d=new Date(date);d.setHours(0,0,0,0);return Math.round((d-today)/86400000);};
-const filteredProducts=computed(()=>products.value
-  .filter(p=>p.prod_name && p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase()))
-  .map(p=>({name:p.prod_name,retail:parseFloat(p.retail_price||0),cost:parseFloat(p.cost||0)})));
+    const filteredProducts=computed(()=>products.value
+      .filter(p=>p.prod_name && p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase()))
+      .map(p=>({name:p.prod_name,retail:parseFloat(p.retail_price||0),cost:parseFloat(p.cost||0)})));
     const formatDate=iso=>{if(!iso)return '';const d=new Date(iso);return`${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;};
     const openWhatsApp=(phone,name)=>{if(!phone)return;const clean=phone.replace(/[^0-9]/g,''),hk=clean.startsWith('852')?clean:'852'+clean;window.open(`https://wa.me/${hk}?text=${encodeURIComponent('你好 '+name+'！你的 FITWORKHK 會籍即將到期，請盡快聯繫我們續期 💪')}`,'_blank');};
     const isExpiring=d=>(new Date(d)-new Date())/86400000<14;
