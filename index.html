@@ -1758,91 +1758,64 @@ createApp({
       const styles={'運動':{barColor:'bg-blue-500',textColor:'text-blue-700',emoji:'🏋️'},'零售':{barColor:'bg-emerald-500',textColor:'text-emerald-700',emoji:'🛍️'},'其他項目(收入)':{barColor:'bg-purple-500',textColor:'text-purple-700',emoji:'💚'}};
       return Object.entries(cats).map(([name,amount])=>({name,amount,pct:Math.round(amount/total*100),...(styles[name]||{barColor:'bg-slate-400',textColor:'text-slate-600',emoji:'📌'})})).sort((a,b)=>b.amount-a.amount);
     });
-     (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/index.html b/index.html
-index 5ca0dbdfcf575ff5de97f6395b440d7e67d2ee00..ac2fa128c5c949106a1fde0ca23d481ec94e1713 100644
---- a/index.html
-+++ b/index.html
-@@ -1761,58 +1761,76 @@ createApp({
-     const branchStats=computed(()=>{const b={觀塘:0,中環:0,佐敦:0};clients.value.forEach(c=>{if(b[c.branch]!==undefined)b[c.branch]++;});return b;});
-     const recentTransactions=computed(()=>finances.value.slice(0,10));
-     const expiringClients=computed(()=>clients.value.filter(c=>{const d=(new Date(c.expiry_date)-new Date())/86400000;return d>=0&&d<14;}).sort((a,b)=>new Date(a.expiry_date)-new Date(b.expiry_date)));
-     const daysUntilExpiry=date=>Math.ceil((new Date(date)-new Date())/86400000);
-     const upcomingTrials=computed(()=>{
-       const today=new Date();today.setHours(0,0,0,0);
-       const in30=new Date(today);in30.setDate(today.getDate()+30);
-       return trials.value.filter(t=>{const d=new Date(t.trial_date);d.setHours(0,0,0,0);return d>=today&&d<=in30;});
-     });
-     const daysUntilTrial=date=>{const today=new Date();today.setHours(0,0,0,0);const d=new Date(date);d.setHours(0,0,0,0);return Math.round((d-today)/86400000);};
- 
-     const filteredProducts=computed(()=>
-       products.value
-         .filter(p=>p.prod_name&&p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase()))
-         .map(p=>({name:p.prod_name,retail:parseFloat(p.retail_price||0),cost:parseFloat(p.cost||0)}))
-     );
- 
-     const formatDate=iso=>{if(!iso)return '';const d=new Date(iso);return`${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;};
-     const openWhatsApp=(phone,name)=>{if(!phone)return;const clean=phone.replace(/[^0-9]/g,''),hk=clean.startsWith('852')?clean:'852'+clean;window.open(`https://wa.me/${hk}?text=${encodeURIComponent('你好 '+name+'！你的 FITWORKHK 會籍即將到期，請盡快聯繫我們續期 💪')}`,'_blank');};
-     const isExpiring=d=>d&&(new Date(d)-new Date())/86400000<14;
- 
-     // ============================================================
-     // INIT
-     // ============================================================
-     onMounted(async()=>{
-+      let initialLoaded=false;
-       sb.auth.onAuthStateChange(async(event,sessionData)=>{
-         if(event==='PASSWORD_RECOVERY'){authState.value='recovery';session.value=null;return;}
-         session.value=sessionData;
-         if(sessionData){
-+          if(event==='INITIAL_SESSION'&&initialLoaded)return;
-+          initialLoaded=true;
-           // Run all in parallel, each independently safe
-           await Promise.all([loadData(),loadStockFromDB(),loadMonthlyMetrics()]);
-         }
-       });
-+
-+      // Fallback: ensure persisted sessions also trigger initial data load
-+      try{
-+        const {data:{session:currentSession}}=await sb.auth.getSession();
-+        if(currentSession){
-+          session.value=currentSession;
-+          if(!initialLoaded){
-+            initialLoaded=true;
-+            await Promise.all([loadData(),loadStockFromDB(),loadMonthlyMetrics()]);
-+          }
-+        }
-+      }catch(e){
-+        console.warn('initial session load failed:',e);
-+      }
-+
-       if(window.location.hash.includes('type=recovery'))authState.value='recovery';
-     });
- 
-     return{
-       session,authState,authForm,newPassword,authLoading,handleAuth,forgotPassword,updatePassword,handleLogout,triggerReset,
-       showProfile,currentTab,retailSubTab,financeSubTab,dashSubTab,tabs,dateRange,dateRanges,reportPerson,
-       clients,finances,products,PRODUCTS_DATA,trials,cart,dataLoading,toast,
-       pSearch,cSearch,crmBranchFilter,stockSearch,stockFilter,stockFilters,txSearch,txTypeFilter,
-       showExClientDropdown,exClientSearch,exFilteredClients,showRtClientDropdown,rtClientSearch,rtFilteredClients,
-       showReferralDropdown,referralSearch,referralFilteredClients,
-       showClientModal,clientForm,clientSaveError,savingClient,openClient,closeClientModal,saveClient,filteredClients,
-       showExpModal,expForm,openExp,saveExp,expCats,
-       showRestockModal,restockForm,openRestock,saveRestock,
-       showEditTxModal,editTxForm,openEditTx,saveEditTx,deleteTx,
-       showDeleteConfirm,confirmDeleteTx,
-       showStockCorrectionModal,stockCorrectionForm,openStockCorrection,saveStockCorrection,correctionReasons,
-       showMetricsModal,metricsForm,openMetricsModal,saveMonthlyMetrics,
-       analyticsMetrics,analyticsMonthLabel,analyticsMonth,prevAnalyticsMonth,nextAnalyticsMonth,
-       analyticsAdSpend,analyticsNewClients,analyticsNewFromAds,analyticsNewFromReferral,analyticsConversionRate,
-       newClientsByBranch,analyticsRenewals,totalRenewals,renewalBranchMap,marathonCount,analyticsNewMarathon,
-       stockWarningExpanded,stockSyncing,
-       exerciseItems,eForm,savingExercise,saveExercise,priceOptions,rForm,
-       addToCart,increaseQty,decreaseQty,getUnitProfit,getSellPrice,isLossSale,cartTotal,cartItemCount,saveRetail,
-       getBronzePrice,getStock,stockInfo,modifyStock,exportStockCSV,importStockCSV,triggerImport,
-       stockCategories,filteredStockCategories,totalStockQty,totalStockValue,totalBronzeValue,stockSummary,lowStockItems,
- 
-EOF
-)
+    const branchStats=computed(()=>{const b={觀塘:0,中環:0,佐敦:0};clients.value.forEach(c=>{if(b[c.branch]!==undefined)b[c.branch]++;});return b;});
+    const recentTransactions=computed(()=>finances.value.slice(0,10));
+    const expiringClients=computed(()=>clients.value.filter(c=>{const d=(new Date(c.expiry_date)-new Date())/86400000;return d>=0&&d<14;}).sort((a,b)=>new Date(a.expiry_date)-new Date(b.expiry_date)));
+    const daysUntilExpiry=date=>Math.ceil((new Date(date)-new Date())/86400000);
+    const upcomingTrials=computed(()=>{
+      const today=new Date();today.setHours(0,0,0,0);
+      const in30=new Date(today);in30.setDate(today.getDate()+30);
+      return trials.value.filter(t=>{const d=new Date(t.trial_date);d.setHours(0,0,0,0);return d>=today&&d<=in30;});
+    });
+    const daysUntilTrial=date=>{const today=new Date();today.setHours(0,0,0,0);const d=new Date(date);d.setHours(0,0,0,0);return Math.round((d-today)/86400000);};
+
+    const filteredProducts=computed(()=>
+      products.value
+        .filter(p=>p.prod_name&&p.prod_name.toLowerCase().includes(pSearch.value.toLowerCase()))
+        .map(p=>({name:p.prod_name,retail:parseFloat(p.retail_price||0),cost:parseFloat(p.cost||0)}))
+    );
+
+    const formatDate=iso=>{if(!iso)return '';const d=new Date(iso);return`${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;};
+    const openWhatsApp=(phone,name)=>{if(!phone)return;const clean=phone.replace(/[^0-9]/g,''),hk=clean.startsWith('852')?clean:'852'+clean;window.open(`https://wa.me/${hk}?text=${encodeURIComponent('你好 '+name+'！你的 FITWORKHK 會籍即將到期，請盡快聯繫我們續期 💪')}`,'_blank');};
+    const isExpiring=d=>d&&(new Date(d)-new Date())/86400000<14;
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    onMounted(async()=>{
+      sb.auth.onAuthStateChange(async(event,sessionData)=>{
+        if(event==='PASSWORD_RECOVERY'){authState.value='recovery';session.value=null;return;}
+        session.value=sessionData;
+        if(sessionData){
+          // Run all in parallel, each independently safe
+          await Promise.all([loadData(),loadStockFromDB(),loadMonthlyMetrics()]);
+        }
+      });
+      if(window.location.hash.includes('type=recovery'))authState.value='recovery';
+    });
+
+    return{
+      session,authState,authForm,newPassword,authLoading,handleAuth,forgotPassword,updatePassword,handleLogout,triggerReset,
+      showProfile,currentTab,retailSubTab,financeSubTab,dashSubTab,tabs,dateRange,dateRanges,reportPerson,
+      clients,finances,products,PRODUCTS_DATA,trials,cart,dataLoading,toast,
+      pSearch,cSearch,crmBranchFilter,stockSearch,stockFilter,stockFilters,txSearch,txTypeFilter,
+      showExClientDropdown,exClientSearch,exFilteredClients,showRtClientDropdown,rtClientSearch,rtFilteredClients,
+      showReferralDropdown,referralSearch,referralFilteredClients,
+      showClientModal,clientForm,clientSaveError,savingClient,openClient,closeClientModal,saveClient,filteredClients,
+      showExpModal,expForm,openExp,saveExp,expCats,
+      showRestockModal,restockForm,openRestock,saveRestock,
+      showEditTxModal,editTxForm,openEditTx,saveEditTx,deleteTx,
+      showDeleteConfirm,confirmDeleteTx,
+      showStockCorrectionModal,stockCorrectionForm,openStockCorrection,saveStockCorrection,correctionReasons,
+      showMetricsModal,metricsForm,openMetricsModal,saveMonthlyMetrics,
+      analyticsMetrics,analyticsMonthLabel,analyticsMonth,prevAnalyticsMonth,nextAnalyticsMonth,
+      analyticsAdSpend,analyticsNewClients,analyticsNewFromAds,analyticsNewFromReferral,analyticsConversionRate,
+      newClientsByBranch,analyticsRenewals,totalRenewals,renewalBranchMap,marathonCount,analyticsNewMarathon,
+      stockWarningExpanded,stockSyncing,
+      exerciseItems,eForm,savingExercise,saveExercise,priceOptions,rForm,
+      addToCart,increaseQty,decreaseQty,getUnitProfit,getSellPrice,isLossSale,cartTotal,cartItemCount,saveRetail,
+      getBronzePrice,getStock,stockInfo,modifyStock,exportStockCSV,importStockCSV,triggerImport,
+      stockCategories,filteredStockCategories,totalStockQty,totalStockValue,totalBronzeValue,stockSummary,lowStockItems,
       upcomingTrials,daysUntilTrial,todayDate,tomorrowDate,
       expiringClients,daysUntilExpiry,openWhatsApp,isExpiring,
       incomeByCategory,filteredProducts,groupedTransactions,recentTransactions,
