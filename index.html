@@ -1755,10 +1755,21 @@ createApp({
       const total=filtered.reduce((s,f)=>s+Number(f.amount),0);
       if(!total)return[];
       const cats={};filtered.forEach(f=>{cats[f.category]=(cats[f.category]||0)+Number(f.amount);});
-      const styles={'運動':{barColor:'bg-blue-500',textColor:'text-blue-700',emoji:'🏋️'},'零售':{barColor:'bg-emerald-500',textColor:'text-emerald-700',emoji:'🛍️'},'其他項目(收入)':{barColor:'bg-purple-500',textColor:'text-purple-700',emoji:'💚'}};
-      return Object.entries(cats).map(([name,amount])=>({name,amount,pct:Math.round(amount/total*100),...(styles[name]||{barColor:'bg-slate-400',textColor:'text-slate-600',emoji:'📌'})})).sort((a,b)=>b.amount-a.amount);
+      const styles={
+        '運動':{barColor:'bg-blue-500',textColor:'text-blue-700',emoji:'🏋️'},
+        '零售':{barColor:'bg-emerald-500',textColor:'text-emerald-700',emoji:'🛍️'},
+        '其他項目(收入)':{barColor:'bg-purple-500',textColor:'text-purple-700',emoji:'💚'}
+      };
+      const fallbackStyle={barColor:'bg-slate-400',textColor:'text-slate-600',emoji:'📌'};
+      return Object.entries(cats)
+        .map(([name,amount])=>({name,amount,pct:Math.round(amount/total*100),...(styles[name]||fallbackStyle)}))
+        .sort((a,b)=>b.amount-a.amount);
     });
-    const branchStats=computed(()=>{const b={'觀塘':0,'中環':0,'佐敦':0};clients.value.forEach(c=>{if(b[c.branch]!==undefined)b[c.branch]++;});return b;});
+    const branchStats=computed(()=>{
+      const b={'觀塘':0,'中環':0,'佐敦':0};
+      clients.value.forEach(c=>{if(b[c.branch]!==undefined)b[c.branch]++;});
+      return b;
+    });
     const recentTransactions=computed(()=>finances.value.slice(0,10));
     const expiringClients=computed(()=>clients.value.filter(c=>{const d=(new Date(c.expiry_date)-new Date())/86400000;return d>=0&&d<14;}).sort((a,b)=>new Date(a.expiry_date)-new Date(b.expiry_date)));
     const daysUntilExpiry=date=>Math.ceil((new Date(date)-new Date())/86400000);
