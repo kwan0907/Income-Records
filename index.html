@@ -1783,30 +1783,26 @@ createApp({
     // INIT
     // ============================================================
     onMounted(async()=>{
-      let initialLoadPromise=null;
-      const ensureInitialDataLoaded=async sessionData=>{
-        if(!sessionData)return;
-        session.value=sessionData;
-        if(!initialLoadPromise){
-          // Run all in parallel, each independently safe
-          initialLoadPromise=Promise.all([loadData(),loadStockFromDB(),loadMonthlyMetrics()]);
-        }
-        await initialLoadPromise;
-      };
-
       sb.auth.onAuthStateChange(async(event,sessionData)=>{
         if(event==='PASSWORD_RECOVERY'){authState.value='recovery';session.value=null;return;}
-        try{
-          await ensureInitialDataLoaded(sessionData);
-        }catch(e){
-          console.warn('auth state initial load failed:',e);
+        session.value=sessionData;
+        if(sessionData){
+          try{
+            // Run all in parallel, each independently safe
+            await Promise.all([loadData(),loadStockFromDB(),loadMonthlyMetrics()]);
+          }catch(e){
+            console.warn('auth state initial load failed:',e);
+          }
         }
       });
 
       // Fallback: ensure persisted sessions also trigger initial data load
       try{
         const {data:{session:currentSession}}=await sb.auth.getSession();
-        await ensureInitialDataLoaded(currentSession);
+        session.value=currentSession;
+        if(currentSession){
+          await Promise.all([loadData(),loadStockFromDB(),loadMonthlyMetrics()]);
+        }
       }catch(e){
         console.warn('initial session load failed:',e);
       }
