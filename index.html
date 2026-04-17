@@ -797,11 +797,15 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     </div>
     <div v-if="restockForm.isInitial">
       <button @click="saveRestock('system')" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black active:scale-95">✅ 確認設定庫存為 {{ restockForm.qty||0 }} 件</button>
+      <button @click="saveRestock('system')" :disabled="savingRestock" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black active:scale-95 disabled:opacity-60">{{ savingRestock?'處理中...':'✅ 確認設定庫存為 '+(restockForm.qty||0)+' 件' }}</button>
     </div>
     <div v-else class="grid grid-cols-2 gap-3">
       <button @click="saveRestock('Kwan')" class="bg-slate-900 text-white py-4 rounded-2xl font-black active:scale-95">Kwan 入貨</button>
       <button @click="saveRestock('Cat')" class="bg-amber-600 text-white py-4 rounded-2xl font-black active:scale-95">Cat 入貨</button>
+      <button @click="saveRestock('Kwan')" :disabled="savingRestock" class="bg-slate-900 text-white py-4 rounded-2xl font-black active:scale-95 disabled:opacity-60">Kwan 入貨</button>
+      <button @click="saveRestock('Cat')" :disabled="savingRestock" class="bg-amber-600 text-white py-4 rounded-2xl font-black active:scale-95 disabled:opacity-60">Cat 入貨</button>
     </div>
+    <p v-if="restockError" class="text-xs text-red-500 font-semibold bg-red-50 border border-red-200 rounded-xl px-3 py-2">{{ restockError }}</p>
   </div>
 </div>
  
@@ -827,108 +831,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <button @click="saveEditTx" class="py-4 bg-blue-600 text-white rounded-2xl font-black active:scale-95 text-sm">確認</button>
       <button @click="deleteTx" class="py-4 bg-red-500 text-white rounded-2xl font-black active:scale-95 text-sm">🗑️</button>
     </div>
-  </div>
-</div>
- 
-<!-- MODAL: 庫存修正 -->
-<div v-if="showStockCorrectionModal" class="modal-overlay" @click.self="showStockCorrectionModal=false">
-  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4">
-    <div class="flex justify-between items-center"><h3 class="font-black text-lg text-blue-700">🔧 庫存修正</h3><button @click="showStockCorrectionModal=false" class="text-slate-300 font-black text-2xl">×</button></div>
-    <div class="bg-blue-50 border-2 border-blue-100 rounded-2xl p-4 flex justify-between items-center">
-      <div><p class="font-black text-base text-blue-800">{{ stockCorrectionForm.productName }}</p></div>
-      <div class="text-right"><p class="text-4xl font-black text-blue-700">{{ stockCorrectionForm.currentStock }}</p><p class="text-xs text-blue-400">件</p></div>
-    </div>
-    <div class="grid grid-cols-2 gap-2">
-      <button v-for="r in correctionReasons" :key="r" @click="stockCorrectionForm.reason=r" :class="stockCorrectionForm.reason===r?'bg-blue-600 text-white border-blue-600':'bg-slate-50 text-slate-600 border-slate-200'" class="py-2.5 rounded-xl border-2 font-bold text-xs active:scale-95">{{ r }}</button>
-    </div>
-    <div class="flex items-center gap-3">
-      <button @click="stockCorrectionForm.newStock=Math.max(0,(stockCorrectionForm.newStock||0)-1)" class="w-14 h-14 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 select-none">−</button>
-      <input type="number" v-model.number="stockCorrectionForm.newStock" min="0" class="flex-1 border-2 border-slate-200 p-4 rounded-2xl font-black text-3xl text-center focus:border-blue-400 outline-none bg-slate-50">
-      <button @click="stockCorrectionForm.newStock=(stockCorrectionForm.newStock||0)+1" class="w-14 h-14 bg-slate-100 rounded-2xl font-black text-2xl flex items-center justify-center active:scale-90 select-none">+</button>
-    </div>
-    <button @click="saveStockCorrection" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black active:scale-95">✅ 確認修正</button>
-  </div>
-</div>
- 
-<!-- MODAL: 刪除確認 -->
-<div v-if="showDeleteConfirm" class="modal-overlay" @click.self="showDeleteConfirm=false">
-  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-4">
-    <div class="text-center py-2"><p class="text-5xl mb-3">🗑️</p><p class="font-black text-lg">確認刪除此記錄？</p><p class="text-sm text-slate-400 mt-1.5">此操作無法復原</p></div>
-    <div class="grid grid-cols-2 gap-3">
-      <button @click="showDeleteConfirm=false" class="py-4 bg-slate-100 rounded-2xl font-black active:scale-95">取消</button>
-      <button @click="confirmDeleteTx" class="py-4 bg-red-500 text-white rounded-2xl font-black active:scale-95">確認刪除</button>
-    </div>
-  </div>
-</div>
- 
-<!-- MODAL: Profile -->
-<div v-if="showProfile" class="modal-overlay" @click.self="showProfile=false">
-  <div class="slide-up bg-white w-full max-w-lg rounded-t-3xl p-6 space-y-3">
-    <div class="flex justify-between items-center mb-1"><h3 class="font-black text-lg">帳號設定</h3><button @click="showProfile=false" class="text-slate-300 font-black text-2xl">×</button></div>
-    <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl">
-      <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-black text-lg">{{ session.user.email.charAt(0).toUpperCase() }}</div>
-      <p class="font-bold text-sm break-all text-slate-700">{{ session.user.email }}</p>
-    </div>
-    <button @click="triggerReset" class="w-full p-4 bg-white border-2 border-slate-200 rounded-2xl font-bold text-sm active:scale-95">📧 修改密碼</button>
-    <button @click="syncProductsToDB" class="w-full p-4 bg-white border-2 border-blue-200 rounded-2xl font-bold text-sm active:scale-95 text-blue-700">🔄 同步產品資料庫（首次設定）</button>
-    <button @click="handleLogout" class="w-full p-4 bg-slate-900 text-white rounded-2xl font-black active:scale-95">登出帳號</button>
-  </div>
-</div>
- 
-</div>
-<script>
-const{createApp,ref,reactive,computed,onMounted,watch}=Vue;
-const SUPA_URL="https://ajnunehxtiofcphdyhqn.supabase.co";
-const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
-const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
- 
-// ====== 產品靜態數據（從 Products_4.xlsx 匯入）======
-const PRODUCTS_DATA=[
-  {prod_name:"營養蛋白素-雲呢拿",retail_price:464,price_bronze:400.4,cost:252,category:"內",is_active:true},
-  {prod_name:"早餐咭增值",retail_price:280,price_bronze:280,cost:280,category:"其他",is_active:true},
-  {prod_name:"營養蛋白素-野草莓",retail_price:464,price_bronze:400.4,cost:252,category:"內",is_active:true},
-  {prod_name:"夜寧新咭增值",retail_price:360,price_bronze:360,cost:360,category:"其他",is_active:true},
-  {prod_name:"營養蛋白素-朱古力",retail_price:464,price_bronze:400.4,cost:252,category:"內",is_active:true},
-  {prod_name:"營養蛋白素-曲奇妙趣",retail_price:464,price_bronze:400.4,cost:252,category:"內",is_active:true},
-  {prod_name:"營養蛋白素-薄荷朱古力",retail_price:464,price_bronze:400.4,cost:252,category:"內",is_active:true},
-  {prod_name:"營養蛋白素-鮮奶咖啡",retail_price:464,price_bronze:400.4,cost:252,category:"內",is_active:true},
-  {prod_name:"營養蛋白素-紅豆薏仁",retail_price:464,price_bronze:400.4,cost:252,category:"內",is_active:true},
-  {prod_name:"濃縮蘆薈汁-原味",retail_price:446,price_bronze:384.8,cost:242,category:"內",is_active:true},
-  {prod_name:"濃縮蘆薈汁-柑橘味",retail_price:446,price_bronze:384.8,cost:242,category:"內",is_active:true},
-  {prod_name:"濃縮蘆薈汁-葡萄味",retail_price:446,price_bronze:384.8,cost:242,category:"內",is_active:true},
-  {prod_name:"天然瓜拉拿茶",retail_price:323,price_bronze:278.75,cost:175.5,category:"內",is_active:true},
-  {prod_name:"即溶草本飲品50克-桃味",retail_price:379,price_bronze:327.1,cost:206,category:"內",is_active:true},
-  {prod_name:"即溶草本飲品102克",retail_price:670,price_bronze:578.2,cost:364,category:"內",is_active:true},
-  {prod_name:"即溶草本飲品102克-蘋果甘菊味",retail_price:670,price_bronze:578.2,cost:364,category:"內",is_active:true},
-  {prod_name:"佳能蛋白質粉",retail_price:369,price_bronze:318.45,cost:200.5,category:"內",is_active:true},
-  {prod_name:"營養纖維粉(蘋果味)",retail_price:419,price_bronze:361.55,cost:227.5,category:"內",is_active:true},
-  {prod_name:"營養纖維粉(原味)",retail_price:419,price_bronze:361.55,cost:227.5,category:"內",is_active:true},
-  {prod_name:"夜寧新營養飲品",retail_price:1654,price_bronze:1427.2,cost:898,category:"內",is_active:true},
-  {prod_name:"膠原蛋白美肌飲料",retail_price:960,price_bronze:828.45,cost:521.5,category:"內",is_active:true},
-  {prod_name:"BC30 益生菌",retail_price:375,price_bronze:323.55,cost:203.5,category:"內",is_active:true},
-  {prod_name:"Liftoff能量飲品 - 檸檬-青檸味",retail_price:300,price_bronze:258.9,cost:163,category:"內",is_active:true},
-  {prod_name:"Liftoff能量飲品 - 香橙味",retail_price:300,price_bronze:258.9,cost:163,category:"內",is_active:true},
-  {prod_name:"消脂片",retail_price:278,price_bronze:239.9,cost:151,category:"內",is_active:true},
-  {prod_name:"抗脂片",retail_price:366,price_bronze:315.75,cost:198.5,category:"內",is_active:true},
-  {prod_name:"甲殼纖維素",retail_price:555,price_bronze:478.95,cost:301.5,category:"內",is_active:true},
-  {prod_name:"美纖片",retail_price:543,price_bronze:468.6,cost:295,category:"內",is_active:true},
-  {prod_name:"莓之寶",retail_price:278,price_bronze:239.9,cost:151,category:"內",is_active:true},
-  {prod_name:"香蒜片",retail_price:277,price_bronze:239.05,cost:150.5,category:"內",is_active:true},
-  {prod_name:"露思抗氧化精華",retail_price:425,price_bronze:366.8,cost:231,category:"內",is_active:true},
-  {prod_name:"深海魚油",retail_price:465,price_bronze:401.25,cost:252.5,category:"內",is_active:true},
-  {prod_name:"南極磷蝦油",retail_price:633,price_bronze:546.15,cost:343.5,category:"內",is_active:true},
-  {prod_name:"多種維他命",retail_price:368,price_bronze:317.6,cost:200,category:"內",is_active:true},
-  {prod_name:"女士之選",retail_price:568,price_bronze:490.15,cost:308.5,category:"內",is_active:true},
-  {prod_name:"關捷寶",retail_price:831,price_bronze:717,cost:451,category:"內",is_active:true},
-  {prod_name:"複合鈣片",retail_price:216,price_bronze:186.45,cost:117.5,category:"內",is_active:true},
-  {prod_name:"營養蛋白素 24 - 雲尼拿味",retail_price:775,price_bronze:668,cost:421,category:"內",is_active:true},
-  {prod_name:"補水24",retail_price:374,price_bronze:330.05,cost:227.5,category:"內",is_active:true},
-  {prod_name:"健體 24 - 朱古力味",retail_price:1185,price_bronze:1028.55,cost:663.5,category:"內",is_active:true},
-  {prod_name:"雲尼拿杏仁味蛋白棒",retail_price:214,price_bronze:196.3,cost:155,category:"內",is_active:true},
-  {prod_name:"一口蛋白棒",retail_price:256,price_bronze:234.55,cost:184.5,category:"內",is_active:true},
-  {prod_name:"營養蛋白素-精選配方 雲呢拿",retail_price:467,price_bronze:402.95,cost:253.5,category:"內",is_active:true},
-  {prod_name:"醒腦靈",retail_price:581,price_bronze:501.35,cost:315.5,category:"內",is_active:true},
-  {prod_name:"五味子精華",retail_price:330,price_bronze:284.7,cost:179,category:"內",is_active:true},
+@@ -932,68 +933,73 @@ const PRODUCTS_DATA=[
   {prod_name:"鋅維思",retail_price:191,price_bronze:164.75,cost:103.5,category:"內",is_active:true},
   {prod_name:"禦之寶 -黑加侖子味",retail_price:194,price_bronze:167.45,cost:105.5,category:"內",is_active:true},
   {prod_name:"朱古力咖啡",retail_price:485,price_bronze:418.55,cost:263.5,category:"內",is_active:true},
@@ -954,6 +857,11 @@ createApp({
     const dataLoading=ref(false);
     const toast=ref('');
     const showToast=(msg,ms=2000)=>{toast.value=msg;setTimeout(()=>toast.value='',ms);};
+    const withTimeout=(promise,ms=15000,msg='操作逾時，請檢查網絡後重試')=>{
+      let tid;
+      const timeout=new Promise((_,reject)=>{tid=setTimeout(()=>reject(new Error(msg)),ms);});
+      return Promise.race([promise,timeout]).finally(()=>clearTimeout(tid));
+    };
  
     // ── Data ──
     const clients=ref([]),finances=ref([]),trials=ref([]),cart=ref([]);
@@ -972,6 +880,7 @@ createApp({
     const showClientModal=ref(false),clientSaveError=ref(''),savingClient=ref(false);
     const showExpModal=ref(false);
     const showRestockModal=ref(false);
+    const showRestockModal=ref(false),savingRestock=ref(false),restockError=ref('');
     const showEditTxModal=ref(false),showStockCorrectionModal=ref(false),showDeleteConfirm=ref(false);
     const showMetricsModal=ref(false);
     const savingExercise=ref(false);
@@ -997,172 +906,7 @@ createApp({
     const expCats=['Fitwork廣告','FZb廣告','中環租金','觀塘租金','產品採購','馬拉松成本','其他項目(收入)','其他項目(支出)'];
     const exerciseItems=[{id:'trial',name:'試堂',price:98},{id:'10pt',name:'10點套票',price:850},{id:'35pt',name:'35點套票',price:2550}];
     const priceOptions=[
-      {value:'0',label:'原價',desc:'完整零售價',activeClass:'bg-slate-900 text-white border-slate-900'},
-      {value:'bronze',label:'🥉 銅級',desc:'會員優惠價',activeClass:'bg-amber-500 text-white border-amber-500'},
-      {value:'0.25',label:'75折',desc:'會員7.5折',activeClass:'bg-blue-500 text-white border-blue-500'},
-      {value:'0.35',label:'65折',desc:'折扣優惠',activeClass:'bg-purple-500 text-white border-purple-500'},
-      {value:'0.5',label:'廠本',desc:'成本價（±$0）',activeClass:'bg-rose-500 text-white border-rose-500'},
-    ];
- 
-    const todayDate=computed(()=>new Date().toISOString().split('T')[0]);
-    const tomorrowDate=computed(()=>{const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().split('T')[0];});
- 
-    // ====== STOCK ======
-    const stockData=reactive({});
-    const loadStockFromDB=async()=>{
-      if(!session.value)return;
-      const{data}=await sb.from('stock').select('prod_name,quantity').eq('user_id',session.value.user.id);
-      if(data){Object.keys(stockData).forEach(k=>delete stockData[k]);data.forEach(r=>{stockData[r.prod_name]=r.quantity;});}
-    };
-    const syncStockToDB=async(name,qty)=>{
-      if(!session.value)return;
-      stockSyncing.value=true;
-      try{await sb.from('stock').upsert({user_id:session.value.user.id,prod_name:name,quantity:qty,updated_at:new Date().toISOString()},{onConflict:'user_id,prod_name'});}
-      finally{stockSyncing.value=false;}
-    };
-    const getStock=n=>(!n?0:stockData[n]??0);
-    const modifyStock=async(name,delta)=>{const q=Math.max(0,(stockData[name]??0)+delta);stockData[name]=q;await syncStockToDB(name,q);};
-    const setStock=async(name,qty)=>{const q=Math.max(0,qty);stockData[name]=q;await syncStockToDB(name,q);};
-    const stockInfo=n=>{const s=getStock(n),pct=Math.min(100,Math.round(s/20*100));if(s===0)return{text:'缺貨',badge:'bg-red-100 text-red-600 border-red-200',bar:'bg-red-400',pct,numColor:'text-red-500',cardBorder:'border-red-100'};if(s<5)return{text:'不足',badge:'bg-amber-100 text-amber-700 border-amber-200',bar:'bg-amber-400',pct,numColor:'text-amber-600',cardBorder:'border-amber-100'};if(s<10)return{text:'正常',badge:'bg-blue-100 text-blue-700 border-blue-200',bar:'bg-blue-400',pct,numColor:'text-blue-600',cardBorder:'border-slate-100'};return{text:'充足',badge:'bg-emerald-100 text-emerald-700 border-emerald-200',bar:'bg-emerald-500',pct,numColor:'text-emerald-600',cardBorder:'border-emerald-100'};};
- 
-    const getBronzePrice=n=>{
-      const p=products.value.find(x=>x.prod_name===n);
-      if(p&&p.price_bronze&&parseFloat(p.price_bronze)>0)return parseFloat(p.price_bronze);
-      return null;
-    };
- 
-    const stockCategories=computed(()=>{
-      const cats={'內':{name:'💊 内服產品',emoji:'💊',items:[]},'外':{name:'🧴 外用產品',emoji:'🧴',items:[]},'其他':{name:'📦 其他',emoji:'📦',items:[]}};
-      products.value.forEach(p=>{
-        if(!p.prod_name)return;
-        const key=cats[p.category]?p.category:'其他';
-        cats[key].items.push(p);
-      });
-      return Object.values(cats).filter(c=>c.items.length>0);
-    });
-    const filteredStockCategories=computed(()=>stockCategories.value.map(cat=>({...cat,items:cat.items.filter(p=>{const matchS=!stockSearch.value||p.prod_name.toLowerCase().includes(stockSearch.value.toLowerCase());const s=getStock(p.prod_name);const matchF=stockFilter.value==='all'||(stockFilter.value==='danger'&&s===0)||(stockFilter.value==='low'&&s>0&&s<5)||(stockFilter.value==='ok'&&s>=5);return matchS&&matchF;})})).filter(c=>c.items.length>0));
-    const totalStockQty=computed(()=>products.value.reduce((s,p)=>s+getStock(p.prod_name),0));
-    const totalStockValue=computed(()=>products.value.reduce((s,p)=>s+getStock(p.prod_name)*parseFloat(p.cost||0),0));
-    const totalBronzeValue=computed(()=>products.value.reduce((s,p)=>{const bp=getBronzePrice(p.prod_name);return s+getStock(p.prod_name)*(bp||parseFloat(p.retail_price||0));},0));
-    const stockSummary=computed(()=>{let o=0,l=0,n=0,a=0;products.value.forEach(p=>{const s=getStock(p.prod_name);if(s===0)o++;else if(s<5)l++;else if(s<10)n++;else a++;});return{outOfStock:o,lowStock:l,normal:n,abundant:a};});
-    const lowStockItems=computed(()=>products.value.map(p=>({name:p.prod_name,stock:getStock(p.prod_name)})).filter(i=>i.stock<5).sort((a,b)=>a.stock-b.stock));
-    const openStockCorrection=p=>{stockCorrectionForm.value={productName:p.prod_name,currentStock:getStock(p.prod_name),newStock:getStock(p.prod_name),reason:'盤點更正'};showStockCorrectionModal.value=true;};
-    const saveStockCorrection=async()=>{await setStock(stockCorrectionForm.value.productName,Number(stockCorrectionForm.value.newStock));showStockCorrectionModal.value=false;showToast('✅ 庫存已修正');};
- 
-    const exportStockCSV=()=>{if(!products.value.length)return;const now=new Date();const rows=[['產品名稱','庫存','廠本','銅級','零售','狀態']];products.value.forEach(p=>{const s=getStock(p.prod_name),bp=getBronzePrice(p.prod_name);rows.push([p.prod_name,s,parseFloat(p.cost||0).toFixed(2),bp?bp.toFixed(2):'',parseFloat(p.retail_price||0).toFixed(2),s===0?'缺貨':s<5?'不足':s<10?'正常':'充足']);});const csv='\uFEFF'+rows.map(r=>r.map(c=>`"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`FITWORKHK_庫存_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.csv`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);};
-    const triggerImport=()=>{const el=document.getElementById('stockImportInput');if(el)el.click();};
-    const importStockCSV=async event=>{const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async e=>{const text=e.target.result.replace(/^\uFEFF/,'');const lines=text.split(/\r?\n/).filter(l=>l.trim());let imported=0,skipped=0;for(const line of lines){const parts=line.split(',').map(p=>p.trim().replace(/^["'`]|["'`]$/g,''));if(parts.length<2)continue;const name=parts[0].trim();if(!name||['產品名稱','FITWORKHK','匯出','類別'].some(h=>name.startsWith(h)))continue;const qty=parseInt(parts[1].replace(/[^0-9]/g,''),10);if(!isNaN(qty)&&qty>=0){await setStock(name,qty);imported++;}else skipped++;}event.target.value='';showToast(`✅ 匯入完成 ${imported} 款`);};reader.readAsText(file,'UTF-8');};
- 
-    // ── Sync products to DB (one-time setup) ──
-    const syncProductsToDB=async()=>{
-      if(!session.value)return;
-      showToast('⏳ 同步中，請稍候...',5000);
-      try{
-        const rows=PRODUCTS_DATA.map(p=>({...p}));
-        const{error}=await sb.from('products').upsert(rows,{onConflict:'prod_name'});
-        if(error){
-          // Try inserting one by one if bulk fails
-          let ok=0;
-          for(const p of rows){
-            const{error:e2}=await sb.from('products').upsert({...p},{onConflict:'prod_name'});
-            if(!e2)ok++;
-          }
-          showToast(`✅ 同步完成 ${ok}/${rows.length} 款`);
-        }else{
-          showToast(`✅ 成功同步 ${rows.length} 款產品`);
-        }
-      }catch(e){
-        showToast('❌ 同步失敗：'+e.message);
-      }
-    };
- 
-    // ====== Referral ======
-    const getClientGeneration=cid=>{let gen=0,c=clients.value.find(x=>x.id===cid);const v=new Set();while(c&&c.referred_by_id){if(v.has(c.id)||gen>10)break;v.add(c.id);c=clients.value.find(x=>x.id===c.referred_by_id);gen++;}return gen;};
-    const genLabel=cid=>{const g=getClientGeneration(cid);if(g===0)return{label:'直接',cls:'bg-slate-100 text-slate-500'};if(g===1)return{label:'1代',cls:'bg-blue-100 text-blue-600'};if(g===2)return{label:'2代',cls:'bg-purple-100 text-purple-600'};return{label:g+'代',cls:'bg-indigo-100 text-indigo-600'};};
-    const filterClients=(searchRef)=>computed(()=>{const q=searchRef.value.toLowerCase();return clients.value.filter(c=>!q||(c.name+(c.phone||'')).toLowerCase().includes(q)).slice(0,40);});
-    const exFilteredClients=filterClients(exClientSearch);
-    const rtFilteredClients=filterClients(rtClientSearch);
-    const referralFilteredClients=computed(()=>{const q=referralSearch.value.toLowerCase(),cid=clientForm.value.id;return clients.value.filter(c=>c.id!==cid&&(!q||(c.name+(c.phone||'')).toLowerCase().includes(q))).slice(0,40);});
- 
-    // ====== Auth ======
-    const handleAuth=async()=>{
-      authLoading.value=true;
-      const{email,password}=authForm.value;
-      const res=authState.value==='login'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});
-      authLoading.value=false;
-      if(res.error)alert(res.error.message);
-    };
-    const forgotPassword=async()=>{const e=authForm.value.email;if(!e)return alert("請先在 Email 欄位輸入你的 Email");const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:'https://incomesapp.netlify.app/'});if(!error)alert("重設郵件已發送到 "+e);else alert(error.message);};
-    const updatePassword=async()=>{if(!newPassword.value||newPassword.value.length<6)return alert("密碼最少 6 個字元");const{error}=await sb.auth.updateUser({password:newPassword.value});if(!error){alert("✅ 密碼更新成功！");await sb.auth.signOut();authState.value='login';session.value=null;}else alert(error.message);};
-    const handleLogout=async()=>{await sb.auth.signOut();session.value=null;showProfile.value=false;};
-    const triggerReset=()=>{showProfile.value=false;forgotPassword();};
- 
-    // ====== Load Data ======
-    const loadData=async()=>{
-      if(!session.value)return;
-      dataLoading.value=true;
-      const uid=session.value.user.id;
-      const today=new Date().toISOString().split('T')[0];
-      try{
-        const[{data:c},{data:f},{data:prods},{data:tr}]=await Promise.all([
-          sb.from('clients').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
-          sb.from('finances').select('*').eq('user_id',uid).order('created_at',{ascending:false}),
-          sb.from('products').select('*').eq('is_active',true).order('prod_name'),
-          sb.from('trials').select('*').eq('user_id',uid).gte('trial_date',today).order('trial_date',{ascending:true})
-        ]);
-        clients.value=c||[];
-        finances.value=f||[];
-        trials.value=tr||[];
-        // Merge DB products with static data - DB takes priority, static fills gaps
-        if(prods&&prods.length>0){
-          const dbMap={};
-          prods.forEach(p=>{dbMap[p.prod_name]=p;});
-          // Update static data with DB data
-          products.value=PRODUCTS_DATA.map(p=>{
-            const db=dbMap[p.prod_name];
-            return db?{...p,...db}:p;
-          });
-          // Add any DB products not in static list
-          prods.forEach(p=>{
-            if(!PRODUCTS_DATA.find(s=>s.prod_name===p.prod_name)){
-              products.value.push(p);
-            }
-          });
-        }else{
-          // No DB products: use static data
-          products.value=[...PRODUCTS_DATA];
-        }
-      }catch(e){
-        console.error('loadData error:',e);
-      }finally{
-        dataLoading.value=false;
-      }
-    };
- 
-    // ====== Monthly metrics ======
-    const loadMonthlyMetrics=async()=>{
-      if(!session.value)return;
-      const{data}=await sb.from('monthly_metrics').select('*').eq('user_id',session.value.user.id).eq('metric_month',analyticsMonth.value).maybeSingle();
-      monthlyMetrics.value=data||{inquiries:0,ad_trials:0,notes:''};
-    };
-    watch(analyticsMonth,loadMonthlyMetrics);
-    const analyticsMonthLabel=computed(()=>{const[y,m]=analyticsMonth.value.split('-').map(Number);return y+'年'+m+'月';});
-    const prevAnalyticsMonth=()=>{const[y,m]=analyticsMonth.value.split('-').map(Number);const d=new Date(y,m-2,1);analyticsMonth.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
-    const nextAnalyticsMonth=()=>{const[y,m]=analyticsMonth.value.split('-').map(Number);const d=new Date(y,m,1);analyticsMonth.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
-    const openMetricsModal=()=>{metricsForm.value={inquiries:monthlyMetrics.value.inquiries||0,ad_trials:monthlyMetrics.value.ad_trials||0,notes:monthlyMetrics.value.notes||''};showMetricsModal.value=true;};
-    const saveMonthlyMetrics=async()=>{
-      const payload={user_id:session.value.user.id,metric_month:analyticsMonth.value,...metricsForm.value,updated_at:new Date().toISOString()};
-      const{error}=await sb.from('monthly_metrics').upsert(payload,{onConflict:'user_id,metric_month'});
-      if(!error){showMetricsModal.value=false;await loadMonthlyMetrics();showToast('✅ 已儲存');}else alert(error.message);
-    };
-    const analyticsMetrics=computed(()=>monthlyMetrics.value);
- 
-    // ====== Analytics ======
-    const analyticsFinances=computed(()=>finances.value.filter(f=>f.created_at.startsWith(analyticsMonth.value)));
-    const analyticsAdSpend=computed(()=>analyticsFinances.value.filter(f=>f.type==='expense'&&f.category.includes('廣告')).reduce((s,f)=>s+Number(f.amount),0));
-    const analyticsNewClients=computed(()=>clients.value.filter(c=>c.created_at&&c.created_at.startsWith(analyticsMonth.value)));
-    const analyticsNewFromAds=computed(()=>analyticsNewClients.value.filter(c=>c.source==='廣告').length);
-    const analyticsNewFromReferral=computed(()=>analyticsNewClients.value.filter(c=>c.source==='轉介紹'||c.referred_by_id).length);
+@@ -1166,80 +1172,84 @@ createApp({
     const analyticsConversionRate=computed(()=>{const t=analyticsMetrics.value.ad_trials;return t?Math.round(analyticsNewFromAds.value/t*100):0;});
     const newClientsByBranch=computed(()=>{const r={觀塘:{total:0,ads:0,referral:0},中環:{total:0,ads:0,referral:0},佐敦:{total:0,ads:0,referral:0}};analyticsNewClients.value.forEach(c=>{if(r[c.branch]){r[c.branch].total++;if(c.source==='廣告')r[c.branch].ads++;else if(c.source==='轉介紹'||c.referred_by_id)r[c.branch].referral++;}});return r;});
     const analyticsRenewals=computed(()=>analyticsFinances.value.filter(f=>!!f.is_renewal&&f.type==='income'));
@@ -1188,6 +932,10 @@ createApp({
  
     const saveClient=async()=>{
       clientSaveError.value='';
+      if(!session.value?.user?.id){
+        clientSaveError.value='登入狀態失效，請重新登入';
+        return;
+      }
       if(!clientForm.value.name||!clientForm.value.name.trim()){
         clientSaveError.value='請輸入客戶姓名';
         return;
@@ -1209,15 +957,19 @@ createApp({
         if(clientForm.value.id){
           // UPDATE
           result=await sb.from('clients')
+          result=await withTimeout(sb.from('clients')
             .update(fieldsToSave)
             .eq('id',clientForm.value.id)
             .eq('user_id',session.value.user.id)
             .select();
+            .select());
         }else{
           // INSERT
           result=await sb.from('clients')
+          result=await withTimeout(sb.from('clients')
             .insert(fieldsToSave)
             .select();
+            .select());
         }
  
         if(result.error){
@@ -1243,48 +995,7 @@ createApp({
     const openExp=c=>{expForm.value={category:c,amount:0,note:''};showExpModal.value=true;};
     const saveExp=async person=>{
       if(!expForm.value.amount||Number(expForm.value.amount)<=0)return alert('請輸入金額');
-      const isInc=expForm.value.category.includes('收入');
-      const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:isInc?'income':'expense',category:expForm.value.category,amount:Number(expForm.value.amount),person,note:expForm.value.note});
-      if(!error){showExpModal.value=false;await loadData();currentTab.value='dashboard';showToast('✅ 記帳完成');}else alert("錯誤："+error.message);
-    };
-    const openEditTx=t=>{editTxForm.value={...t};showEditTxModal.value=true;};
-    const saveEditTx=async()=>{
-      const{id,type,category,amount,note,person,is_renewal}=editTxForm.value;
-      const{error}=await sb.from('finances').update({type,category,amount:Number(amount),note,person,is_renewal:is_renewal||false}).eq('id',id).eq('user_id',session.value.user.id);
-      if(!error){showEditTxModal.value=false;await loadData();showToast('✅ 已更新');}else alert(error.message);
-    };
-    const deleteTx=()=>{showEditTxModal.value=false;showDeleteConfirm.value=true;};
-    const confirmDeleteTx=async()=>{
-      const{error}=await sb.from('finances').delete().eq('id',editTxForm.value.id).eq('user_id',session.value.user.id);
-      if(!error){showDeleteConfirm.value=false;await loadData();showToast('🗑️ 已刪除');}else alert(error.message);
-    };
-    const groupedTransactions=computed(()=>{let arr=finances.value;if(txTypeFilter.value!=='all')arr=arr.filter(t=>t.type===txTypeFilter.value);if(txSearch.value){const q=txSearch.value.toLowerCase();arr=arr.filter(t=>(t.category+t.note+t.person+String(t.amount)).toLowerCase().includes(q));}const groups={},order=[];arr.forEach(t=>{const d=new Date(t.created_at),key=d.toLocaleDateString('zh-HK',{year:'numeric',month:'long',day:'numeric',weekday:'short'});if(!groups[key]){groups[key]=[];order.push(key);}groups[key].push(t);});return order.map(k=>({date:k,items:groups[k],dayTotal:groups[k].reduce((s,t)=>s+(t.type==='income'?1:-1)*Number(t.amount),0)}));});
- 
-    // ====== Exercise POS ======
-    const saveExercise=async person=>{
-      const{type,isNew,isReferral,isRenewal,clientId,trialDate,trialName,trialPhone}=eForm.value;
-      if(type==='trial'){if(!trialName.trim())return alert("請輸入試堂人名字");}
-      else{if(!clientId)return alert("請先選擇客戶");}
-      savingExercise.value=true;
-      try{
-        let profit=type==='trial'?98:type==='10pt'?(isReferral?413:465):(isNew?1250.50:1277.50);
-        const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'運動',amount:profit,person,client_id:type==='trial'?null:clientId,note:type,is_renewal:type!=='trial'&&isRenewal});
-        if(error)return alert("錯誤："+error.message);
-        if(type==='trial'){
-          await sb.from('trials').insert([{user_id:session.value.user.id,client_id:null,client_name:trialName.trim(),trial_date:trialDate||null,paid_date:todayDate.value,amount:profit,person,reminded:false,trial_phone:trialPhone.trim()||null}]);
-        }
-        await loadData();
-        eForm.value={clientId:null,type:'35pt',isNew:false,isReferral:false,isRenewal:false,trialDate:'',trialName:'',trialPhone:''};
-        currentTab.value='dashboard';
-        showToast('✅ 已記錄');
-      }finally{
-        savingExercise.value=false;
-      }
-    };
- 
-    // ====== Retail POS ======
-    const getSellPrice=p=>{
-      const d=rForm.value.discount;
+@@ -1288,109 +1298,127 @@ createApp({
       if(d==='bronze'){const bp=getBronzePrice(p.name);return bp!==null?bp:p.retail;}
       return p.retail*(1-parseFloat(d));
     };
@@ -1311,7 +1022,9 @@ createApp({
       }else alert("錯誤："+error.message);
     };
     const openRestock=p=>{restockForm.value={product:p,qty:0,isInitial:false};showRestockModal.value=true;};
+    const openRestock=p=>{restockForm.value={product:p,qty:0,isInitial:false};restockError.value='';showRestockModal.value=true;};
     const saveRestock=async person=>{
+      restockError.value='';
       const{product,qty,isInitial}=restockForm.value;
       if(!product)return;
       if(isInitial){await setStock(product.name,Number(qty));showRestockModal.value=false;showToast('✅ 庫存已設定');return;}
@@ -1319,6 +1032,31 @@ createApp({
       const amount=product.cost*Number(qty);
       const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'expense',category:'產品採購',amount,person,note:`${product.name} ×${qty}`});
       if(!error){await modifyStock(product.name,Number(qty));showRestockModal.value=false;await loadData();showToast('✅ 入貨已記錄');}else alert("錯誤："+error.message);
+      savingRestock.value=true;
+      try{
+        if(isInitial){
+          await withTimeout(setStock(product.name,Number(qty)));
+          showRestockModal.value=false;
+          showToast('✅ 庫存已設定');
+          return;
+        }
+        if(qty<1)return alert("入貨最少 1 件");
+        const amount=product.cost*Number(qty);
+        const{error}=await withTimeout(sb.from('finances').insert({user_id:session.value.user.id,type:'expense',category:'產品採購',amount,person,note:`${product.name} ×${qty}`}));
+        if(!error){
+          await withTimeout(modifyStock(product.name,Number(qty)));
+          showRestockModal.value=false;
+          await loadData();
+          showToast('✅ 入貨已記錄');
+        }else{
+          restockError.value='錯誤：'+error.message;
+          alert("錯誤："+error.message);
+        }
+      }catch(e){
+        restockError.value=e.message||'入貨失敗，請稍後再試';
+      }finally{
+        savingRestock.value=false;
+      }
     };
  
     // ====== Dashboard ======
@@ -1366,6 +1104,7 @@ createApp({
       showClientModal,clientForm,clientSaveError,savingClient,openClient,closeClientModal,saveClient,filteredClients,
       showExpModal,expForm,openExp,saveExp,expCats,
       showRestockModal,restockForm,openRestock,saveRestock,
+      showRestockModal,restockForm,openRestock,saveRestock,savingRestock,restockError,
       showEditTxModal,editTxForm,openEditTx,saveEditTx,deleteTx,
       showDeleteConfirm,confirmDeleteTx,
       showStockCorrectionModal,stockCorrectionForm,openStockCorrection,saveStockCorrection,correctionReasons,
@@ -1391,6 +1130,7 @@ createApp({
 </body>
 </html>
  
+
 
 
 
