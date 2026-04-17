@@ -244,12 +244,12 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         </div>
 
         <!-- Expiring clients -->
-        <div v-if="expiringClients.length>0" class="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
+        <div v-if="expiringclients.length>0" class="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3 flex justify-between items-center" style="background:linear-gradient(90deg,#fff1f2,#ffe4e6)">
             <p class="font-black text-sm text-red-600">🔔 即將到期</p>
-            <span class="text-xs font-bold text-red-500 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">{{ expiringClients.length }} 位 · 14天內</span>
+            <span class="text-xs font-bold text-red-500 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">{{ expiringclients.length }} 位 · 14天內</span>
           </div>
-          <div v-for="(c,i) in expiringClients" :key="c.id" :class="i<expiringClients.length-1?'border-b border-slate-50':''" class="px-4 py-3 flex items-center justify-between gap-3">
+          <div v-for="(c,i) in expiringclients" :key="c.id" :class="i<expiringclients.length-1?'border-b border-slate-50':''" class="px-4 py-3 flex items-center justify-between gap-3">
             <div @click="openClient(c);currentTab='crm'" class="flex-1 cursor-pointer min-w-0">
               <p class="font-bold text-sm truncate">{{ c.name }}</p>
               <p class="text-xs text-slate-400 mt-0.5">{{ c.branch }} · {{ c.phone }}</p>
@@ -347,17 +347,17 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3.5 flex items-center justify-between" style="background:linear-gradient(90deg,#eff6ff,#dbeafe)">
             <div class="flex items-center gap-2"><span>👥</span><p class="font-black text-sm text-blue-700">本月新客戶</p><span class="tag-auto ml-1">Auto</span></div>
-            <span class="text-xs font-black bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full">{{ analyticsNewClients.length }} 人</span>
+            <span class="text-xs font-black bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full">{{ analyticsNewclients.length }} 人</span>
           </div>
           <div class="p-4 space-y-3">
             <div v-for="b in ['觀塘','中環','佐敦']" :key="b">
-              <div class="flex justify-between mb-1"><span class="text-xs font-black text-slate-700">{{ b }}</span><span class="text-xs text-slate-400 font-semibold">{{ newClientsByBranch[b]?.total||0 }} 人</span></div>
+              <div class="flex justify-between mb-1"><span class="text-xs font-black text-slate-700">{{ b }}</span><span class="text-xs text-slate-400 font-semibold">{{ newclientsByBranch[b]?.total||0 }} 人</span></div>
               <div class="h-6 rounded-xl overflow-hidden flex" style="background:#f1f5f9">
-                <div :style="{width:Math.round((newClientsByBranch[b]?.ads||0)/Math.max(1,analyticsNewClients.length)*100)+'%'}" class="bar-fill bg-blue-500 h-full flex items-center justify-center">
-                  <span v-if="newClientsByBranch[b]?.ads>0" class="text-xs font-black text-white px-1">{{ newClientsByBranch[b]?.ads }}</span>
+                <div :style="{width:Math.round((newclientsByBranch[b]?.ads||0)/Math.max(1,analyticsNewclients.length)*100)+'%'}" class="bar-fill bg-blue-500 h-full flex items-center justify-center">
+                  <span v-if="newclientsByBranch[b]?.ads>0" class="text-xs font-black text-white px-1">{{ newclientsByBranch[b]?.ads }}</span>
                 </div>
-                <div :style="{width:Math.round((newClientsByBranch[b]?.referral||0)/Math.max(1,analyticsNewClients.length)*100)+'%'}" class="bar-fill bg-purple-400 h-full flex items-center justify-center">
-                  <span v-if="newClientsByBranch[b]?.referral>0" class="text-xs font-black text-white px-1">{{ newClientsByBranch[b]?.referral }}</span>
+                <div :style="{width:Math.round((newclientsByBranch[b]?.referral||0)/Math.max(1,analyticsNewclients.length)*100)+'%'}" class="bar-fill bg-purple-400 h-full flex items-center justify-center">
+                  <span v-if="newclientsByBranch[b]?.referral>0" class="text-xs font-black text-white px-1">{{ newclientsByBranch[b]?.referral }}</span>
                 </div>
               </div>
             </div>
@@ -418,10 +418,10 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           :class="crmBranchFilter===b?'bg-blue-600 text-white shadow-md':'bg-white text-slate-500 border border-slate-200'"
           class="px-3.5 py-1.5 rounded-xl text-xs font-black transition-all">{{ b }}</button>
       </div>
-      <div v-if="filteredClients.length===0" class="text-center py-14 text-slate-300">
+      <div v-if="filteredclients.length===0" class="text-center py-14 text-slate-300">
         <p class="text-5xl mb-3">👥</p><p class="font-semibold">暫無客戶記錄</p>
       </div>
-      <div v-for="c in filteredClients" :key="c.id" @click="openClient(c)" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer active:bg-blue-50 card-press">
+      <div v-for="c in filteredclients" :key="c.id" @click="openClient(c)" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer active:bg-blue-50 card-press">
         <div class="w-11 h-11 rounded-full flex items-center justify-center font-black text-white text-lg flex-shrink-0 shadow-sm" style="background:linear-gradient(135deg,#60a5fa,#1d4ed8)">
           {{ c.name.charAt(0) }}
         </div>
@@ -474,7 +474,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <div v-if="eForm.type!=='trial'" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
         <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇客戶 <span class="text-red-400">*</span></p>
         <div class="relative z-40">
-          <div @click="showExClientDropdown=!showExClientDropdown;exClientSearch=''"
+          <div @click="showExClientDropdown=!showExClientDropdown;exclientSearch=''"
             :class="eForm.clientId?'border-blue-400 bg-blue-50':'border-slate-200 bg-slate-50'"
             class="w-full p-3.5 rounded-xl border-2 font-semibold text-sm cursor-pointer flex items-center justify-between select-none">
             <span :class="eForm.clientId?'text-blue-800 font-black':'text-slate-400'">
@@ -484,11 +484,11 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
           <div v-if="showExClientDropdown" class="absolute top-full left-0 right-0 bg-white border-2 border-blue-200 rounded-2xl shadow-2xl mt-1.5 overflow-hidden dropdown-anim" style="z-index:50">
             <div class="p-2.5 bg-blue-50 border-b border-blue-100">
-              <input v-model="exClientSearch" placeholder="🔍 搜尋..." class="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-semibold focus:outline-none bg-white" @click.stop autofocus>
+              <input v-model="exclientSearch" placeholder="🔍 搜尋..." class="w-full px-3 py-2.5 border border-blue-200 rounded-xl text-sm font-semibold focus:outline-none bg-white" @click.stop autofocus>
             </div>
             <div class="max-h-56 overflow-y-auto no-scrollbar">
               <div @click="eForm.clientId=null;showExClientDropdown=false" class="px-4 py-3 text-slate-400 text-sm border-b border-slate-50 cursor-pointer active:bg-slate-50">-- 不選擇 --</div>
-              <div v-for="c in exFilteredClients" :key="c.id" @click="eForm.clientId=c.id;showExClientDropdown=false"
+              <div v-for="c in exFilteredclients" :key="c.id" @click="eForm.clientId=c.id;showExClientDropdown=false"
                 :class="eForm.clientId===c.id?'bg-blue-50 border-l-4 border-blue-500':''"
                 class="px-4 py-3 cursor-pointer border-b border-slate-50 active:bg-blue-50">
                 <p class="font-black text-sm">{{ c.name }}</p>
@@ -562,7 +562,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
           <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇購買客戶</p>
           <div class="relative z-40">
-            <div @click="showRtClientDropdown=!showRtClientDropdown;rtClientSearch=''"
+            <div @click="showRtClientDropdown=!showRtClientDropdown;rtclientSearch=''"
               :class="rForm.clientId?'border-emerald-400 bg-emerald-50':'border-slate-200 bg-slate-50'"
               class="w-full p-3.5 rounded-xl border-2 font-semibold text-sm cursor-pointer flex items-center justify-between select-none">
               <span :class="rForm.clientId?'text-emerald-800 font-black':'text-slate-400'">
@@ -572,11 +572,11 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             </div>
             <div v-if="showRtClientDropdown" class="absolute top-full left-0 right-0 bg-white border-2 border-emerald-200 rounded-2xl shadow-2xl mt-1.5 overflow-hidden dropdown-anim" style="z-index:50">
               <div class="p-2.5 bg-emerald-50 border-b border-emerald-100">
-                <input v-model="rtClientSearch" placeholder="🔍 搜尋..." class="w-full px-3 py-2.5 border border-emerald-200 rounded-xl text-sm font-semibold focus:outline-none bg-white" @click.stop autofocus>
+                <input v-model="rtclientSearch" placeholder="🔍 搜尋..." class="w-full px-3 py-2.5 border border-emerald-200 rounded-xl text-sm font-semibold focus:outline-none bg-white" @click.stop autofocus>
               </div>
               <div class="max-h-56 overflow-y-auto no-scrollbar">
                 <div @click="rForm.clientId=null;showRtClientDropdown=false" class="px-4 py-3 text-slate-400 text-sm border-b border-slate-50 cursor-pointer">-- 不選擇 --</div>
-                <div v-for="c in rtFilteredClients" :key="c.id" @click="rForm.clientId=c.id;showRtClientDropdown=false"
+                <div v-for="c in rtFilteredclients" :key="c.id" @click="rForm.clientId=c.id;showRtClientDropdown=false"
                   :class="rForm.clientId===c.id?'bg-emerald-50 border-l-4 border-emerald-500':''"
                   class="px-4 py-3 cursor-pointer border-b border-slate-50 active:bg-emerald-50">
                   <p class="font-black text-sm">{{ c.name }}</p>
@@ -890,7 +890,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             </div>
             <div class="max-h-44 overflow-y-auto no-scrollbar">
               <div @click.stop="clientForm.referred_by_id=null;showReferralDropdown=false" class="px-4 py-3 text-slate-400 text-sm border-b border-slate-50 cursor-pointer active:bg-slate-50">-- 無介紹人 --</div>
-              <div v-for="c in referralFilteredClients" :key="c.id" @click.stop="clientForm.referred_by_id=c.id;showReferralDropdown=false"
+              <div v-for="c in referralFilteredclients" :key="c.id" @click.stop="clientForm.referred_by_id=c.id;showReferralDropdown=false"
                 :class="clientForm.referred_by_id===c.id?'bg-purple-50 border-l-4 border-purple-500':''"
                 class="px-4 py-3 cursor-pointer border-b border-slate-50 active:bg-purple-50">
                 <p class="font-black text-sm">{{ c.name }}</p>
@@ -1196,8 +1196,8 @@ createApp({
     // ─── SEARCH ───
     const pSearch=ref(''),cSearch=ref(''),crmBranchFilter=ref('全部');
     const stockSearch=ref(''),stockFilter=ref('all'),txSearch=ref(''),txTypeFilter=ref('all');
-    const showExClientDropdown=ref(false),exClientSearch=ref('');
-    const showRtClientDropdown=ref(false),rtClientSearch=ref('');
+    const showExClientDropdown=ref(false),exclientSearch=ref('');
+    const showRtClientDropdown=ref(false),rtclientSearch=ref('');
     const showReferralDropdown=ref(false),referralSearch=ref('');
 
     // ─── MODALS ───
@@ -1387,13 +1387,13 @@ createApp({
       if(g===2)return{label:'2代',cls:'bg-purple-100 text-purple-600'};
       return{label:g+'代',cls:'bg-indigo-100 text-indigo-600'};
     };
-    const filterClients=sRef=>computed(()=>{
+    const filterclients=sRef=>computed(()=>{
       const q=sRef.value.toLowerCase();
       return clients.value.filter(c=>!q||(c.name+(c.phone||'')).toLowerCase().includes(q)).slice(0,40);
     });
-    const exFilteredClients=filterClients(exClientSearch);
-    const rtFilteredClients=filterClients(rtClientSearch);
-    const referralFilteredClients=computed(()=>{
+    const exFilteredclients=filterclients(exclientSearch);
+    const rtFilteredclients=filterClients(rtclientSearch);
+    const referralFilteredclients=computed(()=>{
       const q=referralSearch.value.toLowerCase(),cid=clientForm.value.id;
       return clients.value.filter(c=>c.id!==cid&&(!q||(c.name+(c.phone||'')).toLowerCase().includes(q))).slice(0,40);
     });
@@ -1495,16 +1495,16 @@ createApp({
     // ============================================================
     const analyticsFinances=computed(()=>finances.value.filter(f=>f.created_at&&f.created_at.startsWith(analyticsMonth.value)));
     const analyticsAdSpend=computed(()=>analyticsFinances.value.filter(f=>f.type==='expense'&&f.category.includes('廣告')).reduce((s,f)=>s+Number(f.amount),0));
-    const analyticsNewClients=computed(()=>clients.value.filter(c=>c.created_at&&c.created_at.startsWith(analyticsMonth.value)));
-    const analyticsNewFromAds=computed(()=>analyticsNewClients.value.filter(c=>c.source==='廣告').length);
-    const analyticsNewFromReferral=computed(()=>analyticsNewClients.value.filter(c=>c.source==='轉介紹'||c.referred_by_id).length);
+    const analyticsNewclients=computed(()=>clients.value.filter(c=>c.created_at&&c.created_at.startsWith(analyticsMonth.value)));
+    const analyticsNewFromAds=computed(()=>analyticsNewclients.value.filter(c=>c.source==='廣告').length);
+    const analyticsNewFromReferral=computed(()=>analyticsNewclients.value.filter(c=>c.source==='轉介紹'||c.referred_by_id).length);
     const analyticsConversionRate=computed(()=>{const t=analyticsMetrics.value.ad_trials;return t?Math.round(analyticsNewFromAds.value/t*100):0;});
-    const newClientsByBranch=computed(()=>{const r={觀塘:{total:0,ads:0,referral:0},中環:{total:0,ads:0,referral:0},佐敦:{total:0,ads:0,referral:0}};analyticsNewClients.value.forEach(c=>{if(r[c.branch]){r[c.branch].total++;if(c.source==='廣告')r[c.branch].ads++;else if(c.source==='轉介紹'||c.referred_by_id)r[c.branch].referral++;}});return r;});
+    const newclientsByBranch=computed(()=>{const r={觀塘:{total:0,ads:0,referral:0},中環:{total:0,ads:0,referral:0},佐敦:{total:0,ads:0,referral:0}};analyticsNewclients.value.forEach(c=>{if(r[c.branch]){r[c.branch].total++;if(c.source==='廣告')r[c.branch].ads++;else if(c.source==='轉介紹'||c.referred_by_id)r[c.branch].referral++;}});return r;});
     const analyticsRenewals=computed(()=>analyticsFinances.value.filter(f=>!!f.is_renewal&&f.type==='income'));
     const totalRenewals=computed(()=>analyticsRenewals.value.length);
     const renewalBranchMap=computed(()=>{const r={觀塘:0,中環:0,佐敦:0};analyticsRenewals.value.forEach(f=>{const c=f.client_id?clients.value.find(x=>x.id===f.client_id):null;const b=c?.branch;if(b&&r[b]!==undefined)r[b]++;});return r;});
     const marathonCount=computed(()=>clients.value.filter(c=>c.marathon).length);
-    const analyticsNewMarathon=computed(()=>analyticsNewClients.value.filter(c=>c.marathon).length);
+    const analyticsNewMarathon=computed(()=>analyticsNewclients.value.filter(c=>c.marathon).length);
 
     // ============================================================
     // CRM — BUG FIXED: loadData is NOT called from inside saveClient
@@ -1580,7 +1580,7 @@ createApp({
       }
     };
 
-    const filteredClients=computed(()=>clients.value.filter(c=>
+    const filteredclients=computed(()=>clients.value.filter(c=>
       (c.name+(c.phone||'')).toLowerCase().includes(cSearch.value.toLowerCase())&&
       (crmBranchFilter.value==='全部'||c.branch===crmBranchFilter.value)
     ));
@@ -1760,7 +1760,7 @@ createApp({
     });
     const branchStats=computed(()=>{const b={觀塘:0,中環:0,佐敦:0};clients.value.forEach(c=>{if(b[c.branch]!==undefined)b[c.branch]++;});return b;});
     const recentTransactions=computed(()=>finances.value.slice(0,10));
-    const expiringClients=computed(()=>clients.value.filter(c=>{const d=(new Date(c.expiry_date)-new Date())/86400000;return d>=0&&d<14;}).sort((a,b)=>new Date(a.expiry_date)-new Date(b.expiry_date)));
+    const expiringclients=computed(()=>clients.value.filter(c=>{const d=(new Date(c.expiry_date)-new Date())/86400000;return d>=0&&d<14;}).sort((a,b)=>new Date(a.expiry_date)-new Date(b.expiry_date)));
     const daysUntilExpiry=date=>Math.ceil((new Date(date)-new Date())/86400000);
     const upcomingTrials=computed(()=>{
       const today=new Date();today.setHours(0,0,0,0);
@@ -1799,9 +1799,9 @@ createApp({
       showProfile,currentTab,retailSubTab,financeSubTab,dashSubTab,tabs,dateRange,dateRanges,reportPerson,
       clients,finances,products,PRODUCTS_DATA,trials,cart,dataLoading,toast,
       pSearch,cSearch,crmBranchFilter,stockSearch,stockFilter,stockFilters,txSearch,txTypeFilter,
-      showExClientDropdown,exClientSearch,exFilteredClients,showRtClientDropdown,rtClientSearch,rtFilteredClients,
-      showReferralDropdown,referralSearch,referralFilteredClients,
-      showClientModal,clientForm,clientSaveError,savingClient,openClient,closeClientModal,saveClient,filteredClients,
+      showExClientDropdown,exclientSearch,exFilteredclients,showRtClientDropdown,rtclientSearch,rtFilteredclients,
+      showReferralDropdown,referralSearch,referralFilteredclients,
+      showClientModal,clientForm,clientSaveError,savingClient,openClient,closeClientModal,saveClient,filteredclients,
       showExpModal,expForm,openExp,saveExp,expCats,
       showRestockModal,restockForm,openRestock,saveRestock,
       showEditTxModal,editTxForm,openEditTx,saveEditTx,deleteTx,
@@ -1809,15 +1809,15 @@ createApp({
       showStockCorrectionModal,stockCorrectionForm,openStockCorrection,saveStockCorrection,correctionReasons,
       showMetricsModal,metricsForm,openMetricsModal,saveMonthlyMetrics,
       analyticsMetrics,analyticsMonthLabel,analyticsMonth,prevAnalyticsMonth,nextAnalyticsMonth,
-      analyticsAdSpend,analyticsNewClients,analyticsNewFromAds,analyticsNewFromReferral,analyticsConversionRate,
-      newClientsByBranch,analyticsRenewals,totalRenewals,renewalBranchMap,marathonCount,analyticsNewMarathon,
+      analyticsAdSpend,analyticsNewclients,analyticsNewFromAds,analyticsNewFromReferral,analyticsConversionRate,
+      newclientsByBranch,analyticsRenewals,totalRenewals,renewalBranchMap,marathonCount,analyticsNewMarathon,
       stockWarningExpanded,stockSyncing,
       exerciseItems,eForm,savingExercise,saveExercise,priceOptions,rForm,
       addToCart,increaseQty,decreaseQty,getUnitProfit,getSellPrice,isLossSale,cartTotal,cartItemCount,saveRetail,
       getBronzePrice,getStock,stockInfo,modifyStock,exportStockCSV,importStockCSV,triggerImport,
       stockCategories,filteredStockCategories,totalStockQty,totalStockValue,totalBronzeValue,stockSummary,lowStockItems,
       upcomingTrials,daysUntilTrial,todayDate,tomorrowDate,
-      expiringClients,daysUntilExpiry,openWhatsApp,isExpiring,
+      expiringclients,daysUntilExpiry,openWhatsApp,isExpiring,
       incomeByCategory,filteredProducts,groupedTransactions,recentTransactions,
       totalProfit,totalIncome,totalExpense,branchStats,formatDate,
       syncProductsToDB,showToast,
