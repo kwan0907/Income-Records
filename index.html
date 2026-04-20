@@ -20,16 +20,10 @@ html,body{height:100%;overflow:hidden;}
 body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-serif;background:var(--bg);color:var(--t);font-size:15px;}
 [v-cloak]{display:none!important;}
 #app{height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-
-/* ── SCROLLBARS ── */
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-
-/* ── TOAST ── */
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--card2);color:var(--t);padding:10px 20px;border-radius:99px;z-index:9999;font-size:14px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap;border:1px solid var(--border);}
-
-/* ── AUTH ── */
 .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg);background-image:radial-gradient(circle at 20% 20%,rgba(124,111,247,.15) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(244,114,182,.1) 0%,transparent 50%);}
 .auth-box{width:100%;max-width:400px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
 .auth-logo{text-align:center;margin-bottom:28px;}
@@ -51,8 +45,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 .btn-success{background:rgba(74,222,128,.15);color:var(--g);border:1.5px solid rgba(74,222,128,.3);}
 .btn-sm{padding:8px 14px;font-size:13px;border-radius:var(--br3);font-weight:600;}
 .auth-links{display:flex;justify-content:space-between;margin-top:16px;}
-
-/* ── LAYOUT ── */
 .app-header{flex-shrink:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .header-brand{display:flex;align-items:center;gap:8px;}
 .header-brand .logo-t{font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--ps),var(--s));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
@@ -70,13 +62,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 .nav-item:active{transform:scale(.93);}
 .nav-item span:first-child{font-size:18px;}
 .nav-item span:last-child{font-size:10px;font-weight:600;white-space:nowrap;}
-
-/* ── PAGE ── */
 .page{padding:16px;max-width:600px;margin:0 auto;}
 .page-title{font-size:20px;font-weight:800;color:var(--t);margin-bottom:16px;}
 .section-title{font-size:13px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
-
-/* ── CARDS ── */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--br);padding:16px;margin-bottom:12px;}
 .card-sm{background:var(--card);border:1px solid var(--border);border-radius:var(--br2);padding:12px;}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
@@ -84,9 +72,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 .stat-card .val{font-size:22px;font-weight:800;color:var(--t);}
 .stat-card .lbl{font-size:11px;color:var(--t2);margin-top:2px;font-weight:600;}
 .stat-card .icon{font-size:22px;margin-bottom:6px;}
-.stat-4{grid-template-columns:1fr 1fr 1fr 1fr;}
-
-/* ── CLIENT LIST ── */
 .search-bar{display:flex;gap:8px;margin-bottom:12px;}
 .search-bar .inp{flex:1;}
 .filter-btn{background:var(--bg3);border:1.5px solid var(--border);color:var(--t2);padding:0 14px;border-radius:var(--br3);cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;height:46px;}
@@ -111,8 +96,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 .empty-state .empty-icon{font-size:48px;display:block;margin-bottom:12px;opacity:.5;}
 .fab{position:fixed;right:16px;bottom:76px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--pd));color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(124,111,247,.4);z-index:100;}
 .fab:active{transform:scale(.9);}
-
-/* ── POS ── */
 .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
 .product-card{background:var(--card);border:2px solid var(--border);border-radius:var(--br2);padding:14px;cursor:pointer;transition:.15s;text-align:center;}
 .product-card:active{transform:scale(.96);}
@@ -141,16 +124,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 .dropdown-item .d-name{font-weight:600;color:var(--t);}
 .dropdown-item .d-sub{font-size:12px;color:var(--t2);}
 .staff-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
-
-/* ── INVENTORY ── */
 .inv-item{background:var(--card);border:1px solid var(--border);border-radius:var(--br2);padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
 .inv-item .stock-num{font-size:24px;font-weight:800;min-width:44px;text-align:right;}
 .stock-ok{color:var(--g);}
 .stock-low{color:var(--o);}
 .stock-zero{color:var(--r);}
 .inv-actions{display:flex;gap:6px;margin-left:auto;}
-
-/* ── ACCOUNTING ── */
 .txn-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);}
 .txn-item:last-child{border-bottom:none;}
 .txn-icon{width:36px;height:36px;border-radius:var(--br3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
@@ -164,8 +143,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 .txn-income-amt{color:var(--g);}
 .txn-expense-amt{color:var(--r);}
 .txn-time{font-size:11px;color:var(--t3);margin-top:2px;}
-
-/* ── MODALS ── */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
 .modal-backdrop.center{align-items:center;padding:20px;}
 .modal-sheet{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;padding:0;}
@@ -191,8 +168,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 .category-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .category-btn{padding:10px;border-radius:var(--br3);border:1.5px solid var(--border);background:var(--bg3);color:var(--t2);text-align:center;cursor:pointer;font-size:13px;font-weight:600;transition:.15s;}
 .category-btn.active{border-color:var(--p);background:rgba(124,111,247,.15);color:var(--ps);}
-
-/* ── ANALYTICS ── */
 .analytics-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .month-nav{display:flex;align-items:center;gap:12px;}
 .month-nav button{background:var(--bg3);border:1.5px solid var(--border);color:var(--t);width:32px;height:32px;border-radius:var(--br3);cursor:pointer;font-size:16px;}
@@ -200,16 +175,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 .analytics-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--br2);padding:14px 12px;text-align:center;}
 .analytics-stat .a-val{font-size:28px;font-weight:800;color:var(--t);}
 .analytics-stat .a-lbl{font-size:12px;color:var(--t2);margin-top:4px;font-weight:600;}
-
-/* ── SETTINGS ── */
 .settings-item{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer;}
 .settings-item:last-child{border-bottom:none;}
 .settings-icon{width:38px;height:38px;border-radius:var(--br3);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
 .settings-info{flex:1;}
 .settings-info .s-title{font-size:15px;font-weight:600;color:var(--t);}
 .settings-info .s-sub{font-size:12px;color:var(--t2);margin-top:2px;}
-
-/* ── MISC ── */
 .divider{height:1px;background:var(--border);margin:12px 0;}
 .text-center{text-align:center;}
 .text-p{color:var(--ps);}
@@ -236,12 +207,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 <body>
 <div id="app" v-cloak>
 
-  <!-- TOAST -->
   <transition name="fade">
     <div v-if="toast" class="toast">{{ toast }}</div>
   </transition>
 
-  <!-- ══════════════ AUTH SCREEN ══════════════ -->
   <div v-if="!appReady" style="min-height:100vh;display:flex;align-items:center;justify-content:center;">
     <div style="color:var(--t2);font-size:14px;">⟳ 載入中...</div>
   </div>
@@ -254,7 +223,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
         <p>{{ authState==='recovery'?'重設密碼':authState==='reset'?'設定新密碼':'管理系統' }}</p>
       </div>
 
-      <!-- Recovery -->
       <template v-if="authState==='recovery'">
         <div class="inp-group">
           <label>電郵地址</label>
@@ -268,7 +236,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
         </div>
       </template>
 
-      <!-- Reset Password -->
       <template v-else-if="authState==='reset'">
         <div class="auth-title">設定新密碼</div>
         <div class="inp-group">
@@ -284,7 +251,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
         </button>
       </template>
 
-      <!-- Login / Signup -->
       <template v-else>
         <div class="inp-group">
           <label>電郵地址</label>
@@ -312,10 +278,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
     </div>
   </div>
 
-  <!-- ══════════════ MAIN APP ══════════════ -->
   <template v-else>
-
-    <!-- Header -->
     <div class="app-header">
       <div class="header-brand">
         <span style="font-size:20px;">💪</span>
@@ -332,14 +295,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
       </div>
     </div>
 
-    <!-- Content -->
     <div class="app-content">
 
-      <!-- ── 📊 DASHBOARD ── -->
+      <!-- 📊 DASHBOARD -->
       <div v-if="view==='dashboard'" class="page">
         <div class="page-title">📊 總覽</div>
-
-        <!-- 本月數據 -->
         <div class="section-title">本月 {{ todayMonthLabel }}</div>
         <div class="stat-grid">
           <div class="stat-card">
@@ -364,7 +324,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
           </div>
         </div>
 
-        <!-- 到期警示 -->
         <div class="card" v-if="expiringClients.length>0" style="border-color:rgba(251,146,60,.4);background:rgba(251,146,60,.08);">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:20px;">⚠️</span>
@@ -376,7 +335,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
           </div>
         </div>
 
-        <!-- 庫存警示 -->
         <div class="card" v-if="lowStockItems.length>0" style="border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.08);">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:20px;">📦</span>
@@ -388,7 +346,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
           </div>
         </div>
 
-        <!-- 最近交易 -->
         <div class="section-title" style="margin-top:4px;">最近交易</div>
         <div class="card" v-if="recentTransactions.length">
           <div v-for="t in recentTransactions" :key="t.id" class="txn-item">
@@ -413,14 +370,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
         </div>
       </div>
 
-      <!-- ── 📈 ANALYTICS ── -->
+      <!-- 📈 ANALYTICS -->
       <div v-if="view==='analytics'" class="page">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
           <div class="page-title" style="margin-bottom:0;">📈 月度分析</div>
           <button class="btn btn-sm btn-secondary" @click="openManualModal">✏️ 手動編輯</button>
         </div>
-
-        <!-- Month Nav -->
         <div class="analytics-header">
           <div class="month-nav">
             <button @click="prevMonth">‹</button>
@@ -428,8 +383,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
             <button @click="nextMonth">›</button>
           </div>
         </div>
-
-        <!-- Stats -->
         <div class="stat-grid" style="margin-bottom:12px;">
           <div class="analytics-stat">
             <div class="a-val" style="color:var(--g)">HK${{ getMonthlyIncome(analyticsYear,analyticsMonth).toLocaleString() }}</div>
@@ -451,7 +404,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
           </div>
         </div>
 
-        <!-- Manual Data -->
         <div class="card" v-if="currentManualData.enquiries||currentManualData.trial_count||currentManualData.notes">
           <div class="section-title" style="margin-bottom:10px;">手動數據</div>
           <div style="display:flex;gap:16px;margin-bottom:8px;">
@@ -469,7 +421,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
           </div>
         </div>
 
-        <!-- Category Breakdown -->
         <div class="section-title">收入分類</div>
         <div class="card">
           <div v-for="cat in incomeCategoryBreakdown" :key="cat.name" style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);" v-show="cat.amount>0">
@@ -491,7 +442,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
         </div>
       </div>
 
-      <!-- ── 👥 CLIENTS ── -->
+      <!-- 👥 CLIENTS -->
       <div v-if="view==='clients'" class="page" style="padding-bottom:80px;">
         <div class="page-title">👥 客戶管理</div>
         <div class="search-bar">
@@ -528,14 +479,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
             <div class="icon-btn" @click="confirmDelete('client', c.id)">🗑️</div>
           </div>
         </div>
-
         <button class="fab" @click="openClientForm(null)">+</button>
       </div>
 
-      <!-- ── 🏋️ EXERCISE POS ── -->
+      <!-- 🏋️ EXERCISE POS -->
       <div v-if="view==='pos-exercise'" class="page">
         <div class="page-title">🏋️ 運動 POS</div>
-
         <div class="section-title">選擇服務</div>
         <div v-if="exerciseProducts.length===0" class="no-products">暫無運動產品，請在設定中同步產品</div>
         <div class="product-grid">
@@ -548,20 +497,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
           </div>
         </div>
 
-        <!-- Selected product detail -->
         <template v-if="selProduct">
           <div class="divider"></div>
           <div class="checkout-card">
             <div class="section-title">交易資料</div>
-
-            <!-- Trial - no client needed -->
             <template v-if="selProduct.id==='trial'">
               <div style="background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);border-radius:var(--br3);padding:10px;margin-bottom:12px;font-size:13px;color:var(--b);">
                 🧪 試堂不計入客戶名單
               </div>
             </template>
-
-            <!-- Normal - select client -->
             <template v-else>
               <div class="form-row">
                 <label>選擇客戶 <span class="req">*</span></label>
@@ -585,7 +529,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
               </div>
             </template>
 
-            <!-- Toggles -->
             <div class="toggle-row">
               <div class="toggle-info">
                 <div class="t-title">🔄 這是續卡</div>
@@ -616,7 +559,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 
             <div class="divider"></div>
             <div class="price-big">${{ calcExPrice() }}</div>
-
             <div class="staff-btns">
               <button class="btn btn-primary" @click="saveExercisePOS('Kwan')" :disabled="savingEx">
                 {{ savingEx?'處理中...':'💰 Kwan' }}
@@ -629,10 +571,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
         </template>
       </div>
 
-      <!-- ── 🛒 RETAIL POS ── -->
+      <!-- 🛒 RETAIL POS -->
       <div v-if="view==='pos-retail'" class="page">
         <div class="page-title">🛒 POS 結帳</div>
-
         <div class="section-title">選擇商品</div>
         <div v-if="retailProducts.length===0" class="no-products">暫無零售商品</div>
         <div class="product-grid">
@@ -643,7 +584,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
           </div>
         </div>
 
-        <!-- Cart -->
         <template v-if="rCart.length>0">
           <div class="divider"></div>
           <div class="section-title">購物車</div>
@@ -659,7 +599,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
               </div>
             </div>
             <div class="price-big">${{ cartTotal().toLocaleString() }}</div>
-
             <div class="form-row">
               <label>客戶（可選）</label>
               <input class="inp" v-model="rSearch" placeholder="搜尋客戶..." @focus="showRClientDD=true">
@@ -676,7 +615,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
                 </div>
               </div>
             </div>
-
             <div class="staff-btns">
               <button class="btn btn-primary" @click="saveRetailPOS('Kwan')" :disabled="savingR">
                 {{ savingR?'處理中...':'💰 Kwan' }}
@@ -689,18 +627,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
         </template>
       </div>
 
-      <!-- ── 📦 INVENTORY ── -->
+      <!-- 📦 INVENTORY -->
       <div v-if="view==='inventory'" class="page">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
           <div class="page-title" style="margin-bottom:0;">📦 庫存</div>
           <span v-if="lowStockItems.length>0" class="tag tag-red">⚠️ {{ lowStockItems.length }} 低庫存</span>
         </div>
-
         <div v-if="retailProducts.length===0" class="empty-state">
           <span class="empty-icon">📦</span>
           <div>暫無商品，請先同步產品</div>
         </div>
-
         <div v-for="p in retailProducts" :key="p.id" class="inv-item">
           <div style="flex:1;">
             <div style="font-weight:700;font-size:15px;">{{ p.name }}</div>
@@ -714,14 +650,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
         </div>
       </div>
 
-      <!-- ── 📝 ACCOUNTING ── -->
+      <!-- 📝 ACCOUNTING -->
       <div v-if="view==='accounting'" class="page">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
           <div class="page-title" style="margin-bottom:0;">📝 記帳</div>
           <button class="btn btn-sm" style="background:linear-gradient(135deg,var(--p),var(--pd));color:#fff;border:none;" @click="openExpForm">+ 新增</button>
         </div>
-
-        <!-- Month totals -->
         <div class="stat-grid" style="margin-bottom:16px;">
           <div class="stat-card">
             <div class="val" style="color:var(--g);">+${{ monthlyIncome.toLocaleString() }}</div>
@@ -732,8 +666,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
             <div class="lbl">本月支出</div>
           </div>
         </div>
-
-        <!-- Transaction list by date group -->
         <div v-if="groupedTransactions.length===0" class="empty-state">
           <span class="empty-icon">📝</span>
           <div>暫無記錄</div>
@@ -764,7 +696,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
         </div>
       </div>
 
-      <!-- ── 📋 ALL RECORDS ── -->
+      <!-- 📋 ALL RECORDS -->
       <div v-if="view==='records'" class="page">
         <div class="page-title">📋 全部記錄</div>
         <div v-if="allRecords.length===0" class="empty-state">
@@ -822,9 +754,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
       </div>
     </div>
 
-  </template><!-- end main app -->
-
-  <!-- ══════════════ MODALS ══════════════ -->
+  </template>
 
   <!-- Client Form Modal -->
   <transition name="slide-up">
@@ -1106,7 +1036,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
     </div>
   </transition>
 
-  <!-- Account Settings Modal -->
+  <!-- Settings Modal -->
   <transition name="slide-up">
     <div v-if="showSettings" class="modal-backdrop" @click.self="showSettings=false">
       <div class="modal-sheet">
@@ -1124,7 +1054,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
               <div style="font-size:12px;color:var(--t2);margin-top:2px;">FITWORK HK 管理員</div>
             </div>
           </div>
-
           <div class="section-title">修改密碼</div>
           <div class="form-row">
             <label>新密碼</label>
@@ -1133,9 +1062,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
           <button class="btn btn-secondary" @click="changePassword" :disabled="changingPwd" style="margin-bottom:20px;">
             {{ changingPwd?'⟳ 更新中...':'📧 修改密碼' }}
           </button>
-
           <div class="divider"></div>
-          <div class="settings-item" @click="syncProductsToDb" style="cursor:pointer;">
+          <div class="settings-item" @click="syncProductsToDb">
             <div class="settings-icon">🔄</div>
             <div class="settings-info">
               <div class="s-title">{{ syncingProducts?'同步中...':'同步產品到資料庫' }}</div>
@@ -1149,7 +1077,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
     </div>
   </transition>
 
-</div><!-- #app -->
+</div>
 
 <style>
 .fade-enter-active,.fade-leave-active{transition:opacity .2s;}
@@ -1160,13 +1088,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Segoe UI',sans-
 
 <script>
 // ══════════════════════════════════════════
-// 🔧 CONFIG - 替換你的 Supabase 資訊
+// 🔧 CONFIG
 // ══════════════════════════════════════════
-const SUPABASE_URL = "https://ajnunehxtiofcphdyhqn.supabase.co";
-const SUPABASE_ANON_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
+const SUPABASE_URL = 'https://ajnunehxtiofcphdyhqn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4';
 
 // ══════════════════════════════════════════
-// 🚀 CACHE SYSTEM - 解決數據消失問題的核心
+// 🚀 CACHE SYSTEM
 // ══════════════════════════════════════════
 const FW = {
   _prefix: 'fwhk_v2_',
@@ -1195,10 +1123,10 @@ const FW = {
 // ══════════════════════════════════════════
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    persistSession: true,       // ← 關鍵：持久化 session
-    autoRefreshToken: true,     // ← 自動更新 token
-    detectSessionInUrl: true,   // ← 偵測 URL 中的 session（重設密碼用）
-    storageKey: 'fwhk_auth'     // ← 自定義 storage key 避免衝突
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'fwhk_auth'
   }
 });
 
@@ -1211,30 +1139,20 @@ createApp({
       syncing: false,
       toast: '',
       _toastTimer: null,
-
-      // Auth
       session: null,
       authState: 'login',
       authLoading: false,
       authEmail: '',
       authPwd: '',
       authPwd2: '',
-
-      // Navigation
       view: 'dashboard',
-
-      // Core Data (loaded from cache instantly)
       clients: [],
       products: [],
       transactions: [],
       stock: {},
       manualMonthly: [],
-
-      // Analytics date selector
       analyticsYear: new Date().getFullYear(),
       analyticsMonth: new Date().getMonth() + 1,
-
-      // Client UI
       clientSearch: '',
       filterBranch: '',
       showClientModal: false,
@@ -1242,56 +1160,39 @@ createApp({
       savingClient: false,
       clientError: '',
       showReferralDD: false,
-
-      // Exercise POS
       selProduct: null,
       eForm: { clientId: null, isRenewal: false, isNewClient: false, isReferral: false },
       showExClientDD: false,
       exSearch: '',
       savingEx: false,
-
-      // Retail POS
       rCart: [],
       rForm: { clientId: null },
       showRClientDD: false,
       rSearch: '',
       savingR: false,
-
-      // Inventory
       showRestockModal: false,
       restockForm: { product: null, qty: 1, isInitial: false, recordExpense: true },
       showStockModal: false,
       stockForm: { productName: '', currentStock: 0, newQty: 0, reason: '' },
-
-      // Accounting
       showExpModal: false,
       expForm: { type: '↓ 支出', category: '觀塘租金', amount: '', note: '', staff: 'Kwan' },
       savingExp: false,
       editingTxn: null,
-
-      // Manual analytics
       showManualModal: false,
       manualForm: { enquiries: 0, trial_count: 0, notes: '' },
       savingManual: false,
-
-      // Delete
       showDeleteModal: false,
       deleteTarget: null,
-
-      // Settings
       showSettings: false,
       newPwd: '',
       changingPwd: false,
       syncingProducts: false,
-
-      // Constants
       incomeCategories: ['運動', '零售', '其他項目(收入)', 'Fitwork廣告', 'FZb廣告'],
       expenseCategories: ['中環租金', '觀塘租金', '產品採購', '馬拉松成本', '其他項目(支出)'],
     };
   },
 
   computed: {
-    // ── Clients ──
     filteredClients() {
       let list = this.clients;
       if (this.clientSearch) {
@@ -1312,12 +1213,8 @@ createApp({
         return exp >= now && exp <= soon;
       });
     },
-
-    // ── Products ──
     exerciseProducts() { return this.products.filter(p => p.type === 'exercise'); },
     retailProducts() { return this.products.filter(p => p.type === 'retail'); },
-
-    // ── POS ──
     exClientList() {
       const q = this.exSearch.toLowerCase();
       if (!q) return this.clients;
@@ -1328,13 +1225,9 @@ createApp({
       if (!q) return this.clients;
       return this.clients.filter(c => c.name?.toLowerCase().includes(q) || c.phone?.includes(q));
     },
-
-    // ── Inventory ──
     lowStockItems() {
       return this.retailProducts.filter(p => this.getStock(p.name) <= 5);
     },
-
-    // ── Analytics / Finance ──
     todayMonthLabel() {
       const now = new Date();
       return `${now.getFullYear()}年${now.getMonth()+1}月`;
@@ -1348,7 +1241,6 @@ createApp({
     monthlyIncome() { return this.getMonthlyIncome(new Date().getFullYear(), new Date().getMonth()+1); },
     monthlyExpense() { return this.getMonthlyExpense(new Date().getFullYear(), new Date().getMonth()+1); },
     monthlyProfit() { return this.monthlyIncome - this.monthlyExpense; },
-
     incomeCategoryBreakdown() {
       return this.incomeCategories.map(name => ({
         name,
@@ -1369,8 +1261,6 @@ createApp({
           .reduce((s, t) => s + (t.amount||0), 0)
       }));
     },
-
-    // ── Records ──
     recentTransactions() {
       return this.transactions.slice(0, 10);
     },
@@ -1389,37 +1279,21 @@ createApp({
   },
 
   methods: {
-    // ── Toast ──
     showToast(msg, ms=3000) {
       this.toast = msg;
       clearTimeout(this._toastTimer);
       this._toastTimer = setTimeout(() => { this.toast = ''; }, ms);
     },
 
-    // ══════════════════════════════════════
-    // 🚀 INIT - 解決問題的核心方法
-    // ══════════════════════════════════════
     async initApp() {
-      // STEP 1: 立即載入快取數據（不等 Supabase，避免白屏）
       this.loadFromCache();
-
-      // STEP 2: 取得 auth session
       const { data: { session } } = await sb.auth.getSession();
       this.session = session;
       this.appReady = true;
-
-      // STEP 3: 如果已登入，背景同步最新數據
-      if (session) {
-        this.syncAll();
-      }
-
-      // STEP 4: 監聽 auth 狀態變化
+      if (session) { this.syncAll(); }
       sb.auth.onAuthStateChange((event, session) => {
-        console.log('Auth event:', event);
-
         if (event === 'SIGNED_IN') {
           this.session = session;
-          // 只在之前沒有 session 時才重新 fetch
           if (!this.clients.length) this.syncAll();
         } else if (event === 'SIGNED_OUT') {
           this.session = null;
@@ -1427,7 +1301,6 @@ createApp({
           this.clearLocalData();
         } else if (event === 'TOKEN_REFRESHED') {
           this.session = session;
-          // token 更新，不需要重新 fetch
         } else if (event === 'PASSWORD_RECOVERY') {
           this.authState = 'reset';
           this.session = session;
@@ -1436,7 +1309,6 @@ createApp({
       });
     },
 
-    // 從 localStorage 快取載入（即時顯示）
     loadFromCache() {
       this.clients = FW.get('clients') || [];
       this.products = FW.get('products') || [];
@@ -1453,7 +1325,6 @@ createApp({
       this.manualMonthly = [];
     },
 
-    // ── Auth ──
     async authSubmit() {
       if (this.authState === 'login') await this.login();
       else if (this.authState === 'signup') await this.signup();
@@ -1511,7 +1382,6 @@ createApp({
       else { this.newPwd = ''; this.showToast('✅ 密碼已更新'); }
     },
 
-    // ── Sync ──
     async syncAll() {
       if (this.syncing) return;
       this.syncing = true;
@@ -1530,7 +1400,6 @@ createApp({
       this.syncing = false;
     },
 
-    // ── Data Fetching (with cache write) ──
     async fetchClients() {
       const { data } = await sb.from('clients').select('*').order('created_at', { ascending: false });
       if (data) { this.clients = data; FW.set('clients', data); }
@@ -1557,7 +1426,6 @@ createApp({
       if (data) { this.manualMonthly = data; FW.set('manual', data); }
     },
 
-    // ── Clients CRUD ──
     openClientForm(client = null) {
       if (client) {
         this.clientForm = {
@@ -1627,7 +1495,6 @@ createApp({
       this.deleteTarget = null;
     },
 
-    // ── Client Helpers ──
     genLabel(client) {
       if (!client.expiry_date) return '無有效期';
       const days = Math.ceil((new Date(client.expiry_date) - new Date()) / 86400000);
@@ -1655,7 +1522,6 @@ createApp({
       return days >= 0 && days <= 14;
     },
 
-    // ── Exercise POS ──
     selectProduct(p) {
       this.selProduct = p;
       this.eForm = { clientId: null, isRenewal: false, isNewClient: false, isReferral: false };
@@ -1695,7 +1561,6 @@ createApp({
       this.savingEx = false;
     },
 
-    // ── Retail POS ──
     addToCart(p) {
       const ex = this.rCart.find(i => i.product.id === p.id);
       if (ex) ex.qty++;
@@ -1726,7 +1591,6 @@ createApp({
       this.savingR = false;
     },
 
-    // ── Inventory ──
     getStock(name) { return this.stock[name] ?? 0; },
     getStockClass(name) {
       const q = this.getStock(name);
@@ -1771,7 +1635,6 @@ createApp({
       this.showToast('✅ 庫存已修正');
     },
 
-    // ── Accounting ──
     openExpForm() {
       this.editingTxn = null;
       this.expForm = { type: '↓ 支出', category: '觀塘租金', amount: '', note: '', staff: 'Kwan' };
@@ -1824,7 +1687,6 @@ createApp({
       this.editingTxn = null;
     },
 
-    // ── Analytics ──
     getMonthlyIncome(y, m) {
       return this.transactions.filter(t => t.type==='income' && new Date(t.created_at).getFullYear()===y && new Date(t.created_at).getMonth()+1===m).reduce((s,t)=>s+(t.amount||0),0);
     },
@@ -1868,21 +1730,17 @@ createApp({
       else this.analyticsMonth++;
     },
 
-    // ── Settings ──
     async syncProductsToDb() {
       this.syncingProducts = true;
-      // 重新拉最新產品
       await this.fetchProducts();
       this.syncingProducts = false;
       this.showToast('✅ 產品已同步');
     },
 
-    // ── Helpers ──
     getCategoryIcon(cat) {
       const m = { '運動':'🏋️','零售':'🛒','中環租金':'🏢','觀塘租金':'🏢','佐敦租金':'🏢','產品採購':'📦','馬拉松成本':'🏃','Fitwork廣告':'📢','FZb廣告':'📢','其他項目(收入)':'💰','其他項目(支出)':'💸' };
       return m[cat] || '💳';
     },
-
     formatDateTime(d) {
       if (!d) return '';
       const dt = new Date(d);
@@ -1893,11 +1751,6 @@ createApp({
       const dt = new Date(d);
       return `${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
     },
-    formatDate(d) {
-      if (!d) return '—';
-      return new Date(d).toLocaleDateString('zh-HK');
-    },
-
     groupByDate(list) {
       const groups = {};
       list.forEach(t => {
