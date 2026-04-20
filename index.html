@@ -41,6 +41,7 @@ body{background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 .pill-tab-active{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 
 /* === NAV === */
+input, select, textarea { font-size: 16px !important; } /* 防止手機點擊輸入框時自動放大 */
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
 /* === GLASSMORPHISM CARD === */
@@ -56,17 +57,14 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 <body>
 <div id="app" v-cloak>
 
-<!-- TOAST -->
 <transition name="fade">
   <div v-if="toast" class="toast">{{ toast }}</div>
 </transition>
 
-<!-- DROPDOWN OVERLAY -->
 <div v-if="showExClientDropdown||showRtClientDropdown||showReferralDropdown"
   @click="showExClientDropdown=false;showRtClientDropdown=false;showReferralDropdown=false"
   class="fixed inset-0 z-30"></div>
 
-<!-- ===================== LOGIN ===================== -->
 <div v-if="!session" class="min-h-screen flex flex-col items-center justify-center p-6 hero-grad">
   <div class="w-full max-w-sm">
     <div class="text-center mb-10">
@@ -98,10 +96,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
 </div>
 
-<!-- ===================== MAIN APP ===================== -->
 <div v-else class="min-h-screen" style="background:#f0f4ff">
 
-  <!-- HEADER -->
   <header class="sticky top-0 z-40" style="background:rgba(240,244,255,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(99,102,241,.1)">
     <div class="max-w-lg mx-auto px-4 py-3 flex justify-between items-center">
       <div class="font-black text-xl italic" style="color:#1e3a8a">FITWORK<span style="color:#94a3b8">HK</span></div>
@@ -119,19 +115,15 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
   <main class="max-w-lg mx-auto px-3 pt-3 pb-28 space-y-3">
 
-    <!-- ===== DASHBOARD ===== -->
     <section v-if="currentTab==='dashboard'" class="space-y-3 fade-in">
-      <!-- Sub tabs -->
       <div class="flex gap-1 p-1 rounded-2xl" style="background:rgba(0,0,0,.07)">
         <button @click="dashSubTab='overview'" :class="dashSubTab==='overview'?'pill-tab-active text-blue-700':'text-slate-400 hover:text-slate-600'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📊 總覽</button>
         <button @click="dashSubTab='analytics'" :class="dashSubTab==='analytics'?'pill-tab-active text-purple-700':'text-slate-400 hover:text-slate-600'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📈 月度分析</button>
       </div>
 
       <template v-if="dashSubTab==='overview'">
-        <!-- Hero profit card -->
         <div class="hero-grad rounded-3xl p-5 text-white shadow-2xl relative overflow-hidden">
           <div class="absolute top-0 right-0 w-40 h-40 rounded-full opacity-10" style="background:radial-gradient(circle,#60a5fa,transparent);transform:translate(30%,-30%)"></div>
           <div class="flex gap-1.5 mb-3 flex-wrap">
@@ -158,7 +150,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
 
-        <!-- Branch + Marathon stats -->
         <div class="grid grid-cols-5 gap-2">
           <div v-for="b in ['觀塘','中環','佐敦']" :key="b" class="stat-card text-center col-span-1" style="flex:1">
             <p class="text-xl font-black text-blue-600">{{ branchStats[b] }}</p>
@@ -174,7 +165,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
 
-        <!-- Upcoming trials -->
         <div v-if="upcomingTrials.length>0" class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3 flex justify-between items-center" style="background:linear-gradient(90deg,#eef2ff,#e0e7ff)">
             <p class="font-black text-sm text-indigo-700">📅 即將試堂</p>
@@ -199,7 +189,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
 
-        <!-- Low stock warning -->
         <div v-if="lowStockItems.length>0" class="bg-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden">
           <div @click="stockWarningExpanded=!stockWarningExpanded" class="px-4 py-3 flex items-center justify-between cursor-pointer select-none" style="background:linear-gradient(90deg,#fffbeb,#fef3c7)">
             <div class="flex items-center gap-2">
@@ -223,7 +212,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
 
-        <!-- Income distribution -->
         <div v-if="incomeByCategory.length>0" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
           <div class="flex justify-between items-center mb-4">
             <p class="font-black text-sm text-slate-800">📊 收入分佈</p>
@@ -243,7 +231,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
 
-        <!-- Expiring clients -->
         <div v-if="expiringClients.length>0" class="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3 flex justify-between items-center" style="background:linear-gradient(90deg,#fff1f2,#ffe4e6)">
             <p class="font-black text-sm text-red-600">🔔 即將到期</p>
@@ -264,7 +251,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
 
-        <!-- Recent transactions -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3 border-b border-slate-50 flex justify-between items-center">
             <p class="font-black text-sm text-slate-800">📋 最近交易</p>
@@ -289,10 +275,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <button @click="openEditTx(t)" class="text-slate-300 p-1.5 rounded-lg active:bg-slate-100 flex-shrink-0 text-base">✏️</button>
           </div>
         </div>
-      </template><!-- end overview -->
-
-      <!-- ===== ANALYTICS ===== -->
-      <template v-if="dashSubTab==='analytics'">
+      </template><template v-if="dashSubTab==='analytics'">
         <div class="bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between shadow-sm border border-slate-100">
           <button @click="prevAnalyticsMonth" class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-xl active:scale-90">‹</button>
           <div class="text-center">
@@ -301,7 +284,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
           <button @click="nextAnalyticsMonth" class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-xl active:scale-90">›</button>
         </div>
-        <!-- Ad analytics -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3.5 flex items-center justify-between" style="background:linear-gradient(90deg,#fff7ed,#ffedd5)">
             <div class="flex items-center gap-2"><span class="text-lg">📢</span><p class="font-black text-sm text-orange-700">廣告效益</p></div>
@@ -343,7 +325,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             </div>
           </div>
         </div>
-        <!-- New clients analytics -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3.5 flex items-center justify-between" style="background:linear-gradient(90deg,#eff6ff,#dbeafe)">
             <div class="flex items-center gap-2"><span>👥</span><p class="font-black text-sm text-blue-700">本月新客戶</p><span class="tag-auto ml-1">Auto</span></div>
@@ -367,7 +348,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             </div>
           </div>
         </div>
-        <!-- Renewals -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3.5 flex items-center justify-between" style="background:linear-gradient(90deg,#f0fdf4,#dcfce7)">
             <div class="flex items-center gap-2"><span>🔄</span><p class="font-black text-sm text-teal-700">本月續卡</p><span class="tag-auto ml-1">Auto</span></div>
@@ -383,7 +363,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             </div>
           </div>
         </div>
-        <!-- Marathon -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div class="px-4 py-3.5 text-white flex items-center justify-between" style="background:linear-gradient(90deg,#059669,#0d9488)">
             <div class="flex items-center gap-2"><span>🏃</span><p class="font-black text-sm">馬拉松</p><span class="tag-auto ml-1" style="background:rgba(255,255,255,.2);color:#fff">Auto</span></div>
@@ -402,10 +381,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
       </template>
-    </section><!-- end dashboard -->
-
-    <!-- ===== CRM ===== -->
-    <section v-if="currentTab==='crm'" class="space-y-3 fade-in">
+    </section><section v-if="currentTab==='crm'" class="space-y-3 fade-in">
       <div class="flex gap-2">
         <div class="relative flex-1">
           <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
@@ -444,10 +420,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       </div>
     </section>
 
-    <!-- ===== EXERCISE POS ===== -->
     <section v-if="currentTab==='exercise'" class="space-y-3 fade-in">
       <h2 class="font-black text-xl px-1" style="color:#1e3a8a">🏋️ 運動 POS</h2>
-      <!-- Service type -->
       <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
         <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">服務類型</p>
         <div class="space-y-2">
@@ -463,14 +437,12 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </button>
         </div>
       </div>
-      <!-- Trial info -->
       <div v-if="eForm.type==='trial'" class="bg-white rounded-2xl p-4 border-2 border-indigo-200 shadow-sm space-y-3">
         <p class="font-black text-sm text-indigo-700">🧪 試堂人資料</p>
         <input v-model="eForm.trialName" placeholder="試堂人名字 *" class="w-full border-2 border-slate-200 p-3.5 rounded-xl font-bold text-sm focus:border-indigo-400 outline-none bg-slate-50">
         <input v-model="eForm.trialPhone" placeholder="試堂人電話（可選）" class="w-full border-2 border-slate-200 p-3.5 rounded-xl font-semibold text-sm focus:border-indigo-300 outline-none bg-slate-50">
         <input type="date" v-model="eForm.trialDate" :min="tomorrowDate" class="w-full border-2 border-indigo-200 p-3.5 rounded-xl font-bold text-sm focus:border-indigo-500 outline-none bg-indigo-50">
       </div>
-      <!-- Client selector -->
       <div v-if="eForm.type!=='trial'" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
         <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇客戶 <span class="text-red-400">*</span></p>
         <div class="relative z-40">
@@ -498,7 +470,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
       </div>
-      <!-- Attributes -->
       <div v-if="eForm.type!=='trial'" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-3">
         <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">交易屬性</p>
         <label :class="eForm.isRenewal?'bg-teal-50 border-teal-400':'bg-slate-50 border-slate-200'" class="flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all">
@@ -527,15 +498,14 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       </div>
       <div class="grid grid-cols-2 gap-3">
         <button @click="saveExercise('Kwan')" :disabled="savingExercise" class="text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 disabled:opacity-60" style="background:#0f172a">
-          {{ savingExercise?'..':'💰 Kwan' }}
+          {{ savingExercise?'處理中...':'💰 Kwan' }}
         </button>
         <button @click="saveExercise('Cat')" :disabled="savingExercise" class="bg-blue-600 text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 disabled:opacity-60">
-          {{ savingExercise?'..':'💰 Cat' }}
+          {{ savingExercise?'處理中...':'💰 Cat' }}
         </button>
       </div>
     </section>
 
-    <!-- ===== RETAIL ===== -->
     <section v-if="currentTab==='retail'" class="space-y-3 fade-in">
       <div class="flex gap-1 p-1 rounded-2xl" style="background:rgba(0,0,0,.07)">
         <button @click="retailSubTab='pos'" :class="retailSubTab==='pos'?'pill-tab-active text-emerald-700':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">🛒 POS 結帳</button>
@@ -545,9 +515,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         </button>
       </div>
 
-      <!-- POS -->
       <template v-if="retailSubTab==='pos'">
-        <!-- Price mode -->
         <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
           <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2.5">價格模式</p>
           <div class="grid grid-cols-2 gap-2">
@@ -558,7 +526,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             </button>
           </div>
         </div>
-        <!-- Client selector -->
         <div class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
           <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">選擇購買客戶</p>
           <div class="relative z-40">
@@ -586,12 +553,10 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             </div>
           </div>
         </div>
-        <!-- Product search -->
         <div class="relative">
           <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
           <input v-model="pSearch" placeholder="搜尋產品..." class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl font-semibold shadow-sm focus:outline-none focus:border-emerald-400 text-sm">
         </div>
-        <!-- Product list -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" style="max-height:288px;overflow-y:auto">
           <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center sticky top-0">
             <span class="text-xs text-slate-400 font-bold">產品（{{ filteredProducts.length }}）</span>
@@ -609,7 +574,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <button @click.stop="openRestock({name:p.name,cost:p.cost,retail:p.retail})" class="flex-shrink-0 bg-amber-100 text-amber-700 text-xs font-black px-2.5 py-1.5 rounded-lg active:scale-90 border border-amber-200">入貨</button>
           </div>
         </div>
-        <!-- Cart -->
         <div v-if="cart.length>0" class="rounded-2xl p-5 text-white shadow-xl" style="background:#0f172a">
           <div class="flex items-center justify-between mb-4">
             <div>
@@ -648,10 +612,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <div v-else class="text-center py-10 text-slate-300">
           <p class="text-4xl mb-2">🛒</p><p class="text-sm font-semibold">點擊產品加入購物車</p>
         </div>
-      </template><!-- end POS -->
-
-      <!-- STOCK -->
-      <template v-if="retailSubTab==='stock'">
+      </template><template v-if="retailSubTab==='stock'">
         <div class="grid grid-cols-2 gap-2.5">
           <div class="stat-card">
             <p class="text-xs text-slate-400 font-semibold uppercase">總庫存</p>
@@ -723,10 +684,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
       </template>
-    </section><!-- end retail -->
-
-    <!-- ===== FINANCE ===== -->
-    <section v-if="currentTab==='finance'" class="space-y-3 fade-in">
+    </section><section v-if="currentTab==='finance'" class="space-y-3 fade-in">
       <div class="flex gap-1 p-1 rounded-2xl" style="background:rgba(0,0,0,.07)">
         <button @click="financeSubTab='add'" :class="financeSubTab==='add'?'pill-tab-active text-slate-800':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📝 記帳</button>
         <button @click="financeSubTab='history'" :class="financeSubTab==='history'?'pill-tab-active text-slate-800':'text-slate-400'" class="flex-1 py-2.5 rounded-xl font-black text-xs transition-all">📋 全部記錄</button>
@@ -780,7 +738,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
   </main>
 
-  <!-- BOTTOM NAV -->
   <nav class="fixed bottom-0 left-0 right-0 z-40 shadow-2xl" style="background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.07)">
     <div class="max-w-lg mx-auto grid grid-cols-5">
       <button v-for="t in tabs" :key="t.id" @click="currentTab=t.id"
@@ -792,12 +749,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       </button>
     </div>
   </nav>
-</div><!-- end main app -->
-
-<!-- ===================== MODALS ===================== -->
-
-<!-- MODAL: Monthly metrics -->
-<div v-if="showMetricsModal" class="modal-overlay" @click.self="showMetricsModal=false">
+</div><div v-if="showMetricsModal" class="modal-overlay" @click.self="showMetricsModal=false">
   <div class="modal-sheet">
     <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex justify-between items-start">
       <div>
@@ -839,7 +791,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
 </div>
 
-<!-- MODAL: Client -->
 <div v-if="showClientModal" class="modal-overlay" @click.self="closeClientModal">
   <div class="modal-sheet">
     <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -847,17 +798,14 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
       <button @click="closeClientModal" class="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-400 text-xl leading-none">×</button>
     </div>
     <div class="px-6 py-5 space-y-4">
-      <!-- Name -->
       <div>
         <p class="text-xs font-bold text-slate-500 mb-1.5">客戶姓名 <span class="text-red-500">*</span></p>
         <input v-model="clientForm.name" placeholder="輸入客戶姓名" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50 text-sm">
       </div>
-      <!-- Phone -->
       <div>
         <p class="text-xs font-bold text-slate-500 mb-1.5">電話號碼</p>
         <input v-model="clientForm.phone" placeholder="例如：91234567" type="tel" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50 text-sm">
       </div>
-      <!-- Branch + Source -->
       <div class="grid grid-cols-2 gap-3">
         <div>
           <p class="text-xs font-bold text-slate-500 mb-1.5">分店</p>
@@ -872,7 +820,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </select>
         </div>
       </div>
-      <!-- Referral -->
       <div>
         <p class="text-xs font-bold text-slate-500 mb-1.5">介紹人（可選）</p>
         <div class="relative" style="z-index:50">
@@ -900,7 +847,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
       </div>
-      <!-- Marathon toggle -->
       <label :class="clientForm.marathon?'bg-emerald-50 border-emerald-300':'bg-slate-50 border-slate-200'" class="flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer">
         <div :class="clientForm.marathon?'bg-emerald-500':'bg-slate-200'" class="w-12 h-6 rounded-full transition-colors flex items-center px-1 flex-shrink-0">
           <div :class="clientForm.marathon?'translate-x-6':'translate-x-0'" class="w-5 h-5 bg-white rounded-full shadow transition-transform"></div>
@@ -908,12 +854,10 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <span class="font-bold text-sm">🏃 活躍馬拉松成員</span>
         <input type="checkbox" v-model="clientForm.marathon" class="hidden">
       </label>
-      <!-- Expiry -->
       <div>
         <p class="text-xs font-bold text-slate-500 mb-1.5">有效日期</p>
         <input type="date" v-model="clientForm.expiry_date" class="w-full border-2 border-slate-200 p-4 rounded-2xl font-semibold focus:border-blue-400 outline-none bg-slate-50 text-sm">
       </div>
-      <!-- Error -->
       <div v-if="clientSaveError" class="bg-red-50 border border-red-200 rounded-xl p-3.5 text-red-600 text-sm font-semibold">
         ❌ {{ clientSaveError }}
       </div>
@@ -928,7 +872,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
 </div>
 
-<!-- MODAL: Expense -->
 <div v-if="showExpModal" class="modal-overlay" @click.self="showExpModal=false">
   <div class="modal-sheet">
     <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -949,7 +892,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
 </div>
 
-<!-- MODAL: Restock -->
 <div v-if="showRestockModal" class="modal-overlay" @click.self="showRestockModal=false">
   <div class="modal-sheet no-scrollbar" style="overflow-y:auto">
     <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -996,7 +938,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
 </div>
 
-<!-- MODAL: Edit transaction -->
 <div v-if="showEditTxModal" class="modal-overlay" @click.self="showEditTxModal=false">
   <div class="modal-sheet no-scrollbar">
     <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -1029,7 +970,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
 </div>
 
-<!-- MODAL: Stock correction -->
 <div v-if="showStockCorrectionModal" class="modal-overlay" @click.self="showStockCorrectionModal=false">
   <div class="modal-sheet">
     <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -1054,7 +994,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
 </div>
 
-<!-- MODAL: Delete confirm -->
 <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="showDeleteConfirm=false">
   <div class="modal-sheet">
     <div class="p-8 text-center space-y-5">
@@ -1068,7 +1007,6 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
 </div>
 
-<!-- MODAL: Profile -->
 <div v-if="showProfile" class="modal-overlay" @click.self="showProfile=false">
   <div class="modal-sheet">
     <div class="px-6 pt-6 pb-4 border-b border-slate-100 flex justify-between items-center">
@@ -1087,13 +1025,39 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
   </div>
 </div>
 
-</div><!-- end app -->
-
-<script>
+</div><script>
 const{createApp,ref,reactive,computed,onMounted,watch}=Vue;
 const SUPA_URL="https://ajnunehxtiofcphdyhqn.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqbnVuZWh4dGlvZmNwaGR5aHFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk4MzcsImV4cCI6MjA5MTcxNTgzN30.vn74xMzEm-fj7Gzhosxvn5UQWozAf_8LrDHXG3kycT4";
 const sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+
+// ============================================================
+// SUPABASE QUERY HELPER WITH TIMEOUT (防卡死機制)
+// ============================================================
+const safeDbCall = (promise, ms = 8000) => {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      resolve({ error: { message: "網路連線超時，請檢查是否被防火牆阻擋 (Timeout)" }, data: null });
+    }, ms);
+    promise.then(res => {
+      clearTimeout(timer);
+      resolve(res);
+    }).catch(err => {
+      clearTimeout(timer);
+      resolve({ error: err, data: null });
+    });
+  });
+};
+
+async function safeQuery(queryFn){
+  try{
+    const result=await safeDbCall(queryFn());
+    return result.data||[];
+  }catch(e){
+    console.warn('safeQuery error:',e);
+    return[];
+  }
+}
 
 // ============================================================
 // STATIC PRODUCT DATA (from Products_4.xlsx — always available)
@@ -1156,19 +1120,6 @@ const PRODUCTS_DATA=[
   {prod_name:"會藉服務年費",retail_price:93,price_bronze:93,cost:93,category:"其他"},
 ];
 
-// ============================================================
-// SUPABASE QUERY HELPER — never hangs, always returns safely
-// ============================================================
-async function safeQuery(queryFn){
-  try{
-    const result=await queryFn();
-    return result.data||[];
-  }catch(e){
-    console.warn('safeQuery error:',e);
-    return[];
-  }
-}
-
 createApp({
   setup(){
     // ─── AUTH ───
@@ -1191,7 +1142,7 @@ createApp({
     // ─── DATA ───
     const clients=ref([]),finances=ref([]),trials=ref([]),cart=ref([]);
     const monthlyMetrics=ref({inquiries:0,ad_trials:0,notes:''});
-    const products=ref([...PRODUCTS_DATA]); // Always starts with static data
+    const products=ref([...PRODUCTS_DATA]);
 
     // ─── SEARCH ───
     const pSearch=ref(''),cSearch=ref(''),crmBranchFilter=ref('全部');
@@ -1254,7 +1205,7 @@ createApp({
       if(!session.value)return;
       stockSyncing.value=true;
       try{
-        await sb.from('stock').upsert({user_id:session.value.user.id,prod_name:name,quantity:qty,updated_at:new Date().toISOString()},{onConflict:'user_id,prod_name'});
+        await safeDbCall(sb.from('stock').upsert({user_id:session.value.user.id,prod_name:name,quantity:qty,updated_at:new Date().toISOString()},{onConflict:'user_id,prod_name'}));
       }catch(e){console.warn('syncStock error:',e);}
       finally{stockSyncing.value=false;}
     };
@@ -1355,11 +1306,11 @@ createApp({
       showToast('⏳ 同步中...',8000);
       try{
         const rows=PRODUCTS_DATA.map(p=>({...p,is_active:true}));
-        const{error}=await sb.from('products').upsert(rows,{onConflict:'prod_name'});
+        const{error}=await safeDbCall(sb.from('products').upsert(rows,{onConflict:'prod_name'}));
         if(error){
           let ok=0;
           for(const p of rows){
-            const{error:e2}=await sb.from('products').upsert({...p,is_active:true},{onConflict:'prod_name'});
+            const{error:e2}=await safeDbCall(sb.from('products').upsert({...p,is_active:true},{onConflict:'prod_name'}));
             if(!e2)ok++;
           }
           showToast(`✅ 同步 ${ok}/${rows.length} 款`);
@@ -1406,29 +1357,29 @@ createApp({
       try{
         const{email,password}=authForm.value;
         const res=authState.value==='login'
-          ?await sb.auth.signInWithPassword({email,password})
-          :await sb.auth.signUp({email,password});
+          ?await safeDbCall(sb.auth.signInWithPassword({email,password}))
+          :await safeDbCall(sb.auth.signUp({email,password}));
         if(res.error)alert(res.error.message);
       }finally{authLoading.value=false;}
     };
     const forgotPassword=async()=>{
       const e=authForm.value.email;
       if(!e)return alert("請先輸入 Email");
-      const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:'https://incomesapp.netlify.app/'});
+      const{error}=await safeDbCall(sb.auth.resetPasswordForEmail(e,{redirectTo:'https://incomesapp.netlify.app/'}));
       if(!error)alert("重設郵件已發送至 "+e);
       else alert(error.message);
     };
     const updatePassword=async()=>{
       if(!newPassword.value||newPassword.value.length<6)return alert("密碼最少 6 個字元");
-      const{error}=await sb.auth.updateUser({password:newPassword.value});
-      if(!error){alert("✅ 密碼更新成功！");await sb.auth.signOut();authState.value='login';session.value=null;}
+      const{error}=await safeDbCall(sb.auth.updateUser({password:newPassword.value}));
+      if(!error){alert("✅ 密碼更新成功！");await safeDbCall(sb.auth.signOut());authState.value='login';session.value=null;}
       else alert(error.message);
     };
-    const handleLogout=async()=>{await sb.auth.signOut();session.value=null;showProfile.value=false;};
+    const handleLogout=async()=>{await safeDbCall(sb.auth.signOut());session.value=null;showProfile.value=false;};
     const triggerReset=()=>{showProfile.value=false;forgotPassword();};
 
     // ============================================================
-    // LOAD DATA — each query is INDEPENDENT, never blocks others
+    // LOAD DATA
     // ============================================================
     const loadData=async()=>{
       if(!session.value)return;
@@ -1436,7 +1387,6 @@ createApp({
       const uid=session.value.user.id;
       const today=new Date().toISOString().split('T')[0];
       try{
-        // Each query is independent — one failure won't block others
         const[cData,fData,trData]=await Promise.all([
           safeQuery(()=>sb.from('clients').select('*').eq('user_id',uid).order('created_at',{ascending:false})),
           safeQuery(()=>sb.from('finances').select('*').eq('user_id',uid).order('created_at',{ascending:false})),
@@ -1446,9 +1396,8 @@ createApp({
         finances.value=fData;
         trials.value=trData;
 
-        // Products: try DB but NEVER block on it — static data is always available
         try{
-          const{data:prods}=await sb.from('products').select('*').eq('is_active',true).order('prod_name');
+          const prods=await safeQuery(()=>sb.from('products').select('*').eq('is_active',true).order('prod_name'));
           if(prods&&prods.length>0){
             const dbMap={};prods.forEach(p=>{dbMap[p.prod_name]=p;});
             products.value=PRODUCTS_DATA.map(p=>{const db=dbMap[p.prod_name];return db?{...p,...db}:p;});
@@ -1471,7 +1420,7 @@ createApp({
     const loadMonthlyMetrics=async()=>{
       if(!session.value)return;
       try{
-        const{data}=await sb.from('monthly_metrics').select('*').eq('user_id',session.value.user.id).eq('metric_month',analyticsMonth.value).maybeSingle();
+        const data=await safeQuery(()=>sb.from('monthly_metrics').select('*').eq('user_id',session.value.user.id).eq('metric_month',analyticsMonth.value).maybeSingle());
         monthlyMetrics.value=data||{inquiries:0,ad_trials:0,notes:''};
       }catch(e){monthlyMetrics.value={inquiries:0,ad_trials:0,notes:''};}
     };
@@ -1483,7 +1432,7 @@ createApp({
     const saveMonthlyMetrics=async()=>{
       try{
         const payload={user_id:session.value.user.id,metric_month:analyticsMonth.value,...metricsForm.value,updated_at:new Date().toISOString()};
-        const{error}=await sb.from('monthly_metrics').upsert(payload,{onConflict:'user_id,metric_month'});
+        const{error}=await safeDbCall(sb.from('monthly_metrics').upsert(payload,{onConflict:'user_id,metric_month'}));
         if(!error){showMetricsModal.value=false;await loadMonthlyMetrics();showToast('✅ 已儲存');}
         else alert(error.message);
       }catch(e){alert('儲存失敗：'+e.message);}
@@ -1507,8 +1456,7 @@ createApp({
     const analyticsNewMarathon=computed(()=>analyticsNewClients.value.filter(c=>c.marathon).length);
 
     // ============================================================
-    // CRM — BUG FIXED: loadData is NOT called from inside saveClient
-    //        to avoid blocking; we do a lightweight clients-only reload
+    // CRM
     // ============================================================
     const closeClientModal=()=>{
       showClientModal.value=false;
@@ -1527,8 +1475,6 @@ createApp({
       showClientModal.value=true;
     };
 
-    // FIXED saveClient: uses safeQuery, closes modal before async ops,
-    // always resets savingClient in finally
     const saveClient=async()=>{
       clientSaveError.value='';
       const name=(clientForm.value.name||'').trim();
@@ -1550,25 +1496,21 @@ createApp({
       };
 
       try{
-        let error;
+        let res;
         if(isEdit){
-          const res=await sb.from('clients').update(fieldsToSave).eq('id',editId).eq('user_id',session.value.user.id);
-          error=res.error;
+          res=await safeDbCall(sb.from('clients').update(fieldsToSave).eq('id',editId).eq('user_id',session.value.user.id));
         }else{
-          const res=await sb.from('clients').insert(fieldsToSave);
-          error=res.error;
+          res=await safeDbCall(sb.from('clients').insert(fieldsToSave));
         }
 
-        if(error){
-          console.error('saveClient DB error:',JSON.stringify(error));
-          clientSaveError.value=error.message||'儲存失敗，請重試';
-          return; // finally still runs
+        if(res.error){
+          console.error('saveClient DB error:',JSON.stringify(res.error));
+          clientSaveError.value=res.error.message||'儲存失敗，請重試';
+          return;
         }
 
-        // Success — close modal first, then reload in background
         closeClientModal();
         showToast(isEdit?'✅ 客戶資料已更新':'✅ 新客戶已新增');
-        // Reload only clients + finances (not products — avoids any hang)
         safeQuery(()=>sb.from('clients').select('*').eq('user_id',session.value.user.id).order('created_at',{ascending:false})).then(data=>{clients.value=data;});
         safeQuery(()=>sb.from('finances').select('*').eq('user_id',session.value.user.id).order('created_at',{ascending:false})).then(data=>{finances.value=data;});
 
@@ -1576,7 +1518,7 @@ createApp({
         console.error('saveClient exception:',e);
         clientSaveError.value='系統錯誤：'+e.message;
       }finally{
-        savingClient.value=false; // ALWAYS runs
+        savingClient.value=false;
       }
     };
 
@@ -1593,7 +1535,7 @@ createApp({
       if(!expForm.value.amount||Number(expForm.value.amount)<=0)return alert('請輸入金額');
       try{
         const isInc=expForm.value.category.includes('收入');
-        const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:isInc?'income':'expense',category:expForm.value.category,amount:Number(expForm.value.amount),person,note:expForm.value.note});
+        const{error}=await safeDbCall(sb.from('finances').insert({user_id:session.value.user.id,type:isInc?'income':'expense',category:expForm.value.category,amount:Number(expForm.value.amount),person,note:expForm.value.note}));
         if(!error){showExpModal.value=false;await loadData();currentTab.value='dashboard';showToast('✅ 記帳完成');}
         else alert("錯誤："+error.message);
       }catch(e){alert('錯誤：'+e.message);}
@@ -1602,7 +1544,7 @@ createApp({
     const saveEditTx=async()=>{
       try{
         const{id,type,category,amount,note,person,is_renewal}=editTxForm.value;
-        const{error}=await sb.from('finances').update({type,category,amount:Number(amount),note,person,is_renewal:is_renewal||false}).eq('id',id).eq('user_id',session.value.user.id);
+        const{error}=await safeDbCall(sb.from('finances').update({type,category,amount:Number(amount),note,person,is_renewal:is_renewal||false}).eq('id',id).eq('user_id',session.value.user.id));
         if(!error){showEditTxModal.value=false;await loadData();showToast('✅ 已更新');}
         else alert(error.message);
       }catch(e){alert('錯誤：'+e.message);}
@@ -1610,7 +1552,7 @@ createApp({
     const deleteTx=()=>{showEditTxModal.value=false;showDeleteConfirm.value=true;};
     const confirmDeleteTx=async()=>{
       try{
-        const{error}=await sb.from('finances').delete().eq('id',editTxForm.value.id).eq('user_id',session.value.user.id);
+        const{error}=await safeDbCall(sb.from('finances').delete().eq('id',editTxForm.value.id).eq('user_id',session.value.user.id));
         if(!error){showDeleteConfirm.value=false;await loadData();showToast('🗑️ 已刪除');}
         else alert(error.message);
       }catch(e){alert('錯誤：'+e.message);}
@@ -1625,7 +1567,7 @@ createApp({
     });
 
     // ============================================================
-    // EXERCISE POS — FIXED: savingExercise always resets in finally
+    // EXERCISE POS
     // ============================================================
     const saveExercise=async person=>{
       const{type,isNew,isReferral,isRenewal,clientId,trialDate,trialName,trialPhone}=eForm.value;
@@ -1635,30 +1577,29 @@ createApp({
       savingExercise.value=true;
       try{
         const profit=type==='trial'?98:type==='10pt'?(isReferral?413:465):(isNew?1250.50:1277.50);
-        const{error}=await sb.from('finances').insert({
+        const{error}=await safeDbCall(sb.from('finances').insert({
           user_id:session.value.user.id,type:'income',category:'運動',
           amount:profit,person,client_id:type==='trial'?null:clientId,
           note:type,is_renewal:type!=='trial'&&isRenewal
-        });
+        }));
         if(error){alert("錯誤："+error.message);return;}
 
         if(type==='trial'){
-          await sb.from('trials').insert([{
+          await safeDbCall(sb.from('trials').insert([{
             user_id:session.value.user.id,client_id:null,client_name:trialName.trim(),
             trial_date:trialDate||null,paid_date:todayDate.value,amount:profit,
             person,reminded:false,trial_phone:(trialPhone||'').trim()||null
-          }]);
+          }]));
         }
 
         eForm.value={clientId:null,type:'35pt',isNew:false,isReferral:false,isRenewal:false,trialDate:'',trialName:'',trialPhone:''};
         showToast('✅ 已記錄');
         currentTab.value='dashboard';
-        // Reload in background
         loadData();
       }catch(e){
         alert('錯誤：'+e.message);
       }finally{
-        savingExercise.value=false; // ALWAYS runs
+        savingExercise.value=false;
       }
     };
 
@@ -1692,7 +1633,7 @@ createApp({
       if(!cart.value.length)return;
       const totalP=cartTotal.value,note=cart.value.map(i=>`${i.name}×${i.qty}`).join(', ');
       try{
-        const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'零售',amount:totalP,person,client_id:rForm.value.clientId,note});
+        const{error}=await safeDbCall(sb.from('finances').insert({user_id:session.value.user.id,type:'income',category:'零售',amount:totalP,person,client_id:rForm.value.clientId,note}));
         if(!error){
           await Promise.all(cart.value.map(item=>modifyStock(item.name,-item.qty)));
           cart.value=[];rForm.value.clientId=null;
@@ -1702,7 +1643,6 @@ createApp({
       }catch(e){alert('錯誤：'+e.message);}
     };
 
-    // FIXED openRestock: simple, direct, no issues
     const openRestock=p=>{
       restockForm.value={product:{name:p.name,cost:p.cost,retail:p.retail},qty:0,isInitial:false};
       showRestockModal.value=true;
@@ -1720,12 +1660,11 @@ createApp({
       if((qty||0)<1)return alert("入貨最少 1 件");
       const amount=(product.cost||0)*Number(qty);
       try{
-        const{error}=await sb.from('finances').insert({user_id:session.value.user.id,type:'expense',category:'產品採購',amount,person,note:`${product.name} ×${qty}`});
+        const{error}=await safeDbCall(sb.from('finances').insert({user_id:session.value.user.id,type:'expense',category:'產品採購',amount,person,note:`${product.name} ×${qty}`}));
         if(!error){
           await modifyStock(product.name,Number(qty));
           showRestockModal.value=false;
           showToast('✅ 入貨已記錄');
-          // Background reload
           safeQuery(()=>sb.from('finances').select('*').eq('user_id',session.value.user.id).order('created_at',{ascending:false})).then(data=>{finances.value=data;});
         }else alert("錯誤："+error.message);
       }catch(e){alert('錯誤：'+e.message);}
