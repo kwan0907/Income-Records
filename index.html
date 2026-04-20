@@ -12,17 +12,6 @@
 *{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
 body{background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 
-/* === AUTH LOADING SCREEN === */
-#auth-loading{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 45%,#1d4ed8 100%)}
-#auth-loading .logo{font-size:3rem;font-weight:900;font-style:italic;color:#fff;letter-spacing:-0.02em}
-#auth-loading .logo span{color:#60a5fa}
-#auth-loading .dots{display:flex;gap:8px;margin-top:20px}
-#auth-loading .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.4);animation:dotPulse 1.4s ease-in-out infinite}
-#auth-loading .dot:nth-child(2){animation-delay:.2s}
-#auth-loading .dot:nth-child(3){animation-delay:.4s}
-@keyframes dotPulse{0%,80%,100%{transform:scale(.8);background:rgba(255,255,255,.3)}40%{transform:scale(1.2);background:rgba(255,255,255,.9)}}
-#auth-loading.hidden{display:none!important}
-
 /* === MODAL === */
 .modal-overlay{position:fixed;inset:0;background:rgba(10,15,40,.85);z-index:200;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .modal-sheet{width:100%;max-width:480px;background:#fff;border-radius:28px 28px 0 0;max-height:92vh;overflow-y:auto;animation:slideUp .32s cubic-bezier(.32,.72,0,1)}
@@ -52,7 +41,7 @@ body{background:#f0f4ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 .pill-tab-active{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)}
 
 /* === NAV === */
-input,select,textarea{font-size:16px !important}
+input, select, textarea { font-size: 16px !important; } /* 防止手機點擊輸入框時自動放大 */
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
 
 /* === GLASSMORPHISM CARD === */
@@ -63,30 +52,14 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 
 /* === STAT CARD === */
 .stat-card{background:#fff;border-radius:20px;padding:16px;border:1px solid rgba(0,0,0,.06);box-shadow:0 1px 4px rgba(0,0,0,.06)}
-
-/* === OFFLINE BANNER === */
-.offline-banner{position:fixed;top:0;left:0;right:0;z-index:500;background:#ef4444;color:#fff;text-align:center;font-size:12px;font-weight:700;padding:6px;letter-spacing:.03em}
 </style>
 </head>
 <body>
-
-<!-- Auth Loading Screen: shown immediately, hidden once auth state confirmed -->
-<div id="auth-loading">
-  <div class="logo">FITWORK<span>HK</span></div>
-  <div class="dots">
-    <div class="dot"></div>
-    <div class="dot"></div>
-    <div class="dot"></div>
-  </div>
-</div>
-
 <div id="app" v-cloak>
 
 <transition name="fade">
   <div v-if="toast" class="toast">{{ toast }}</div>
 </transition>
-
-<div v-if="offlineBanner" class="offline-banner">⚠️ 網路連線不穩，部分數據可能未即時更新</div>
 
 <div v-if="showExClientDropdown||showRtClientDropdown||showReferralDropdown"
   @click="showExClientDropdown=false;showRtClientDropdown=false;showReferralDropdown=false"
@@ -168,13 +141,17 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             ${{ totalProfit }}
           </p>
           <div class="flex gap-5 mt-3 text-xs font-semibold">
-            <span class="flex items-center gap-1.5 text-emerald-300"><span class="w-2 h-2 bg-emerald-400 rounded-full"></span>收入 ${{ totalIncome }}</span>
-            <span class="flex items-center gap-1.5 text-red-300"><span class="w-2 h-2 bg-red-400 rounded-full"></span>支出 ${{ totalExpense }}</span>
+            <span class="flex items-center gap-1.5 text-emerald-300">
+              <span class="w-2 h-2 bg-emerald-400 rounded-full"></span>收入 ${{ totalIncome }}
+            </span>
+            <span class="flex items-center gap-1.5 text-red-300">
+              <span class="w-2 h-2 bg-red-400 rounded-full"></span>支出 ${{ totalExpense }}
+            </span>
           </div>
         </div>
 
         <div class="grid grid-cols-5 gap-2">
-          <div v-for="b in ['觀塘','中環','佐敦']" :key="b" class="stat-card text-center col-span-1">
+          <div v-for="b in ['觀塘','中環','佐敦']" :key="b" class="stat-card text-center col-span-1" style="flex:1">
             <p class="text-xl font-black text-blue-600">{{ branchStats[b] }}</p>
             <p class="text-xs text-slate-400 font-bold mt-0.5">{{ b }}</p>
           </div>
@@ -224,8 +201,13 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
           <div v-if="stockWarningExpanded" class="divide-y divide-slate-50">
             <div v-for="item in lowStockItems" :key="item.name" @click="currentTab='retail';retailSubTab='stock'" class="px-4 py-3 flex justify-between items-center cursor-pointer active:bg-amber-50">
-              <div><p class="font-bold text-sm">{{ item.name }}</p><p class="text-xs text-slate-400 mt-0.5">點擊管理庫存</p></div>
-              <span :class="item.stock===0?'bg-red-50 text-red-600 border-red-200':'bg-amber-50 text-amber-700 border-amber-200'" class="text-xs font-black px-3 py-1.5 rounded-xl border font-mono">{{ item.stock===0?'缺　貨':item.stock+' 件' }}</span>
+              <div>
+                <p class="font-bold text-sm">{{ item.name }}</p>
+                <p class="text-xs text-slate-400 mt-0.5">點擊管理庫存</p>
+              </div>
+              <span :class="item.stock===0?'bg-red-50 text-red-600 border-red-200':'bg-amber-50 text-amber-700 border-amber-200'" class="text-xs font-black px-3 py-1.5 rounded-xl border font-mono">
+                {{ item.stock===0?'缺　貨':item.stock+' 件' }}
+              </span>
             </div>
           </div>
         </div>
@@ -278,7 +260,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <p class="text-4xl mb-2">📋</p><p class="text-sm font-semibold">暫無記錄</p>
           </div>
           <div v-for="(t,i) in recentTransactions" :key="t.id" :class="i<recentTransactions.length-1?'border-b border-slate-50':''" class="flex items-center gap-3 px-4 py-3">
-            <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0" :class="t.type==='income'?'bg-emerald-50 text-emerald-600':'bg-red-50 text-red-500'">{{ t.type==='income'?'↑':'↓' }}</div>
+            <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0" :class="t.type==='income'?'bg-emerald-50 text-emerald-600':'bg-red-50 text-red-500'">
+              {{ t.type==='income'?'↑':'↓' }}
+            </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-1.5 flex-wrap">
                 <p class="font-bold text-sm">{{ t.category }}</p>
@@ -291,9 +275,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <button @click="openEditTx(t)" class="text-slate-300 p-1.5 rounded-lg active:bg-slate-100 flex-shrink-0 text-base">✏️</button>
           </div>
         </div>
-      </template>
-
-      <template v-if="dashSubTab==='analytics'">
+      </template><template v-if="dashSubTab==='analytics'">
         <div class="bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between shadow-sm border border-slate-100">
           <button @click="prevAnalyticsMonth" class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-xl active:scale-90">‹</button>
           <div class="text-center">
@@ -399,9 +381,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
         </div>
       </template>
-    </section>
-
-    <section v-if="currentTab==='crm'" class="space-y-3 fade-in">
+    </section><section v-if="currentTab==='crm'" class="space-y-3 fade-in">
       <div class="flex gap-2">
         <div class="relative flex-1">
           <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
@@ -418,7 +398,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <p class="text-5xl mb-3">👥</p><p class="font-semibold">暫無客戶記錄</p>
       </div>
       <div v-for="c in filteredClients" :key="c.id" @click="openClient(c)" class="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 cursor-pointer active:bg-blue-50 card-press">
-        <div class="w-11 h-11 rounded-full flex items-center justify-center font-black text-white text-lg flex-shrink-0 shadow-sm" style="background:linear-gradient(135deg,#60a5fa,#1d4ed8)">{{ c.name.charAt(0) }}</div>
+        <div class="w-11 h-11 rounded-full flex items-center justify-center font-black text-white text-lg flex-shrink-0 shadow-sm" style="background:linear-gradient(135deg,#60a5fa,#1d4ed8)">
+          {{ c.name.charAt(0) }}
+        </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-1.5 flex-wrap">
             <p class="font-black text-sm">{{ c.name }}</p>
@@ -467,7 +449,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           <div @click="showExClientDropdown=!showExClientDropdown;exClientSearch=''"
             :class="eForm.clientId?'border-blue-400 bg-blue-50':'border-slate-200 bg-slate-50'"
             class="w-full p-3.5 rounded-xl border-2 font-semibold text-sm cursor-pointer flex items-center justify-between select-none">
-            <span :class="eForm.clientId?'text-blue-800 font-black':'text-slate-400'">{{ eForm.clientId?(clients.find(c=>c.id===eForm.clientId)?.name+' · '+(clients.find(c=>c.id===eForm.clientId)?.phone||'')):'點擊搜尋選擇客戶...' }}</span>
+            <span :class="eForm.clientId?'text-blue-800 font-black':'text-slate-400'">
+              {{ eForm.clientId?(clients.find(c=>c.id===eForm.clientId)?.name+' · '+(clients.find(c=>c.id===eForm.clientId)?.phone||'')):'點擊搜尋選擇客戶...' }}
+            </span>
             <span class="text-slate-400 text-xs ml-2 flex-shrink-0">{{ showExClientDropdown?'▲':'▼' }}</span>
           </div>
           <div v-if="showExClientDropdown" class="absolute top-full left-0 right-0 bg-white border-2 border-blue-200 rounded-2xl shadow-2xl mt-1.5 overflow-hidden dropdown-anim" style="z-index:50">
@@ -513,8 +497,12 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
-        <button @click="saveExercise('Kwan')" :disabled="savingExercise" class="text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 disabled:opacity-60" style="background:#0f172a">{{ savingExercise?'處理中...':'💰 Kwan' }}</button>
-        <button @click="saveExercise('Cat')" :disabled="savingExercise" class="bg-blue-600 text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 disabled:opacity-60">{{ savingExercise?'處理中...':'💰 Cat' }}</button>
+        <button @click="saveExercise('Kwan')" :disabled="savingExercise" class="text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 disabled:opacity-60" style="background:#0f172a">
+          {{ savingExercise?'處理中...':'💰 Kwan' }}
+        </button>
+        <button @click="saveExercise('Cat')" :disabled="savingExercise" class="bg-blue-600 text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 disabled:opacity-60">
+          {{ savingExercise?'處理中...':'💰 Cat' }}
+        </button>
       </div>
     </section>
 
@@ -544,7 +532,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <div @click="showRtClientDropdown=!showRtClientDropdown;rtClientSearch=''"
               :class="rForm.clientId?'border-emerald-400 bg-emerald-50':'border-slate-200 bg-slate-50'"
               class="w-full p-3.5 rounded-xl border-2 font-semibold text-sm cursor-pointer flex items-center justify-between select-none">
-              <span :class="rForm.clientId?'text-emerald-800 font-black':'text-slate-400'">{{ rForm.clientId?(clients.find(c=>c.id===rForm.clientId)?.name+' · '+(clients.find(c=>c.id===rForm.clientId)?.phone||'')):'點擊搜尋客戶（可選）...' }}</span>
+              <span :class="rForm.clientId?'text-emerald-800 font-black':'text-slate-400'">
+                {{ rForm.clientId?(clients.find(c=>c.id===rForm.clientId)?.name+' · '+(clients.find(c=>c.id===rForm.clientId)?.phone||'')):'點擊搜尋客戶（可選）...' }}
+              </span>
               <span class="text-slate-400 text-xs ml-2">{{ showRtClientDropdown?'▲':'▼' }}</span>
             </div>
             <div v-if="showRtClientDropdown" class="absolute top-full left-0 right-0 bg-white border-2 border-emerald-200 rounded-2xl shadow-2xl mt-1.5 overflow-hidden dropdown-anim" style="z-index:50">
@@ -576,7 +566,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           <div v-for="(p,i) in filteredProducts" :key="p.name" :class="i<filteredProducts.length-1?'border-b border-slate-50':''" class="flex items-center gap-2 pr-3">
             <div @click="addToCart(p)" class="flex-1 px-4 py-3.5 flex items-center gap-2 cursor-pointer active:bg-emerald-50 min-w-0">
               <span class="font-semibold text-sm flex-1 truncate">{{ p.name }}</span>
-              <span :class="getStock(p.name)===0?'bg-red-50 text-red-600 border-red-200':getStock(p.name)<=3?'bg-amber-50 text-amber-700 border-amber-200':'bg-slate-100 text-slate-500 border-slate-200'" class="text-xs font-black px-2 py-0.5 rounded-lg border font-mono flex-shrink-0">{{ getStock(p.name)===0?'缺貨':'庫'+getStock(p.name) }}</span>
+              <span :class="getStock(p.name)===0?'bg-red-50 text-red-600 border-red-200':getStock(p.name)<=3?'bg-amber-50 text-amber-700 border-amber-200':'bg-slate-100 text-slate-500 border-slate-200'" class="text-xs font-black px-2 py-0.5 rounded-lg border font-mono flex-shrink-0">
+                {{ getStock(p.name)===0?'缺貨':'庫'+getStock(p.name) }}
+              </span>
               <span :class="rForm.discount==='bronze'?'text-amber-600 font-black':isLossSale(p)?'text-red-500':'text-emerald-600'" class="font-black text-sm flex-shrink-0">${{ getSellPrice(p).toFixed(0) }}</span>
             </div>
             <button @click.stop="openRestock({name:p.name,cost:p.cost,retail:p.retail})" class="flex-shrink-0 bg-amber-100 text-amber-700 text-xs font-black px-2.5 py-1.5 rounded-lg active:scale-90 border border-amber-200">入貨</button>
@@ -594,7 +586,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
             <div class="flex items-center gap-2">
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-semibold text-slate-200 truncate">{{ item.name }}</p>
-                <span class="text-xs font-bold" :class="getUnitProfit(item)>0?'text-emerald-400/80':getUnitProfit(item)<0?'text-red-400/80':'text-blue-400/80'">{{ getUnitProfit(item)===0?'±$0':(getUnitProfit(item)>0?'+':'')+getUnitProfit(item).toFixed(0) }} × {{ item.qty }}</span>
+                <span class="text-xs font-bold" :class="getUnitProfit(item)>0?'text-emerald-400/80':getUnitProfit(item)<0?'text-red-400/80':'text-blue-400/80'">
+                  {{ getUnitProfit(item)===0?'±$0':(getUnitProfit(item)>0?'+':'')+getUnitProfit(item).toFixed(0) }} × {{ item.qty }}
+                </span>
               </div>
               <div class="flex items-center bg-slate-800 rounded-xl overflow-hidden flex-shrink-0">
                 <button @click="decreaseQty(i)" class="w-8 h-8 flex items-center justify-center font-black text-slate-300 active:bg-slate-700 select-none">−</button>
@@ -606,7 +600,9 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
           </div>
           <div class="mt-4 pt-3 border-t border-slate-700 flex justify-between items-center">
             <span class="font-bold text-slate-400 text-sm">總利潤</span>
-            <span class="font-black text-2xl" :class="cartTotal>0?'text-emerald-400':cartTotal<0?'text-red-400':'text-blue-400'">{{ cartTotal===0?'$0':cartTotal>0?'+$'+cartTotal.toFixed(0):'-$'+Math.abs(cartTotal).toFixed(0) }}</span>
+            <span class="font-black text-2xl" :class="cartTotal>0?'text-emerald-400':cartTotal<0?'text-red-400':'text-blue-400'">
+              {{ cartTotal===0?'$0':cartTotal>0?'+$'+cartTotal.toFixed(0):'-$'+Math.abs(cartTotal).toFixed(0) }}
+            </span>
           </div>
           <div class="grid grid-cols-2 gap-2 mt-4">
             <button @click="saveRetail('Kwan')" class="bg-emerald-600 py-3.5 rounded-xl font-black text-sm active:scale-95 shadow-lg">Kwan 結帳</button>
@@ -616,9 +612,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
         <div v-else class="text-center py-10 text-slate-300">
           <p class="text-4xl mb-2">🛒</p><p class="text-sm font-semibold">點擊產品加入購物車</p>
         </div>
-      </template>
-
-      <template v-if="retailSubTab==='stock'">
+      </template><template v-if="retailSubTab==='stock'">
         <div class="grid grid-cols-2 gap-2.5">
           <div class="stat-card">
             <p class="text-xs text-slate-400 font-semibold uppercase">總庫存</p>
