@@ -296,7 +296,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
             <button class="tag" :class="{active: filterStatus==='active'}" @click="filterStatus='active'">⭐️ 正式會員</button>
             <button class="tag" :class="{active: filterStatus==='prospect'}" @click="filterStatus='prospect'">👀 試堂/預約</button>
             <div style="width:1px;background:#ccc;margin:0 5px;"></div>
-            <button v-for="b in ['觀塘','中環','佐敦']" class="tag" :class="{active:filterBranch===b}" @click="filterBranch=filterBranch===b?'':b">{{b}}</button>
+            <button v-for="b in ['觀塘','中環','佐敦']" :key="b" class="tag" :class="{active:filterBranch===b}" @click="filterBranch=filterBranch===b?'':b">{{b}}</button>
           </div>
         </div>
 
@@ -372,8 +372,8 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
 
         <div class="card" style="background:#f0efff;border:2px solid var(--p);text-align:center;padding:25px;">
           <div style="font-size:14px;color:var(--t2);margin-bottom:8px;font-weight:700;">應收總額 (營業額)</div>
-          <div style="font-size:42px;font-weight:900;color:var(--p);">$ {{ calcEx().price }}</div>
-          <div style="margin-top:10px;font-size:13px;color:var(--t2);font-weight:700;">預估扣除成本後淨利潤: <span style="color:var(--g);font-size:15px;">$ {{ calcEx().profit }}</span></div>
+          <div style="font-size:42px;font-weight:900;color:var(--p);">$ {{ exCalc.price }}</div>
+          <div style="margin-top:10px;font-size:13px;color:var(--t2);font-weight:700;">預估扣除成本後淨利潤: <span style="color:var(--g);font-size:15px;">$ {{ exCalc.profit }}</span></div>
         </div>
         
         <button class="btn btn-outline" style="width:100%;margin-top:10px;color:var(--pd);border-color:var(--pd);" @click="giveFreeTrial" v-if="exForm.pkg !== 'trial'">🎁 贈送朋友 1 堂 (成本-$52)</button>
@@ -452,7 +452,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
             <div style="font-weight:800;font-size:15px;">件商品</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="font-size:20px;font-weight:900;">$ {{ cartTotal().revenue }}</div>
+            <div style="font-size:20px;font-weight:900;">$ {{ cartTotal.revenue }}</div>
             <div style="background:rgba(255,255,255,0.2);padding:6px 12px;border-radius:12px;font-size:13px;font-weight:800;">結帳 ➔</div>
           </div>
         </div>
@@ -619,7 +619,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
       
       <div class="form-row" style="margin-top:15px;"><label>選擇分類</label>
         <select class="sel" v-model="expForm.category">
-          <option v-for="cat in (expForm.type==='income' ? incCategories : expCategories)" :value="cat">{{ cat }}</option>
+          <option v-for="cat in (expForm.type==='income' ? incCategories : expCategories)" :key="cat" :value="cat">{{ cat }}</option>
         </select>
       </div>
 
@@ -705,12 +705,12 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
       </div>
       
       <div style="background: #f0efff; border: none; padding: 18px; border-radius: 16px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px;"><span>總營業額</span><span style="font-weight:800;">$ {{ cartTotal().revenue }}</span></div>
-        <div style="display:flex;justify-content:space-between;color:var(--r);font-size:14px;font-weight:600;"><span>總產品成本 (50%)</span><span>- $ {{ cartTotal().cost }}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px;"><span>總營業額</span><span style="font-weight:800;">$ {{ cartTotal.revenue }}</span></div>
+        <div style="display:flex;justify-content:space-between;color:var(--r);font-size:14px;font-weight:600;"><span>總產品成本 (50%)</span><span>- $ {{ cartTotal.cost }}</span></div>
         <div class="divider" style="background:#c7d2fe;margin:12px 0;height:1px;"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-weight:900; font-size:17px; color:var(--p);">🚀 實收淨利潤</span>
-          <span style="font-size:36px;font-weight:900;color:var(--p);">$ {{ cartTotal().profit }}</span>
+          <span style="font-size:36px;font-weight:900;color:var(--p);">$ {{ cartTotal.profit }}</span>
         </div>
       </div>
 
@@ -811,6 +811,23 @@ createApp({
     marathonRate() { const total = this.clients.filter(c=>c.status!=='prospect').length; return total ? ((this.marathonCount / total) * 100).toFixed(1) : 0; },
     
     cartItemCount() { return this.rCart.reduce((sum, item) => sum + item.qty, 0); },
+
+    // [優化] 將購物車計算改為 computed 屬性，提升畫面重新渲染的效能
+    cartTotal() {
+      let revenue = 0, cost = 0;
+      this.rCart.forEach(i => { revenue += (i.product[this.posDiscount] || 0) * i.qty; cost += (i.product.price_50 || 0) * i.qty; });
+      return { revenue, cost, profit: revenue - cost };
+    },
+
+    // [優化] 將套票價格計算改為 computed 屬性
+    exCalc() {
+      let p=0, c=0;
+      if(this.exForm.pkg==='trial') return { price: 98, profit: 98, cost: 0 };
+      if(this.exForm.pkg==='pkg_10') { p=850; c=250+135; }
+      if(this.exForm.pkg==='pkg_35') { p=2550; c=800+472.5; if(this.exForm.isNew) p-=98; }
+      if(this.exForm.isReferral) c+=52;
+      return { price: p, profit: p - c, cost: c };
+    },
 
     upcomingTrials() {
       const now = new Date(); now.setHours(0,0,0,0);
@@ -1001,17 +1018,23 @@ createApp({
     loadConfig() {
       if(!this.session) return;
       const key = FW_STAFF_KEY + '_' + this.session.user.id;
-      const staff = localStorage.getItem(key); 
       
-      if(staff && JSON.parse(staff).length > 0) {
-        this.staffList = JSON.parse(staff);
+      // [優化] 加入 Try Catch 避免本地存儲損壞導致崩潰
+      let staff = null;
+      try { staff = JSON.parse(localStorage.getItem(key)); } catch(e) {}
+      
+      if(staff && Array.isArray(staff) && staff.length > 0) {
+        this.staffList = staff;
       } else {
         this.staffList = ['股東'];
         localStorage.setItem(key, JSON.stringify(this.staffList));
       }
       
       if(this.staffList.length > 0) this.expForm.staff = this.staffList[0];
-      const sort = localStorage.getItem(FW_SORT_KEY); if(sort) this.sortData = JSON.parse(sort);
+      
+      let sort = null;
+      try { sort = JSON.parse(localStorage.getItem(FW_SORT_KEY)); } catch(e) {}
+      if(sort) this.sortData = sort;
     },
     addStaff() {
       if(!this.newStaffName.trim()) return;
@@ -1117,18 +1140,10 @@ createApp({
       this.syncing = false;
     },
 
-    calcEx() {
-      let p=0, c=0;
-      if(this.exForm.pkg==='trial') return { price: 98, profit: 98, cost: 0 };
-      if(this.exForm.pkg==='pkg_10') { p=850; c=250+135; }
-      if(this.exForm.pkg==='pkg_35') { p=2550; c=800+472.5; if(this.exForm.isNew) p-=98; }
-      if(this.exForm.isReferral) c+=52;
-      return { price: p, profit: p - c, cost: c };
-    },
     async saveEx(staff) {
       if(this.exForm.pkg!=='trial' && !this.exForm.clientId) return this.showToast('❌ 請選客戶');
       this.savingEx = true;
-      const calc = this.calcEx();
+      const calc = this.exCalc;
       const cat = this.exForm.pkg === 'trial' ? this.exForm.adSource : '運動';
       const p = { user_id: this.session.user.id, type: 'income', category: cat, amount: calc.price, cost: calc.cost, profit: calc.profit, client_id: this.exForm.clientId, staff, note: `售出 ${this.exForm.pkg}`, created_at: new Date().toISOString() };
       await sb.from('transactions').insert(p);
@@ -1174,6 +1189,12 @@ createApp({
 
     addToCart(p) { const item = this.rCart.find(i=>i.product.id===p.id); if(item) item.qty++; else this.rCart.push({product:p, qty:1}); },
     
+    // [修復] 補上缺失的 getCartQty 方法，這是造成白屏的元兇
+    getCartQty(id) {
+      const item = this.rCart.find(i => i.product.id === id);
+      return item ? item.qty : 0;
+    },
+
     updateCartQty(idx, change) {
       const item = this.rCart[idx];
       if(item) {
@@ -1187,11 +1208,6 @@ createApp({
       if(this.rCart.length === 0) this.showRetailCheckoutModal = false;
     },
     
-    cartTotal() {
-      let revenue = 0, cost = 0;
-      this.rCart.forEach(i => { revenue += (i.product[this.posDiscount] || 0) * i.qty; cost += (i.product.price_50 || 0) * i.qty; });
-      return { revenue, cost, profit: revenue - cost };
-    },
     async saveRetailPOS(staff) {
       this.savingR = true;
       for(const item of this.rCart) {
