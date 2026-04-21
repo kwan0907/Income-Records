@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FITWORK HK 旗艦管理系統 v24</title>
+<title>FITWORK HK 旗艦管理系統 v25</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -99,8 +99,6 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
 .dropdown-item:hover { background: #f9fafb; }
 .header-btn { position: relative; z-index: 105; cursor: pointer; }
 .sort-inp { width: 50px; text-align: center; padding: 8px; border: 2px solid var(--p); border-radius: 10px; font-weight: 900; color: var(--p); font-size: 16px; background: var(--ps); }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(79,70,229, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(79,70,229, 0); } 100% { box-shadow: 0 0 0 0 rgba(79,70,229, 0); } }
-.btn-pulse { animation: pulse 2s infinite; }
 </style>
 </head>
 <body>
@@ -111,7 +109,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
     <div class="card" style="width:100%;max-width:400px;text-align:center;padding:40px 30px; border-radius: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
       <h1 style="font-size:36px;color:var(--p);font-weight:900;letter-spacing:-1px;">FITWORK</h1>
       <p style="color:var(--t2);margin-bottom:30px;font-weight:600;">
-        {{ authState==='recovery'?'重設密碼':(authState==='signup'?'建立新帳號':(authState==='verify_otp'?'輸入驗證碼':'旗艦業務管理系統 v24')) }}
+        {{ authState==='recovery'?'重設密碼':(authState==='signup'?'建立新帳號':(authState==='verify_otp'?'輸入驗證碼':'旗艦業務管理系統 v25')) }}
       </p>
       
       <template v-if="authState==='recovery'">
@@ -192,9 +190,9 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
         <div class="stat-grid">
           <div class="stat-card"><div class="val" style="color:var(--g)">$ {{ dashStats.income.toLocaleString() }}</div><div class="lbl">總營業額</div></div>
           <div class="stat-card"><div class="val" style="color:var(--r)">$ {{ dashStats.expense.toLocaleString() }}</div><div class="lbl">總成本支出</div></div>
-          <div class="stat-card" style="grid-column: span 2; border: 2.5px solid var(--p); background: var(--ps);">
-            <div class="lbl" style="font-size:14px;color:var(--p);">💎 總實收淨利潤</div>
-            <div class="val" style="color:var(--p);font-size:38px;margin-top:5px;">$ {{ dashStats.profit.toLocaleString() }}</div>
+          <div class="stat-card" style="grid-column: span 2; border: 2.5px solid var(--p); background: var(--ps); padding: 14px;">
+            <div class="lbl" style="font-size:13px;color:var(--p);">💎 總實收淨利潤</div>
+            <div class="val" style="color:var(--p);font-size:32px;margin-top:3px;">$ {{ dashStats.profit.toLocaleString() }}</div>
           </div>
         </div>
 
@@ -523,9 +521,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
         </div>
       </div>
 
-    </div>
-
-    <div class="nav">
+    </div><div class="nav">
       <div class="nav-item" :class="{active:view==='dashboard'}" @click="view='dashboard'"><span>📊</span><span>總覽</span></div>
       <div class="nav-item" :class="{active:view==='promo'}" @click="view='promo'"><span>📢</span><span>宣傳</span></div>
       <div class="nav-item" :class="{active:view==='clients'}" @click="view='clients'"><span>👥</span><span>客戶</span></div>
@@ -540,7 +536,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
     <div class="modal-sheet">
       <div class="modal-header"><h3>{{ clientForm.id?'✏️ 修改資料':'➕ 新增客戶' }}</h3><button class="close-btn" @click="showClientModal=false">✕</button></div>
       
-      <div class="form-row" style="margin-bottom:15px;">
+      <div class="form-row" style="margin-bottom:20px;">
         <label style="font-weight:800;color:var(--p);">客戶狀態</label>
         <div style="display:flex;gap:10px;margin-top:8px;">
           <button class="btn" :style="clientForm.status!=='prospect'?'background:var(--p);color:#fff':'background:#f2f2f7;color:var(--t)'" @click="clientForm.status='active'">⭐️ 正式會員</button>
@@ -592,9 +588,9 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
         <input class="inp" type="datetime-local" v-model="clientForm.trial_date" style="border-color:var(--o);margin-top:8px;">
       </div>
 
-      <div class="form-row" style="margin-top:15px;" v-if="clientForm.status!=='prospect'"><label>套票到期日</label><input class="inp" type="date" v-model="clientForm.expiry_date"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:15px;padding:15px;background:#f8fafc;border-radius:15px;"><span style="font-weight:800;">🏃 馬拉松活躍成員</span><div class="toggle" :class="{on:clientForm.is_marathon}" @click="clientForm.is_marathon=!clientForm.is_marathon"></div></div>
-      <button class="btn btn-primary" style="margin-top:25px;width:100%;" @click="saveClient" :disabled="savingClient">✅ 儲存資料</button>
+      <div class="form-row" style="margin-top:15px;" v-if="clientForm.status!=='prospect'"><label>到期日 (購買套票會自動延長)</label><input class="inp" type="date" v-model="clientForm.expiry_date"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding:15px;background:#f8fafc;border-radius:15px;"><span style="font-weight:800;">🏃 馬拉松活躍成員</span><div class="toggle" :class="{on:clientForm.is_marathon}" @click="clientForm.is_marathon=!clientForm.is_marathon"></div></div>
+      <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="saveClient" :disabled="savingClient">✅ 儲存資料</button>
       <button v-if="clientForm.id" class="btn-secondary" style="margin-top:10px;color:var(--r);border:none;" @click="confirmDelete('client', clientForm.id)">🗑️ 永久刪除客戶</button>
     </div>
   </div>
@@ -1178,7 +1174,7 @@ createApp({
       else { delete p.id; const res = await sb.from('clients').insert(p); error = res.error; }
       
       this.savingClient = false;
-      if (error) return this.showToast('❌ 儲存失敗<br>' + error.message);
+      if (error) return this.showToast('❌ 儲存失敗，請確定已執行 SQL<br>' + error.message);
       this.showClientModal = false; this.syncAll(); this.showToast('✅ 儲存成功');
     },
 
