@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FITWORK HK 旗艦管理系統 v20</title>
+<title>FITWORK HK 旗艦管理系統 v21</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* ==========================================================================
-   Apple 旗艦級明亮 UI (iOS 17 風格) - 橫向緊湊排列版
+   Apple 旗艦級明亮 UI (iOS 17 風格) - 購物車空間優化版
    ========================================================================== */
 :root {
   --p: #4f46e5; --pd: #4338ca; --ps: #eef2ff; --bg: #f2f2f7; --card: #ffffff;
@@ -23,7 +23,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 
 /* Header & Nav */
 .header { background: rgba(255,255,255,0.75); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top:0; z-index: 100; }
-.content { flex: 1; overflow-y: auto; padding-bottom: 130px; -webkit-overflow-scrolling: touch; }
+.content { flex: 1; overflow-y: auto; padding-bottom: 140px; -webkit-overflow-scrolling: touch; }
 .nav { background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; padding: 10px 4px 32px; position: fixed; bottom: 0; width: 100%; z-index: 100; }
 .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--t3); font-size: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; }
 .nav-item.active { color: var(--p); transform: scale(1.05); }
@@ -37,7 +37,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 .stat-card { background: var(--card); border-radius: var(--br); padding: 18px; text-align: center; border: 1px solid var(--border); }
 .section-title { font-size: 15px; font-weight: 900; color: var(--t2); letter-spacing: 0.5px; margin-bottom: 12px; display:flex; align-items:center; gap:6px;}
 
-/* 宣傳打卡與日曆 */
+/* 宣傳與日曆 */
 .cal-item { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; cursor:pointer;}
 .cal-item:last-child { border-bottom: none; }
 .cal-icon { background: #fff; border: 1px solid var(--border); border-radius: 12px; width: 50px; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden; flex-shrink: 0; }
@@ -49,8 +49,6 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 .conversion-card { background: linear-gradient(135deg, var(--p) 0%, var(--pd) 100%); color: #fff; border: none; }
 .progress-bar-bg { background: rgba(255,255,255,0.2); height: 10px; border-radius: 10px; margin: 12px 0; overflow: hidden; }
 .progress-bar-fill { background: #fff; height: 100%; border-radius: 10px; transition: width 1s ease-out; }
-.funnel-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; font-weight: 700; }
-.funnel-item:last-child { border-bottom: none; }
 
 /* 輸入與按鈕 */
 .inp, .sel { width: 100%; background: #ffffff; border: 1.5px solid #d1d5db; padding: 12px 16px; border-radius: 14px; font-size: 16px; outline: none; transition: 0.2s; color: var(--t); }
@@ -70,11 +68,15 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
 .client-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--p), var(--ps)); color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .txn-item { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f3f4f6; }
 
-/* 🛒 零售專屬：橫向緊湊排列 (打橫省位置) */
+/* 零售橫向緊湊排列 */
 .product-list-h { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
 .p-card-h { background: var(--card); border-radius: 16px; padding: 14px 16px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
 .p-card-h:active { transform: scale(0.98); background: var(--ps); border-color: var(--p); }
 .p-qty-badge-h { background: var(--p); color: #fff; border-radius: 50%; width: 28px; height: 28px; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(79,70,229,0.3); }
+
+/* 🌟 全新：極簡浮動購物車 (省空間) */
+.mini-cart-bar { position: fixed; bottom: 95px; left: 16px; right: 16px; background: linear-gradient(135deg, var(--p), var(--pd)); color: #fff; border-radius: 24px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 25px rgba(79,70,229,0.4); z-index: 101; cursor: pointer; transition: 0.2s; }
+.mini-cart-bar:active { transform: scale(0.97); }
 
 /* 彈窗與雜項 */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: flex-end; z-index: 1000; backdrop-filter: blur(4px); }
@@ -93,8 +95,6 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
 .dropdown-item { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
 .dropdown-item:hover { background: #f9fafb; }
 .header-btn { position: relative; z-index: 105; cursor: pointer; }
-
-/* 排序與動畫 */
 .sort-inp { width: 50px; text-align: center; padding: 8px; border: 2px solid var(--p); border-radius: 10px; font-weight: 900; color: var(--p); font-size: 16px; background: var(--ps); }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(79,70,229, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(79,70,229, 0); } 100% { box-shadow: 0 0 0 0 rgba(79,70,229, 0); } }
 .btn-pulse { animation: pulse 2s infinite; }
@@ -224,7 +224,6 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
 
       <div v-if="view==='promo'" class="page">
         <h2 class="page-title">宣傳打卡系統</h2>
-        
         <div class="card" v-if="activePromo" style="border:2.5px solid var(--p); background:var(--ps); text-align:center;">
           <div style="font-size:14px;color:var(--p);font-weight:800;margin-bottom:10px;">⏱️ 正在派發傳單中...</div>
           <div style="font-size:32px;font-weight:900;color:var(--pd);margin-bottom:15px;">{{ getPromoDuration() }} 分鐘</div>
@@ -234,7 +233,6 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
           </div>
           <button class="btn btn-primary" style="margin-top:20px;" @click="openEndPromoModal">🛑 結束派發並結算</button>
         </div>
-        
         <div class="card" v-else style="text-align:center; padding: 40px 20px;">
           <div style="font-size:48px; margin-bottom:15px;">📢</div>
           <div style="font-weight:800;font-size:18px;margin-bottom:10px;">準備好開始宣傳了嗎？</div>
@@ -311,10 +309,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
           <div class="form-row" v-if="exForm.pkg === 'trial'" style="margin-top:15px;">
             <label style="font-weight:800;color:var(--o);">2. 廣告來源分類</label>
             <select class="sel" v-model="exForm.adSource" style="border-color:var(--o);">
-              <option value="Fitwork廣告">Fitwork 廣告</option>
-              <option value="公號廣告">公眾號 廣告</option>
-              <option value="FZb廣告">FZb 廣告</option>
-              <option value="其他廣告">其他</option>
+              <option value="Fitwork廣告">Fitwork 廣告</option><option value="公號廣告">公眾號 廣告</option><option value="FZb廣告">FZb 廣告</option><option value="其他廣告">其他</option>
             </select>
           </div>
 
@@ -322,9 +317,9 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
             <label style="font-weight:800;">2. 搜尋客戶 (必填)</label>
             <input class="inp" v-model="exSearch" placeholder="🔍 搜尋客戶姓名或電話..." @focus="showExClientDD=true" style="margin-top:6px;">
             <div v-if="showExClientDD" class="dropdown-list" style="position:relative; width:100%;">
-              <div style="padding:10px;text-align:center;font-weight:800;color:var(--r);background:#f9f9f9;border-bottom:1px solid #eee;" @click="showExClientDD=false">✕ 關閉搜尋</div>
+              <div style="padding:10px;text-align:center;font-weight:800;color:var(--r);background:#f9f9f9;border-bottom:1px solid #eee;cursor:pointer;" @click="showExClientDD=false">✕ 關閉搜尋</div>
               <div v-for="c in exClientList" :key="c.id" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="exForm.clientId=c.id;exSearch=c.name;showExClientDD=false;">
-                <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" style="color:#ea580c; font-size:11px; background:#fff7ed; padding:2px 6px; border-radius:6px;">試堂客</span></div>
+                <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" class="tag tag-orange">試堂客</span></div>
                 <div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
               </div>
             </div>
@@ -367,7 +362,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
             <label style="font-size:13px;color:var(--t2);font-weight:800;">1. 搜尋紀錄對象 <span style="color:var(--r);">*</span></label>
             <input class="inp" v-model="rSearch" placeholder="🔍 搜尋客戶姓名或電話..." @focus="showRClientDD=true" style="margin-top:6px;">
             <div v-if="showRClientDD" class="dropdown-list" style="position:relative; width:100%;">
-              <div style="padding:10px;text-align:center;font-weight:800;color:var(--r);background:#f9f9f9;border-bottom:1px solid #eee;" @click="showRClientDD=false">✕ 關閉搜尋</div>
+              <div style="padding:10px;text-align:center;font-weight:800;color:var(--r);background:#f9f9f9;border-bottom:1px solid #eee;cursor:pointer;" @click="showRClientDD=false">✕ 關閉搜尋</div>
               <div class="dropdown-item" @click="rForm.clientId=null; rSearch=''; showRClientDD=false;">-- 散客 / 非會員 --</div>
               <div v-for="c in rClientList" :key="c.id" class="dropdown-item" @click="rForm.clientId=c.id; rSearch=c.name; showRClientDD=false;">
                 <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" class="tag tag-orange">試堂客</span></div>
@@ -396,47 +391,32 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
           <div style="display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:5px; white-space: nowrap;">
             <button class="tag" :class="{active: filterCategory===''}" @click="filterCategory=''">全部分類</button>
             <button class="tag" :class="{active: filterCategory==='內在'}" @click="filterCategory='內在'">內在營養</button>
-            <button class="tag" :class="{active: filterCategory==='外在'}" @click="filterCategory='外在'">外在保養</button>
+            <button class="tag" :class="{active: filterCategory==='外在'}" @click="filterCategory='外外在保養'}" @click="filterCategory='外在'">外在保養</button>
           </div>
 
           <div class="product-list-h">
             <div v-for="p in filteredRetailProducts" :key="p.id" class="p-card-h" @click="addToCart(p)">
               <div style="flex:1; text-align:left; padding-right:10px;">
                 <div style="font-weight:800;font-size:15px;line-height:1.3;color:var(--t);">{{ p.name }}</div>
-                <div style="font-size:11px;color:var(--t3);margin-top:4px;">庫存剩餘: {{ getStock(p.id, posBranch) }} 件</div>
+                <div style="font-size:11px;color:var(--t3);margin-top:4px;">庫存剩餘: <span style="color:var(--p);font-weight:800;">{{ getStock(p.id, posBranch) }}</span> 件</div>
               </div>
               <div style="display:flex;align-items:center;gap:12px;">
                 <div style="color:var(--p);font-weight:900;font-size:18px;">$ {{ p[posDiscount] || 0 }}</div>
                 <div v-if="getCartQty(p.id)" class="p-qty-badge-h">{{ getCartQty(p.id) }}</div>
-                <div v-else style="width:26px;height:26px;border-radius:50%;background:#f2f2f7;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:16px;font-weight:900;">+</div>
+                <div v-else style="width:28px;height:28px;border-radius:50%;background:#f2f2f7;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:20px;font-weight:900;line-height:1;">+</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div v-if="rCart.length>0" class="card" style="position:fixed;bottom:90px;left:16px;right:16px;z-index:101;border:2.5px solid var(--p);box-shadow:0 10px 40px rgba(0,0,0,0.25); border-radius: 28px;">
-          <div style="max-height: 120px; overflow-y: auto;">
-            <div v-for="(item, idx) in rCart" :key="idx" class="txn-item" style="padding:10px 0;">
-              <div style="flex:1;"><div style="font-weight:800;">{{ item.product.name }}</div><div style="font-size:12px;color:var(--t2);">單價 ${{ item.product[posDiscount] }} x {{ item.qty }}件</div></div>
-              <div style="display:flex;align-items:center;gap:15px;">
-                <div style="font-weight:900;color:var(--p);">$ {{ (item.product[posDiscount]*item.qty).toLocaleString() }}</div>
-                <button @click="removeFromCart(idx)" style="background:none;border:none;color:var(--r);font-size:22px;cursor:pointer;">✕</button>
-              </div>
-            </div>
+        <div v-if="rCart.length>0" class="mini-cart-bar" @click="showRetailCheckoutModal=true">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="background:#fff;color:var(--p);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;">{{ cartItemCount }}</div>
+            <div style="font-weight:800;font-size:15px;">件商品</div>
           </div>
-          <div style="margin-top:15px; background: #f0efff; border: none; padding: 16px; border-radius: 16px;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>總營業額</span><span style="font-weight:800;">$ {{ cartTotal().revenue }}</span></div>
-            <div style="display:flex;justify-content:space-between;color:var(--r);font-size:13px;font-weight:600;"><span>總產品成本 (50%)</span><span>- $ {{ cartTotal().cost }}</span></div>
-            <div class="divider" style="background:#c7d2fe;"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
-              <span style="font-weight:900; font-size:17px; color:var(--p);">🚀 實收淨利潤</span>
-              <span style="font-size:32px;font-weight:900;color:var(--p);">$ {{ cartTotal().profit }}</span>
-            </div>
-          </div>
-          <div v-if="staffList.length > 0" class="dynamic-btn-grid">
-            <button v-for="(staff, index) in staffList" :key="staff" class="btn btn-primary" :style="{background: getColor(index)}" @click="saveRetailPOS(staff)" :disabled="savingR">
-              💰 {{ staff }} 結帳
-            </button>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:20px;font-weight:900;">$ {{ cartTotal().revenue }}</div>
+            <div style="background:rgba(255,255,255,0.2);padding:6px 12px;border-radius:12px;font-size:13px;font-weight:800;">結帳 ➔</div>
           </div>
         </div>
       </div>
@@ -609,6 +589,42 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
     </div>
   </div>
 
+  <div v-if="showRetailCheckoutModal" class="modal-overlay" @click.self="showRetailCheckoutModal=false">
+    <div class="modal-sheet">
+      <div class="modal-header"><h3>🛒 結帳明細與總結</h3><button class="close-btn" @click="showRetailCheckoutModal=false">✕</button></div>
+      
+      <div style="max-height: 200px; overflow-y: auto; padding-right:5px; margin-bottom:15px;">
+        <div v-for="(item, idx) in rCart" :key="idx" class="txn-item" style="padding:12px 0;">
+          <div style="flex:1;">
+            <div style="font-weight:800;font-size:15px;">{{ item.product.name }}</div>
+            <div style="font-size:13px;color:var(--t2);margin-top:4px;">單價 ${{ item.product[posDiscount] }} x {{ item.qty }}件</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:15px;">
+            <div style="font-weight:900;color:var(--p);font-size:18px;">$ {{ (item.product[posDiscount]*item.qty).toLocaleString() }}</div>
+            <button @click="removeFromCart(idx)" style="background:#fff1f2;border:none;color:var(--r);width:32px;height:32px;border-radius:50%;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;">✕</button>
+          </div>
+        </div>
+      </div>
+      
+      <div style="background: #f0efff; border: none; padding: 18px; border-radius: 16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px;"><span>總營業額</span><span style="font-weight:800;">$ {{ cartTotal().revenue }}</span></div>
+        <div style="display:flex;justify-content:space-between;color:var(--r);font-size:14px;font-weight:600;"><span>總產品成本 (50%)</span><span>- $ {{ cartTotal().cost }}</span></div>
+        <div class="divider" style="background:#c7d2fe;margin:12px 0;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:900; font-size:17px; color:var(--p);">🚀 實收淨利潤</span>
+          <span style="font-size:36px;font-weight:900;color:var(--p);">$ {{ cartTotal().profit }}</span>
+        </div>
+      </div>
+
+      <div v-if="staffList.length > 0" class="dynamic-btn-grid" style="margin-top:20px;">
+        <button v-for="(staff, index) in staffList" :key="staff" class="btn btn-primary" :style="{background: getColor(index)}" @click="saveRetailPOS(staff)" :disabled="savingR">
+          💰 {{ staff }} 結帳
+        </button>
+      </div>
+      <div v-else style="text-align:center;color:var(--r);font-size:13px;margin-top:15px;font-weight:700;">請先到「⚙️ 設定」新增收款人</div>
+    </div>
+  </div>
+
   <div v-if="showSettings" class="modal-overlay" @click.self="showSettings=false">
     <div class="modal-sheet">
       <div class="modal-header">
@@ -664,8 +680,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const { createApp } = Vue;
 
-const FW_STAFF_KEY = 'fwhk_v20_staff';
-const FW_SORT_KEY = 'fwhk_v20_sort'; 
+const FW_STAFF_KEY = 'fwhk_v21_staff';
+const FW_SORT_KEY = 'fwhk_v21_sort'; 
 
 createApp({
   data() {
@@ -677,7 +693,7 @@ createApp({
       showClientModal: false, clientForm: { id:null, name:'', phone:'', branch:'觀塘', source:'廣告', is_marathon:false, status:'active', referred_by_id: null, trial_date: '' }, savingClient:false,
       showExpModal: false, expForm: { type: 'income', amount: '', note: '', staff: '', category:'公司票' }, editingTxn: null,
       exForm: { pkg: 'pkg_10', clientId: null, isNew: false, isReferral: false, adSource: 'Fitwork廣告' }, exSearch: '', showExClientDD: false, savingEx: false,
-      rCart: [], rForm: { clientId: null }, rSearch: '', showRClientDD: false, savingR: false,
+      rCart: [], rForm: { clientId: null }, rSearch: '', showRClientDD: false, savingR: false, showRetailCheckoutModal: false,
       showRestockModal: false, restockForm: { product: null, branch: '觀塘', qty: 1, isInitial: false },
       
       activePromo: null, showPromoModal: false,
@@ -695,6 +711,8 @@ createApp({
     marathonCount() { return this.clients.filter(c => c.is_marathon).length; },
     marathonRate() { const total = this.clients.filter(c=>c.status!=='prospect').length; return total ? ((this.marathonCount / total) * 100).toFixed(1) : 0; },
     
+    cartItemCount() { return this.rCart.reduce((sum, item) => sum + item.qty, 0); },
+
     upcomingTrials() {
       const now = new Date(); now.setHours(0,0,0,0);
       return this.clients.filter(c => c.status === 'prospect' && c.trial_date)
@@ -838,8 +856,12 @@ createApp({
     async savePromo() {
       const p = { user_id: this.session.user.id, start_time: this.activePromo.start_time, end_time: new Date().toISOString(), location: this.activePromo.location, ...this.promoForm };
       const { error } = await sb.from('promotions').insert(p);
-      if(!error) { this.showToast('✅ 宣傳成果已結算'); this.activePromo = null; this.showPromoModal = false; this.syncAll(); } 
-      else { this.showToast('❌ 儲存失敗: 資料表未建立'); }
+      if(!error) {
+        this.showToast('✅ 宣傳成果已結算');
+        this.activePromo = null; this.showPromoModal = false; this.syncAll();
+      } else {
+        this.showToast('❌ 請確定資料庫 promotions 已經建立!');
+      }
     },
 
     async authSubmit() {
@@ -849,8 +871,9 @@ createApp({
         const { error } = await sb.auth.signInWithPassword({ email: this.authEmail, password: this.authPwd });
         this.authLoading = false;
         if (error) {
-           if(error.message.includes('Email not confirmed')) { this.showToast('⚠️ 帳號尚未驗證，請去信箱收取驗證碼！'); this.authState = 'verify_otp'; } 
-           else { this.showToast('❌ 登入失敗: ' + error.message); }
+           if(error.message.includes('Email not confirmed')) {
+               this.showToast('⚠️ 帳號尚未驗證，請去信箱收取驗證碼！'); this.authState = 'verify_otp';
+           } else { this.showToast('❌ 登入失敗: ' + error.message); }
         } else location.reload();
       } else if (this.authState === 'signup') {
         if (this.authPwd !== this.authPwd2) { this.showToast('❌ 密碼不一致'); return; }
@@ -922,9 +945,11 @@ createApp({
       this.exForm.clientId = null; this.exSearch = ''; this.savingEx = false;
     },
 
-    getCartQty(id) { const i = this.rCart.find(x=>x.product.id===id); return i ? i.qty : 0; },
     addToCart(p) { const item = this.rCart.find(i=>i.product.id===p.id); if(item) item.qty++; else this.rCart.push({product:p, qty:1}); },
-    removeFromCart(idx) { this.rCart.splice(idx, 1); },
+    removeFromCart(idx) { 
+      this.rCart.splice(idx, 1); 
+      if(this.rCart.length === 0) this.showRetailCheckoutModal = false;
+    },
     cartTotal() {
       let revenue = 0, cost = 0;
       this.rCart.forEach(i => { revenue += i.product[this.posDiscount] * i.qty; cost += (i.product.price_50 || 0) * i.qty; });
@@ -941,7 +966,7 @@ createApp({
         const client = this.clients.find(c => c.id === this.rForm.clientId);
         if (client && client.status === 'prospect') await sb.from('clients').update({ status: 'active', user_id: this.session.user.id }).eq('id', this.rForm.clientId);
       }
-      this.rCart = []; this.rForm.clientId = null; this.rSearch = ''; this.syncAll(); this.showToast('✅ 零售交易成功');
+      this.rCart = []; this.rForm.clientId = null; this.rSearch = ''; this.showRetailCheckoutModal = false; this.syncAll(); this.showToast('✅ 零售交易成功');
       this.savingR = false;
     },
 
