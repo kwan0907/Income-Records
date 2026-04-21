@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FITWORK HK 旗艦管理系統 v14</title>
+<title>FITWORK HK 旗艦管理系統 v15</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -84,6 +84,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 .toggle.on::after { left: 24px; }
 .fab-large { position: fixed; right: 20px; bottom: 100px; padding: 14px 20px; border-radius: 99px; background: linear-gradient(135deg, var(--p), var(--pd)); color: #fff; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(79,70,229,0.4); z-index: 100; cursor: pointer; transition: 0.2s; border: none; }
 .fab-large:active { transform: scale(0.95); }
+.dynamic-btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
 </style>
 </head>
 <body>
@@ -93,7 +94,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
   <div v-if="!session" style="height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f2f2f7;">
     <div class="card" style="width:100%;max-width:400px;text-align:center;padding:40px 30px; border-radius: 32px;">
       <h1 style="font-size:36px;color:var(--p);font-weight:900;letter-spacing:-1px;">FITWORK</h1>
-      <p style="color:var(--t2);margin-bottom:30px;font-weight:600;">旗艦業務管理系統 v14</p>
+      <p style="color:var(--t2);margin-bottom:30px;font-weight:600;">旗艦業務管理系統 v15</p>
       <input class="inp" v-model="authEmail" placeholder="電子郵件">
       <input class="inp" type="password" v-model="authPwd" placeholder="密碼" style="margin-top:15px;" @keyup.enter="authSubmit">
       <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="authSubmit" :disabled="authLoading">
@@ -146,7 +147,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
             <div style="text-align:right;"><span style="font-size:32px;">🏃</span></div>
           </div>
           <div class="progress-bar-bg"><div class="progress-bar-fill" :style="{width: marathonRate + '%'}"></div></div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;">
             <span>活躍: {{ marathonCount }} 人</span>
             <span>正式會員: {{ clients.filter(c=>c.status!=='prospect').length }} 人</span>
           </div>
@@ -162,7 +163,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         </div>
 
         <div v-if="staffList.length > 0">
-          <div class="section-title" style="margin-top:24px;">💰 經手人結算 (手上現金)</div>
+          <div class="section-title" style="margin-top:24px;">💰 經手人資金結算 (手上現金)</div>
           <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
             <div v-for="(staff, index) in staffList" :key="staff" class="stat-card" :style="{ border: `2px solid ${getColor(index)}`, background: getBgColor(index), textAlign:'left' }">
               <div style="font-size:15px;font-weight:900;" :style="{color: getColor(index)}">{{ staff }}</div>
@@ -193,11 +194,11 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         <div v-for="c in filteredClients" :key="c.id" class="item-card" @click="openClientForm(c)">
           <div class="client-avatar">{{ (c.name || '?').charAt(0) }}</div>
           <div style="flex:1;">
-            <div style="font-weight:800;font-size:17px;">{{ c.name }} <span v-if="c.is_marathon" class="tag tag-blue" style="margin-left:5px;">🏃</span></div>
+            <div style="font-weight:800;font-size:17px;">{{ c.name }} <span v-if="c.is_marathon" class="tag-blue tag" style="margin-left:5px;">🏃</span></div>
             <div style="font-size:12px;color:var(--t2);margin-top:4px;">{{ c.phone || '未錄入電話' }} · {{ c.branch || '未設定' }}</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:12px;color:var(--p);font-weight:800;margin-bottom:4px;" v-if="c.status!=='prospect'">第 {{ getClientGen(c.id) }} 代</div>
+            <div style="font-size:12px;color:var(--p);font-weight:900;margin-bottom:4px;" v-if="c.status!=='prospect'">第 {{ getClientGen(c.id) }} 代</div>
             <div v-if="c.status==='prospect' && c.trial_date" style="font-size:11px;color:var(--o);font-weight:800;margin-bottom:4px;">預約: {{ getMonthStr(c.trial_date) }}{{ getDayStr(c.trial_date) }}日</div>
             <div :class="getExpiryClass(c)" style="font-size:11px;font-weight:800;">{{ c.status==='prospect' ? '試堂客' : (c.expiry_date || '無效期') }}</div>
           </div>
@@ -222,7 +223,10 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
           <div class="form-row" v-if="exForm.pkg === 'trial'" style="margin-top:15px;">
             <label style="font-weight:800;color:var(--o);">2. 廣告來源分類</label>
             <select class="sel" v-model="exForm.adSource" style="border-color:var(--o);">
-              <option value="Fitwork廣告">Fitwork 廣告</option><option value="公號廣告">公眾號 廣告</option><option value="FZb廣告">FZb 廣告</option><option value="其他廣告">其他</option>
+              <option value="Fitwork廣告">Fitwork 廣告</option>
+              <option value="公號廣告">公眾號 廣告</option>
+              <option value="FZb廣告">FZb 廣告</option>
+              <option value="其他廣告">其他</option>
             </select>
           </div>
 
@@ -256,10 +260,10 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         <div class="card" style="background:#f0efff;border:2px solid var(--p);text-align:center;padding:25px;">
           <div style="font-size:14px;color:var(--t2);margin-bottom:8px;font-weight:700;">應收總額 (營業額)</div>
           <div style="font-size:42px;font-weight:900;color:var(--p);">$ {{ calcEx().price }}</div>
-          <div style="margin-top:10px;font-size:13px;color:var(--t2);font-weight:700;">預估淨利潤: <span style="color:var(--g);font-size:15px;">$ {{ calcEx().profit }}</span></div>
+          <div style="margin-top:10px;font-size:13px;color:var(--t2);font-weight:700;">預估扣除成本後淨利潤: <span style="color:var(--g);font-size:15px;">$ {{ calcEx().profit }}</span></div>
         </div>
         
-        <div v-if="staffList.length > 0" style="display: grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:20px;">
+        <div v-if="staffList.length > 0" class="dynamic-btn-grid" style="margin-top:20px;">
           <button v-for="(staff, index) in staffList" :key="staff" class="btn btn-primary" :style="{background: getColor(index)}" @click="saveEx(staff)" :disabled="savingEx">
             💰 {{ staff }} 結帳
           </button>
@@ -268,31 +272,54 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 
       <div v-if="view==='pos-retail'" class="page">
         <h2 class="page-title">零售商品收銀</h2>
+        
         <div class="card" style="background:#f8fafc; padding: 22px; border-radius: 24px;">
           <div class="form-row">
             <label style="font-size:13px;color:var(--t2);font-weight:800;">1. 搜尋紀錄對象 <span style="color:var(--r);">*</span></label>
             <input class="inp" v-model="rSearch" placeholder="🔍 搜尋客戶姓名或電話..." @focus="showRClientDD=true" style="margin-top:6px;">
-            <div v-if="showRClientDD" style="max-height: 200px; overflow-y: auto; background:#fff; border:1px solid #ddd; border-radius:10px; margin-top:5px; position:absolute; width: calc(100% - 70px); z-index: 50;">
-              <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="rForm.clientId=null; rSearch=''; showRClientDD=false;">-- 散客 / 非會員 --</div>
-              <div v-for="c in rClientList" :key="c.id" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="rForm.clientId=c.id; rSearch=c.name; showRClientDD=false;">
-                <div style="font-weight:700;">{{ c.name }}</div><div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
+            <div v-if="showRClientDD" class="dropdown-list">
+              <div class="dropdown-item" @click="rForm.clientId=null; rSearch=''; showRClientDD=false;">-- 散客 / 非會員 --</div>
+              <div v-for="c in rClientList" :key="c.id" class="dropdown-item" @click="rForm.clientId=c.id; rSearch=c.name; showRClientDD=false;">
+                <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" class="tag tag-orange">試堂客</span></div>
+                <div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
               </div>
             </div>
+            <div v-if="rForm.clientId" style="margin-top:10px;padding:10px 14px;background:var(--ps);color:var(--p);border-radius:10px;font-size:14px;font-weight:800;">
+              ✓ 已選擇: {{ clients.find(c=>c.id===rForm.clientId)?.name }}
+            </div>
           </div>
+
           <div class="stat-grid" style="margin-top:15px; margin-bottom:0;">
             <div><label style="font-size:12px;color:var(--t2);font-weight:800;display:block;margin-bottom:5px;">2. 庫存分店</label>
               <select class="sel" v-model="posBranch"><option value="觀塘">觀塘店</option><option value="中環">中環店</option></select>
             </div>
             <div><label style="font-size:12px;color:var(--t2);font-weight:800;display:block;margin-bottom:5px;">3. 客戶折扣</label>
               <select class="sel" v-model="posDiscount">
-                <option value="retail_price">零售價</option><option value="price_standard">標準價</option><option value="price_bronze">銅級</option><option value="price_silver">銀級 (65折)</option><option value="price_gold">金級</option><option value="price_58">58折</option><option value="price_50">半價 (50%)</option>
+                <option value="retail_price">零售價</option>
+                <option value="price_standard">標準價</option>
+                <option value="price_bronze">銅級</option>
+                <option value="price_silver">銀級 (65折)</option>
+                <option value="price_gold">金級</option>
+                <option value="price_58">58折</option>
+                <option value="price_50">半價 (50%)</option>
               </select>
             </div>
           </div>
         </div>
 
         <div style="margin-top:20px;">
-          <input class="inp" v-model="productSearch" placeholder="🔍 即時搜尋商品 (例: s 或 蛋白)...">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="section-title" style="margin:0;">4. 選擇商品</span>
+          </div>
+          <div style="margin-top:10px;">
+            <input class="inp" v-model="productSearch" placeholder="🔍 即時搜尋商品 (例: s 或 蛋白)..." style="box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+            <div style="display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:5px; white-space: nowrap;">
+              <button class="tag" :class="{active: filterCategory===''}" @click="filterCategory=''">全部分類</button>
+              <button class="tag" :class="{active: filterCategory==='內在'}" @click="filterCategory='內在'">內在營養</button>
+              <button class="tag" :class="{active: filterCategory==='外在'}" @click="filterCategory='外在'">外在保養</button>
+            </div>
+          </div>
+
           <div class="product-grid">
             <div v-for="p in filteredRetailProducts" :key="p.id" class="p-card" @click="addToCart(p)">
               <div v-if="getCartQty(p.id)" class="p-qty-badge">{{ getCartQty(p.id) }}</div>
@@ -316,13 +343,14 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
           <div style="margin-top:15px; background: #f0efff; border: none; padding: 16px; border-radius: 16px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>總營業額</span><span style="font-weight:800;">$ {{ cartTotal().revenue }}</span></div>
             <div style="display:flex;justify-content:space-between;color:var(--r);font-size:13px;font-weight:600;"><span>總產品成本 (50%)</span><span>- $ {{ cartTotal().cost }}</span></div>
-            <div style="height:1px;background:#c7d2fe;margin:8px 0;"></div>
+            <div class="divider" style="background:#c7d2fe;"></div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
               <span style="font-weight:900; font-size:17px; color:var(--p);">🚀 實收淨利潤</span>
               <span style="font-size:32px;font-weight:900;color:var(--p);">$ {{ cartTotal().profit }}</span>
             </div>
           </div>
-          <div v-if="staffList.length > 0" style="display: grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
+
+          <div v-if="staffList.length > 0" class="dynamic-btn-grid">
             <button v-for="(staff, index) in staffList" :key="staff" class="btn btn-primary" :style="{background: getColor(index)}" @click="saveRetailPOS(staff)" :disabled="savingR">
               💰 {{ staff }} 結帳
             </button>
@@ -344,16 +372,23 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         </div>
         
         <input class="inp" v-model="invSearch" placeholder="🔍 即時搜尋產品庫...">
+        <div style="display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:5px; white-space: nowrap;">
+          <button class="tag" :class="{active: filterCategory===''}" @click="filterCategory=''">全部分類</button>
+          <button class="tag" :class="{active: filterCategory==='內在'}" @click="filterCategory='內在'">內在營養</button>
+          <button class="tag" :class="{active: filterCategory==='外在'}" @click="filterCategory='外在'">外在保養</button>
+        </div>
         
         <div style="margin:20px 0;">
           <div v-for="p in filteredInventory" :key="p.id" class="item-card" style="padding:14px;">
             <div v-if="isEditingSort" style="margin-right:12px;">
               <input type="number" class="sort-inp" v-model.number="sortData[p.id]" placeholder="順序" @change="forceSortUpdate">
             </div>
+
             <div style="flex:1;">
               <div style="font-weight:800;font-size:16px;">{{ p.name }}</div>
               <div style="font-size:12px;color:var(--t2);margin-top:4px;">單價成本: ${{ p.price_50 }}</div>
             </div>
+            
             <div v-if="!isEditingSort" style="text-align:right;display:flex;align-items:center;gap:15px;">
               <div style="font-size:28px;font-weight:900;min-width:45px;" :style="{color:getStock(p.id, invBranch)<=5?'var(--r)':'var(--g)'}">{{ getStock(p.id, invBranch) }}</div>
               <div style="display:flex;flex-direction:column;gap:5px;">
@@ -367,8 +402,10 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 
       <div v-if="view==='data'" class="page">
         <h2 class="page-title">系統與資料設定</h2>
+        
         <div class="card">
           <div class="section-title">👤 收款人 / 員工管理</div>
+          <div style="font-size:12px;color:var(--t2);margin-bottom:12px;">設定的名字會自動出現在結帳與記帳選項中。</div>
           <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:15px;">
             <div v-for="(staff, idx) in staffList" :key="idx" class="tag" style="background:#fff;border:1px solid var(--border);padding:8px 12px;font-size:14px;">
               {{ staff }} <span @click="removeStaff(idx)" style="color:var(--r);margin-left:8px;cursor:pointer;">✕</span>
@@ -379,12 +416,14 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
             <button class="btn btn-primary" style="width:auto;padding:10px 20px;" @click="addStaff">新增</button>
           </div>
         </div>
+
         <div class="card" style="margin-top:20px;background:#f8fafc;">
           <div class="section-title">📦 批量更新庫存</div>
           <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" @click="downloadTemplate">📄 下載 CSV 範本格式</button>
           <input type="file" id="importFile" accept=".csv" style="display:none" @change="handleImport">
           <button class="btn btn-primary" style="width:100%;" onclick="document.getElementById('importFile').click()">🚀 上傳並匯入資料</button>
         </div>
+
         <div class="card" style="margin-top:10px;padding:15px;background:#f8fafc;">
           <div class="section-title">📤 財務報表導出</div>
           <button class="btn btn-primary" style="background:var(--g);padding:10px;font-size:13px;" @click="exportTransactions">📥 導出所有紀錄為 Excel / CSV</button>
@@ -396,6 +435,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
           <h2 class="page-title" style="margin:0;">收支流水帳</h2>
           <button class="btn btn-primary" style="width:auto;padding:8px 16px;" @click="openExpForm">+ 新增收支</button>
         </div>
+
         <div v-for="group in groupedTxns" :key="group.date">
           <div style="font-size:12px;font-weight:800;color:var(--t3);margin:15px 0 8px;">📅 {{ group.date }}</div>
           <div class="card" style="padding:0 15px;">
@@ -411,9 +451,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         </div>
       </div>
 
-    </div>
-
-    <div class="nav">
+    </div><div class="nav">
       <div class="nav-item" :class="{active:view==='dashboard'}" @click="view='dashboard'"><span>📊</span><span>總覽</span></div>
       <div class="nav-item" :class="{active:view==='clients'}" @click="view='clients'"><span>👥</span><span>客戶</span></div>
       <div class="nav-item" :class="{active:view==='pos-exercise'}" @click="view='pos-exercise'"><span>🏋️</span><span>運動</span></div>
@@ -441,6 +479,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
       <div class="form-row" style="margin-top:15px;"><label>分店</label><select class="sel" v-model="clientForm.branch"><option value="觀塘">觀塘</option><option value="中環">中環</option><option value="佐敦">佐敦</option></select></div>
       
       <div class="form-row" style="margin-top:15px;"><label>來源</label><select class="sel" v-model="clientForm.source"><option value="廣告">廣告</option><option value="轉介紹">轉介紹</option></select></div>
+      
       <div class="form-row" v-if="clientForm.source==='轉介紹'" style="margin-top:15px;">
         <label style="color:var(--p);font-weight:800;">請選擇介紹人 (必填)</label>
         <select class="sel" v-model="clientForm.referred_by_id" style="border:2px solid var(--p);">
@@ -457,12 +496,9 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         <input class="inp" type="datetime-local" v-model="clientForm.trial_date" style="border-color:var(--o);margin-top:8px;">
       </div>
 
-      <div class="form-row" style="margin-top:15px;" v-if="clientForm.status!=='prospect'"><label>到期日 (購買套票自動延長)</label><input class="inp" type="date" v-model="clientForm.expiry_date"></div>
+      <div class="form-row" style="margin-top:15px;" v-if="clientForm.status!=='prospect'"><label>到期日 (購買套票會自動延長)</label><input class="inp" type="date" v-model="clientForm.expiry_date"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding:15px;background:#f8fafc;border-radius:15px;"><span style="font-weight:800;">🏃 馬拉松活躍成員</span><div class="toggle" :class="{on:clientForm.is_marathon}" @click="clientForm.is_marathon=!clientForm.is_marathon"></div></div>
-      
-      <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="saveClient" :disabled="savingClient">
-        <span v-if="savingClient">處理中...</span><span v-else>✅ 儲存資料</span>
-      </button>
+      <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="saveClient" :disabled="savingClient">✅ 儲存資料</button>
       <button v-if="clientForm.id" class="btn-secondary" style="margin-top:10px;color:var(--r);border:none;" @click="confirmDelete('client', clientForm.id)">🗑️ 永久刪除客戶</button>
     </div>
   </div>
@@ -471,11 +507,13 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
     <div class="modal-sheet">
       <div class="modal-header"><h3>{{ editingTxn?'✏️ 修改':'➕ 新增' }}記錄</h3><button class="close-btn" @click="showExpModal=false">✕</button></div>
       <div class="form-row"><label>類型</label><div style="display:flex;gap:12px;"><button class="btn" :style="expForm.type==='income'?'background:var(--g);color:#fff':'background:#f2f2f7'" @click="expForm.type='income';expForm.category='公司票'">💰 收入</button><button class="btn" :style="expForm.type==='expense'?'background:var(--r);color:#fff':'background:#f2f2f7'" @click="expForm.type='expense';expForm.category='觀塘租金'">💸 支出</button></div></div>
+      
       <div class="form-row" style="margin-top:15px;"><label>選擇分類</label>
         <select class="sel" v-model="expForm.category">
           <option v-for="cat in (expForm.type==='income' ? incCategories : expCategories)" :value="cat">{{ cat }}</option>
         </select>
       </div>
+
       <div class="form-row" style="margin-top:15px;"><label>金額 (HK$)</label><input class="inp" type="number" v-model="expForm.amount" style="font-size:24px;font-weight:900;color:var(--p);"></div>
       <div class="form-row" style="margin-top:15px;"><label>備註</label><input class="inp" v-model="expForm.note"></div>
       <div class="form-row" style="margin-top:15px;"><label>經手人</label>
@@ -508,8 +546,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const { createApp } = Vue;
 
-const FW_STAFF_KEY = 'fwhk_v14_staff';
-const FW_SORT_KEY = 'fwhk_v14_sort'; 
+const FW_STAFF_KEY = 'fwhk_v15_staff';
+const FW_SORT_KEY = 'fwhk_v15_sort'; 
 
 createApp({
   data() {
@@ -535,6 +573,7 @@ createApp({
     marathonCount() { return this.clients.filter(c => c.is_marathon).length; },
     marathonRate() { const total = this.clients.filter(c=>c.status!=='prospect').length; return total ? ((this.marathonCount / total) * 100).toFixed(1) : 0; },
     
+    // 即將到來的試堂預約
     upcomingTrials() {
       const now = new Date();
       now.setHours(0,0,0,0);
@@ -609,6 +648,7 @@ createApp({
     },
     exClientList() { const q = this.exSearch.toLowerCase(); return q ? this.clients.filter(c => (c.name&&c.name.toLowerCase().includes(q)) || (c.phone&&c.phone.includes(q))) : this.clients; },
     rClientList() { const q = this.rSearch.toLowerCase(); return q ? this.clients.filter(c => (c.name&&c.name.toLowerCase().includes(q)) || (c.phone&&c.phone.includes(q))) : this.clients; },
+    expiringClients() { const now = new Date(); const s = new Date(now.getTime() + 14*86400000); return this.clients.filter(c => c.expiry_date && c.status!=='prospect' && new Date(c.expiry_date) >= now && new Date(c.expiry_date) <= s); },
     groupedTxns() {
       const g = {};
       this.transactions.forEach(t => {
@@ -619,7 +659,7 @@ createApp({
     }
   },
   methods: {
-    showToast(msg) { this.toast = msg; setTimeout(()=>this.toast='', 3500); },
+    showToast(msg) { this.toast = msg; setTimeout(()=>this.toast='', 4000); },
     
     loadConfig() {
       const staff = localStorage.getItem(FW_STAFF_KEY); if(staff) this.staffList = JSON.parse(staff);
@@ -781,7 +821,6 @@ createApp({
       this.savingClient = true;
       const p = { ...this.clientForm, user_id: this.session.user.id };
       
-      // 處理時間格式，如果是試堂客且有時間，轉回 ISO 格式存入資料庫
       if (p.status !== 'prospect' || !p.trial_date) {
          p.trial_date = null;
       } else if (p.trial_date) {
@@ -793,6 +832,8 @@ createApp({
           const res = await sb.from('clients').update(p).eq('id', p.id);
           error = res.error;
       } else {
+          // 移除空白 ID，讓 Supabase 自動生成 UUID，徹底修復報錯！
+          delete p.id;
           const res = await sb.from('clients').insert(p);
           error = res.error;
       }
