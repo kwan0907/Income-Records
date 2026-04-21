@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FITWORK HK 旗艦管理系統 v8</title>
+<title>FITWORK HK 旗艦管理系統 v9</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -51,8 +51,9 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 .btn-secondary { background: #ffffff; color: var(--t); border: 1px solid #d1d5db; }
 
 /* 標籤與列表 */
-.tag { padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; display: inline-block; }
-.tag-blue { background: #eef2ff; color: var(--p); }
+.tag { padding: 4px 12px; border-radius: 10px; font-size: 13px; font-weight: 800; display: inline-block; cursor: pointer; border: 1px solid var(--border); background: #fff; color: var(--t2); transition: 0.2s; }
+.tag.active { background: var(--p); color: #fff; border-color: var(--p); }
+.tag-blue { background: #eef2ff; color: var(--p); border: none; font-size: 11px; padding: 2px 8px; }
 .item-card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
 .client-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--p), var(--ps)); color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .txn-item { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f3f4f6; }
@@ -175,16 +176,32 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
               <select class="sel" v-model="posBranch"><option value="觀塘">觀塘店</option><option value="中環">中環店</option></select>
             </div>
             <div><label style="font-size:12px;color:var(--t2);font-weight:800;display:block;margin-bottom:5px;">3. 客戶折扣</label>
-              <select class="sel" v-model="posDiscount"><option value="retail_price">零售價</option><option value="price_standard">標準價</option><option value="price_silver">65折</option><option value="price_50">50%</option></select>
+              <select class="sel" v-model="posDiscount">
+                <option value="retail_price">零售價</option>
+                <option value="price_standard">標準價</option>
+                <option value="price_bronze">銅級</option>
+                <option value="price_silver">銀級 (65折)</option>
+                <option value="price_gold">金級</option>
+                <option value="price_58">58折</option>
+                <option value="price_50">半價 (50%)</option>
+              </select>
             </div>
           </div>
         </div>
 
         <div style="margin-top:20px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
             <span class="section-title" style="margin:0;">4. 選擇商品</span>
-            <input class="inp" v-model="productSearch" placeholder="🔍 快速搜尋..." style="width:160px;padding:8px 12px;font-size:14px;border-radius:10px;">
           </div>
+          <div style="margin-top:10px;">
+            <input class="inp" v-model="productSearch" placeholder="🔍 即時搜尋商品名稱 (例: s 或 蛋白)..." style="box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+            <div style="display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:5px;">
+              <button class="tag" :class="{active: filterCategory===''}" @click="filterCategory=''">全部</button>
+              <button class="tag" :class="{active: filterCategory==='內在'}" @click="filterCategory='內在'">內在產品</button>
+              <button class="tag" :class="{active: filterCategory==='外在'}" @click="filterCategory='外在'">外在保養</button>
+            </div>
+          </div>
+
           <div class="product-grid">
             <div v-for="p in filteredRetailProducts" :key="p.id" class="p-card" @click="addToCart(p)">
               <div v-if="getCartQty(p.id)" class="p-qty-badge">{{ getCartQty(p.id) }}</div>
@@ -205,15 +222,17 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
               </div>
             </div>
           </div>
-          <div style="margin-top:15px; background: #f0efff; border-radius: 16px; padding: 16px;">
+          
+          <div class="profit-preview" style="margin-top:15px; background: #f0efff; border: none; padding: 18px; border-radius: 16px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>總營業額</span><span style="font-weight:800;">$ {{ cartTotal().revenue }}</span></div>
             <div style="display:flex;justify-content:space-between;color:var(--r);font-size:13px;font-weight:600;"><span>總產品成本 (50%)</span><span>- $ {{ cartTotal().cost }}</span></div>
             <div class="divider" style="background:#c7d2fe;"></div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
-              <span style="font-weight:900; font-size:15px; color:var(--p);">🚀 實收淨利潤</span>
-              <span style="font-size:30px;font-weight:900;color:var(--p);">$ {{ cartTotal().profit }}</span>
+              <span style="font-weight:900; font-size:17px; color:var(--p);">🚀 實收淨利潤</span>
+              <span style="font-size:32px;font-weight:900;color:var(--p);">$ {{ cartTotal().profit }}</span>
             </div>
           </div>
+
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px;">
             <button class="btn btn-primary" @click="saveRetailPOS('Kwan')" :disabled="savingR">💰 Kwan 結帳</button>
             <button class="btn btn-primary" @click="saveRetailPOS('Cat')" style="background:var(--b);" :disabled="savingR">💰 Cat 結帳</button>
@@ -277,14 +296,14 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 
       <div v-if="view==='clients'" class="page">
         <h2 class="page-title">客戶管理系統</h2>
-        <input class="inp" v-model="clientSearch" placeholder="🔍 搜尋姓名或電話...">
+        <input class="inp" v-model="clientSearch" placeholder="🔍 即時搜尋姓名或電話...">
         <div style="display:flex;gap:8px;margin:15px 0;overflow-x:auto;padding-bottom:5px;">
-          <button v-for="b in ['觀塘','中環','佐敦']" class="tag" :style="filterBranch===b?'background:var(--p);color:#fff':'background:#fff;border:1px solid #d1d5db'" @click="filterBranch=filterBranch===b?'':b">{{b}}</button>
+          <button v-for="b in ['觀塘','中環','佐敦']" class="tag" :class="{active:filterBranch===b}" @click="filterBranch=filterBranch===b?'':b">{{b}}</button>
         </div>
         <div v-for="c in filteredClients" :key="c.id" class="item-card" @click="openClientForm(c)">
           <div class="client-avatar">{{ (c.name || '?').charAt(0) }}</div>
           <div style="flex:1;">
-            <div style="font-weight:800;font-size:17px;">{{ c.name }} <span v-if="c.is_marathon" class="tag tag-blue" style="margin-left:5px;">🏃</span></div>
+            <div style="font-weight:800;font-size:17px;">{{ c.name }} <span v-if="c.is_marathon" class="tag-blue tag" style="margin-left:5px;">🏃</span></div>
             <div style="font-size:12px;color:var(--t2);margin-top:4px;">{{ c.phone || '未錄入電話' }} · {{ c.branch || '未設定' }}</div>
           </div>
           <div style="text-align:right;">
@@ -292,76 +311,77 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
             <div :class="getExpiryClass(c)" style="font-size:11px;font-weight:800;">{{ c.expiry_date || '無效期' }}</div>
           </div>
         </div>
-        <button class="btn btn-primary" style="position:fixed;right:20px;bottom:100px;width:56px;height:56px;border-radius:50%;font-size:30px;box-shadow:0 8px 20px rgba(79,70,229,0.3);" @click="openClientForm(null)">+</button>
+        <button class="fab" @click="openClientForm(null)">+</button>
       </div>
 
       <div v-if="view==='inventory'" class="page">
-        <h2 class="page-title">資料與庫存管理</h2>
+        <h2 class="page-title">庫存與資料管理</h2>
         
-        <div class="stat-grid" style="margin-bottom:20px;">
-          <div class="data-box" style="padding:15px 10px;">
-            <div style="font-weight:800;margin-bottom:10px;">📥 批量庫存更新</div>
-            <button class="btn-ghost" style="width:100%;margin-bottom:8px;" @click="downloadTemplate">📄 範本</button>
-            <input type="file" id="importFile" accept=".csv" style="display:none" @change="handleImport">
-            <button class="btn btn-primary" style="padding:10px;font-size:13px;" onclick="document.getElementById('importFile').click()">上傳 CSV</button>
-          </div>
-          <div class="data-box" style="padding:15px 10px;">
-            <div style="font-weight:800;margin-bottom:10px;">📤 財務報表導出</div>
-            <div style="font-size:11px;color:var(--t2);margin-bottom:12px;">將收入支出轉出為 Excel 可讀格式</div>
-            <button class="btn btn-primary" style="background:var(--g);padding:10px;font-size:13px;" @click="exportTransactions">下載報表</button>
+        <div style="display:flex;gap:10px;margin-bottom:15px;">
+          <button class="btn btn-secondary" style="flex:1;" :style="invBranch==='觀塘'?'background:var(--p);color:#fff':''" @click="invBranch='觀塘'">📍 觀塘總庫</button>
+          <button class="btn btn-secondary" style="flex:1;" :style="invBranch==='中環'?'background:var(--p);color:#fff':''" @click="invBranch='中環'">📍 中環總庫</button>
+        </div>
+        
+        <input class="inp" v-model="invSearch" placeholder="🔍 即時搜尋產品庫...">
+        <div style="display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:5px;">
+          <button class="tag" :class="{active: filterCategory===''}" @click="filterCategory=''">全部</button>
+          <button class="tag" :class="{active: filterCategory==='內在'}" @click="filterCategory='內在'">內在產品</button>
+          <button class="tag" :class="{active: filterCategory==='外在'}" @click="filterCategory='外在'">外在保養</button>
+        </div>
+        
+        <div style="margin:20px 0;">
+          <div v-for="p in filteredInventory" :key="p.id" class="item-card">
+            <div style="flex:1;">
+              <div style="font-weight:800;">{{ p.name }}</div>
+              <div style="font-size:12px;color:var(--t2);margin-top:4px;">單價成本: ${{ p.price_50 }}</div>
+            </div>
+            <div style="text-align:right;display:flex;align-items:center;gap:12px;">
+              <div style="font-size:26px;font-weight:900;" :style="{color:getStock(p.id, invBranch)<=5?'var(--r)':'var(--g)'}">{{ getStock(p.id, invBranch) }}</div>
+              <button class="btn-secondary" style="width:40px;height:40px;border-radius:12px;font-weight:800;color:var(--p);" @click="openRestock(p, invBranch)">+</button>
+            </div>
           </div>
         </div>
 
-        <div style="display:flex;gap:10px;margin-bottom:15px;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:50;">
-          <button class="btn btn-secondary" :style="invBranch==='觀塘'?'background:var(--p);color:#fff':''" @click="invBranch='觀塘'">📍 觀塘總庫</button>
-          <button class="btn btn-secondary" :style="invBranch==='中環'?'background:var(--p);color:#fff':''" @click="invBranch='中環'">📍 中環總庫</button>
-        </div>
-        <input class="inp" v-model="invSearch" placeholder="🔍 快速過濾產品庫 (70+項)...">
-        
-        <div style="margin-top:15px;">
-          <div v-for="p in filteredInventory" :key="p.id" class="item-card" style="padding:14px;">
-            <div style="flex:1;">
-              <div style="font-weight:800;font-size:16px;">{{ p.name }}</div>
-              <div style="font-size:12px;color:var(--t2);margin-top:4px;">入貨價: ${{ p.price_50 }}</div>
-            </div>
-            <div style="text-align:right;display:flex;align-items:center;gap:15px;">
-              <div style="font-size:28px;font-weight:900;min-width:45px;" :style="{color:getStock(p.id, invBranch)<=5?'var(--r)':'var(--g)'}">{{ getStock(p.id, invBranch) }}</div>
-              <div style="display:flex;flex-direction:column;gap:5px;">
-                <button class="btn-secondary" style="width:40px;height:30px;border-radius:8px;font-size:12px;font-weight:800;color:var(--p);" @click="openRestock(p, invBranch)">入貨</button>
-                <button class="btn-secondary" style="width:40px;height:30px;border-radius:8px;font-size:12px;font-weight:800;" @click="openStockCorrection(p, invBranch)">盤點</button>
-              </div>
-            </div>
-          </div>
+        <div class="card" style="margin-top:30px;background:#f8fafc;">
+          <div class="section-title">📦 批量更新庫存</div>
+          <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" @click="downloadTemplate">📄 下載 CSV 範本格式</button>
+          <input type="file" id="importFile" accept=".csv" style="display:none" @change="handleImport">
+          <button class="btn btn-primary" style="width:100%;" onclick="document.getElementById('importFile').click()">🚀 上傳並匯入資料</button>
         </div>
       </div>
 
       <div v-if="view==='accounting'" class="page">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-          <h2 class="page-title" style="margin:0;">手動流水帳</h2>
-          <button class="btn btn-primary" style="width:auto;padding:8px 16px;" @click="openExpForm">+ 新增紀錄</button>
+          <h2 class="page-title" style="margin:0;">收支流水帳</h2>
+          <button class="btn btn-primary" style="width:auto;padding:8px 16px;" @click="openExpForm">+ 新增收支</button>
         </div>
+        
+        <div class="card" style="margin-top:10px;padding:15px;background:#f8fafc;">
+          <div style="font-weight:800;margin-bottom:10px;">📤 財務報表導出</div>
+          <button class="btn btn-primary" style="background:var(--g);padding:10px;font-size:13px;" @click="exportTransactions">📥 導出所有紀錄為 Excel / CSV</button>
+        </div>
+
         <div v-for="group in groupedTxns" :key="group.date">
-          <div style="font-size:13px;font-weight:900;color:var(--t2);margin:15px 0 8px;">📅 {{ group.date }}</div>
+          <div style="font-size:12px;font-weight:800;color:var(--t3);margin:15px 0 8px;">📅 {{ group.date }}</div>
           <div class="card" style="padding:0 15px;">
-            <div v-for="t in group.items" :key="t.id" class="txn-item">
+            <div v-for="t in group.items" :key="t.id" class="txn-item" style="border-bottom:1px solid #f2f2f7;">
               <div style="flex:1;"><div style="font-weight:800;font-size:14px;">{{ t.category }}</div><div style="font-size:11px;color:var(--t2);">{{ t.note || '無備註' }} · {{ t.staff }}</div></div>
-              <div style="text-align:right;display:flex;align-items:center;gap:12px;">
+              <div style="text-align:right;display:flex;align-items:center;gap:10px;">
                 <div :style="{color:t.type==='income'?'var(--g)':'var(--r)', fontWeight:900, fontSize:'16px'}">{{ t.type==='income'?'+':'-' }}${{ t.amount }}</div>
-                <button @click="openEditTransaction(t)" style="border:none;background:none;font-size:18px;">✏️</button>
+                <button @click="openEditTransaction(t)" style="background:none;border:none;font-size:18px;">✏️</button>
+                <button @click="confirmDelete('transaction', t.id)" style="background:none;border:none;font-size:18px;color:var(--r);">🗑️</button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-    </div>
-
-    <div class="nav">
+    </div><div class="nav">
       <div class="nav-item" :class="{active:view==='dashboard'}" @click="view='dashboard'"><span>📊</span><span>總覽</span></div>
       <div class="nav-item" :class="{active:view==='clients'}" @click="view='clients'"><span>👥</span><span>客戶</span></div>
       <div class="nav-item" :class="{active:view==='pos-exercise'}" @click="view='pos-exercise'"><span>🏋️</span><span>運動</span></div>
       <div class="nav-item" :class="{active:view==='pos-retail'}" @click="view='pos-retail'"><span>🛒</span><span>零售</span></div>
-      <div class="nav-item" :class="{active:view==='inventory'}" @click="view='inventory'"><span>📦</span><span>資料庫</span></div>
+      <div class="nav-item" :class="{active:view==='inventory'}" @click="view='inventory'"><span>📦</span><span>庫存</span></div>
       <div class="nav-item" :class="{active:view==='accounting'}" @click="view='accounting'"><span>📝</span><span>記帳</span></div>
     </div>
   </template>
@@ -376,7 +396,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
       <div class="form-row" v-if="clientForm.source==='轉介紹'" style="margin-top:15px;"><label>介紹人</label><select class="sel" v-model="clientForm.referred_by_id"><option :value="null">-- 無 --</option><option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }}</option></select></div>
       <div class="form-row" style="margin-top:15px;"><label>到期日 (購買套票會自動延長)</label><input class="inp" type="date" v-model="clientForm.expiry_date"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding:15px;background:#f8fafc;border-radius:15px;"><span style="font-weight:800;">🏃 馬拉松活躍成員</span><div class="toggle" :class="{on:clientForm.is_marathon}" @click="clientForm.is_marathon=!clientForm.is_marathon"></div></div>
-      <button class="btn btn-primary" style="margin-top:30px;" @click="saveClient">✅ 儲存資料</button>
+      <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="saveClient" :disabled="savingClient">✅ 儲存資料</button>
       <button v-if="clientForm.id" class="btn-secondary" style="margin-top:10px;color:var(--r);border:none;" @click="confirmDelete('client', clientForm.id)">🗑️ 永久刪除客戶</button>
     </div>
   </div>
@@ -387,7 +407,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
       <div class="form-row"><label>類型</label><div style="display:flex;gap:12px;"><button class="btn" :style="expForm.type==='income'?'background:var(--g);color:#fff':'background:#f2f2f7'" @click="expForm.type='income'">💰 收入</button><button class="btn" :style="expForm.type==='expense'?'background:var(--r);color:#fff':'background:#f2f2f7'" @click="expForm.type='expense'">💸 支出</button></div></div>
       <div class="form-row" style="margin-top:15px;"><label>金額</label><input class="inp" type="number" v-model="expForm.amount" style="font-size:24px;font-weight:900;color:var(--p);"></div>
       <div class="form-row" style="margin-top:15px;"><label>備註</label><input class="inp" v-model="expForm.note"></div>
-      <div class="form-row" style="margin-top:15px;"><label>經手人</label>
+      <div class="form-row" style="margin-top:15px;"><label>員工</label>
         <div style="display:flex;gap:10px;"><button class="btn" :style="expForm.staff==='Kwan'?'background:var(--p);color:#fff':'background:#f3f4f6'" @click="expForm.staff='Kwan'">Kwan</button><button class="btn" :style="expForm.staff==='Cat'?'background:var(--p);color:#fff':'background:#f3f4f6'" @click="expForm.staff='Cat'">Cat</button></div>
       </div>
       <button class="btn btn-primary" style="margin-top:30px;" @click="saveTransaction">✅ 儲存</button>
@@ -404,7 +424,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
           <button class="btn-secondary" style="width:60px;height:60px;border-radius:50%;font-size:30px;font-weight:900;background:#fff;" @click="restockForm.qty++">+</button>
         </div>
       </div>
-      <button class="btn btn-primary" style="margin-top:30px;" @click="saveRestock">✅ 確認變更</button>
+      <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="saveRestock">✅ 確認變更</button>
     </div>
   </div>
 </div>
@@ -421,7 +441,7 @@ createApp({
       appReady: false, session: null, view: 'dashboard', toast: '',
       authEmail: '', authPwd: '', authLoading: false, syncing: false,
       clients: [], transactions: [], products: [], stock: {},
-      dashRange: 'month', clientSearch: '', filterBranch: '', invBranch: '觀塘', invSearch: '', posBranch: '觀塘', posDiscount: 'price_standard', productSearch: '',
+      dashRange: 'month', clientSearch: '', filterBranch: '', filterCategory: '', invBranch: '觀塘', invSearch: '', posBranch: '觀塘', posDiscount: 'price_standard', productSearch: '',
       showClientModal: false, clientForm: { id:null, name:'', phone:'', branch:'觀塘', source:'廣告', is_marathon:false }, savingClient:false,
       showExpModal: false, expForm: { type: 'income', amount: '', note: '', staff: 'Kwan', category:'其他' }, editingTxn: null,
       exForm: { pkg: 'pkg_10', clientId: null, isNew: false, isReferral: false, adSource: 'Fitwork廣告' }, exSearch: '', showExClientDD: false, savingEx: false,
@@ -461,14 +481,22 @@ createApp({
       if (this.filterBranch) l = l.filter(c => c.branch === this.filterBranch);
       return l;
     },
-    filteredInventory() { return this.products.filter(p => !this.invSearch || (p.name && p.name.includes(this.invSearch))); },
-    filteredRetailProducts() { return this.products.filter(p => !this.productSearch || (p.name && p.name.toLowerCase().includes(this.productSearch.toLowerCase())) || (p.name_en && p.name_en.toLowerCase().includes(this.productSearch.toLowerCase()))); },
-    exClientList() { const q = this.exSearch.toLowerCase(); return q ? this.clients.filter(c => c.name?.toLowerCase().includes(q)) : this.clients; },
+    filteredInventory() {
+      let l = this.products;
+      if (this.filterCategory) l = l.filter(p => p.category && p.category.includes(this.filterCategory));
+      if (this.invSearch) { const q = this.invSearch.toLowerCase(); l = l.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.name_en && p.name_en.toLowerCase().includes(q))); }
+      return l;
+    },
+    filteredRetailProducts() {
+      let l = this.products;
+      if (this.filterCategory) l = l.filter(p => p.category && p.category.includes(this.filterCategory));
+      if (this.productSearch) { const q = this.productSearch.toLowerCase(); l = l.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.name_en && p.name_en.toLowerCase().includes(q))); }
+      return l;
+    },
     expiringClients() { const now = new Date(); const s = new Date(now.getTime() + 14*86400000); return this.clients.filter(c => c.expiry_date && new Date(c.expiry_date) >= now && new Date(c.expiry_date) <= s); },
-    lowStockItems() { const l = []; this.products.forEach(p => { if(this.getStock(p.id,'觀塘')<=5) l.push(p.id); if(this.getStock(p.id,'中環')<=5) l.push(p.id); }); return [...new Set(l)]; },
     groupedTxns() {
       const g = {};
-      this.transactions.forEach(t => {
+      this.transactions.filter(t => new Date(t.created_at).getMonth() === new Date().getMonth()).forEach(t => {
         const d = new Date(t.created_at).toLocaleDateString('zh-HK');
         if(!g[d]) g[d] = []; g[d].push(t);
       });
@@ -515,7 +543,7 @@ createApp({
         await sb.from('clients').update({ expiry_date: d.toISOString().split('T')[0], user_id: this.session.user.id }).eq('id', this.exForm.clientId);
       }
       this.syncAll(); this.showToast('✅ 結帳成功');
-      this.exForm.clientId = null; this.exSearch = ''; this.savingEx = false;
+      this.exForm.clientId = null; this.savingEx = false;
     },
 
     // 🛍️ 零售系統
@@ -540,7 +568,7 @@ createApp({
 
     // 📥 匯入匯出
     downloadTemplate() {
-      const csv = "product_id,product_name,branch,quantity\n0141,營養蛋白素-雲呢拿,觀塘,50";
+      const csv = "product_id,product_name,branch(觀塘/中環),quantity\n0141,營養蛋白素-雲呢拿,觀塘,50";
       const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Template.csv"; link.click();
     },
@@ -566,7 +594,6 @@ createApp({
 
     // 📦 庫存
     getStock(id, b) { return this.stock[`${id}_${b}`] || 0; },
-    getStockClass(id, b) { const q = this.getStock(id,b); return q<=5?'text-r':'text-g'; },
     openRestock(p, b) { this.restockForm = { product:p, branch:b, qty:1, isInitial:false }; this.showRestockModal=true; },
     openStockCorrection(p, b) { this.restockForm = { product:p, branch:b, qty:this.getStock(p.id, b), isInitial:true }; this.showRestockModal=true; },
     async saveRestock() {
@@ -577,7 +604,7 @@ createApp({
     },
 
     // 📝 記帳
-    openExpForm() { this.editingTxn=null; this.expForm={type:'income',amount:'',note:'',staff:'Kwan',category:'手動'}; this.showExpModal=true; },
+    openExpForm() { this.editingTxn=null; this.expForm={type:'income',amount:'',note:'',staff:'Kwan',category:'其他'}; this.showExpModal=true; },
     openEditTransaction(t) { this.editingTxn=t.id; this.expForm={type:t.type,amount:t.amount,note:t.note||'',staff:t.staff||'Kwan',category:t.category}; this.showExpModal=true; },
     async saveTransaction() {
       const amt = Number(this.expForm.amount);
@@ -595,7 +622,6 @@ createApp({
       this.showClientModal = false; this.syncAll();
     },
     getExpiryClass(c) { if(!c.expiry_date) return ''; const d=(new Date(c.expiry_date)-new Date())/86400000; return d<0?'tag-red':(d<14?'tag-orange':'tag-green'); },
-    formatTime(d) { return new Date(d).toLocaleTimeString('zh-HK', {hour:'2-digit', minute:'2-digit'}); },
 
     async initApp() {
       const { data } = await sb.auth.getSession(); this.session = data.session;
