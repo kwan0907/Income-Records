@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FITWORK HK 旗艦管理系統 v21</title>
+<title>FITWORK HK 旗艦管理系統 v22</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* ==========================================================================
-   Apple 旗艦級明亮 UI (iOS 17 風格) - 購物車空間優化版
+   Apple 旗艦級明亮 UI (iOS 17 風格)
    ========================================================================== */
 :root {
   --p: #4f46e5; --pd: #4338ca; --ps: #eef2ff; --bg: #f2f2f7; --card: #ffffff;
@@ -37,7 +37,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 .stat-card { background: var(--card); border-radius: var(--br); padding: 18px; text-align: center; border: 1px solid var(--border); }
 .section-title { font-size: 15px; font-weight: 900; color: var(--t2); letter-spacing: 0.5px; margin-bottom: 12px; display:flex; align-items:center; gap:6px;}
 
-/* 宣傳與日曆 */
+/* 宣傳打卡與日曆 */
 .cal-item { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; cursor:pointer;}
 .cal-item:last-child { border-bottom: none; }
 .cal-icon { background: #fff; border: 1px solid var(--border); border-radius: 12px; width: 50px; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden; flex-shrink: 0; }
@@ -49,6 +49,8 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 .conversion-card { background: linear-gradient(135deg, var(--p) 0%, var(--pd) 100%); color: #fff; border: none; }
 .progress-bar-bg { background: rgba(255,255,255,0.2); height: 10px; border-radius: 10px; margin: 12px 0; overflow: hidden; }
 .progress-bar-fill { background: #fff; height: 100%; border-radius: 10px; transition: width 1s ease-out; }
+.funnel-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; font-weight: 700; }
+.funnel-item:last-child { border-bottom: none; }
 
 /* 輸入與按鈕 */
 .inp, .sel { width: 100%; background: #ffffff; border: 1.5px solid #d1d5db; padding: 12px 16px; border-radius: 14px; font-size: 16px; outline: none; transition: 0.2s; color: var(--t); }
@@ -73,8 +75,6 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
 .p-card-h { background: var(--card); border-radius: 16px; padding: 14px 16px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
 .p-card-h:active { transform: scale(0.98); background: var(--ps); border-color: var(--p); }
 .p-qty-badge-h { background: var(--p); color: #fff; border-radius: 50%; width: 28px; height: 28px; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(79,70,229,0.3); }
-
-/* 🌟 全新：極簡浮動購物車 (省空間) */
 .mini-cart-bar { position: fixed; bottom: 95px; left: 16px; right: 16px; background: linear-gradient(135deg, var(--p), var(--pd)); color: #fff; border-radius: 24px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 25px rgba(79,70,229,0.4); z-index: 101; cursor: pointer; transition: 0.2s; }
 .mini-cart-bar:active { transform: scale(0.97); }
 
@@ -89,15 +89,11 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
 .fab-large { position: fixed; right: 20px; bottom: 100px; padding: 14px 20px; border-radius: 99px; background: linear-gradient(135deg, var(--p), var(--pd)); color: #fff; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(79,70,229,0.4); z-index: 100; cursor: pointer; transition: 0.2s; border: none; }
 .fab-large:active { transform: scale(0.95); }
 .dynamic-btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
-
-/* 下拉選單 */
 .dropdown-list { background: #fff; border: 1px solid var(--border); border-radius: 12px; max-height: 250px; overflow-y: auto; margin-top: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 .dropdown-item { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
 .dropdown-item:hover { background: #f9fafb; }
 .header-btn { position: relative; z-index: 105; cursor: pointer; }
 .sort-inp { width: 50px; text-align: center; padding: 8px; border: 2px solid var(--p); border-radius: 10px; font-weight: 900; color: var(--p); font-size: 16px; background: var(--ps); }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(79,70,229, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(79,70,229, 0); } 100% { box-shadow: 0 0 0 0 rgba(79,70,229, 0); } }
-.btn-pulse { animation: pulse 2s infinite; }
 </style>
 </head>
 <body>
@@ -155,7 +151,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
       </div>
       <div style="display:flex;gap:12px;">
         <button class="btn-secondary header-btn" style="width:38px;height:38px;border-radius:50%;padding:0;" @click="syncAll">⟳</button>
-        <button class="btn-primary header-btn" style="width:38px;height:38px;border-radius:50%;padding:0;" @click.stop="openSettingsModal">⚙️</button>
+        <button class="btn-primary header-btn" style="width:38px;height:38px;border-radius:50%;padding:0;" @click.stop="openSettingsModal">{{ session.user.email.charAt(0).toUpperCase() }}</button>
       </div>
     </div>
 
@@ -223,24 +219,12 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
       </div>
 
       <div v-if="view==='promo'" class="page">
-        <h2 class="page-title">宣傳打卡系統</h2>
-        <div class="card" v-if="activePromo" style="border:2.5px solid var(--p); background:var(--ps); text-align:center;">
-          <div style="font-size:14px;color:var(--p);font-weight:800;margin-bottom:10px;">⏱️ 正在派發傳單中...</div>
-          <div style="font-size:32px;font-weight:900;color:var(--pd);margin-bottom:15px;">{{ getPromoDuration() }} 分鐘</div>
-          <div class="form-row" style="text-align:left;">
-            <label>📍 打卡地點 / 備註</label>
-            <input class="inp" v-model="activePromo.location" placeholder="例如：觀塘地鐵站 A 出口...">
-          </div>
-          <button class="btn btn-primary" style="margin-top:20px;" @click="openEndPromoModal">🛑 結束派發並結算</button>
-        </div>
-        <div class="card" v-else style="text-align:center; padding: 40px 20px;">
-          <div style="font-size:48px; margin-bottom:15px;">📢</div>
-          <div style="font-weight:800;font-size:18px;margin-bottom:10px;">準備好開始宣傳了嗎？</div>
-          <div style="font-size:13px;color:var(--t2);margin-bottom:25px;">系統會自動計算你的派發時間與轉換率。</div>
-          <button class="btn btn-primary btn-pulse" @click="startPromo">📍 點我開始打卡</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <h2 class="page-title" style="margin:0;">宣傳打卡系統</h2>
+          <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:14px;" @click="openPromoModal">+ 新增紀錄</button>
         </div>
 
-        <div class="section-title" style="margin-top:24px;">📊 宣傳轉換漏斗 (歷史累計)</div>
+        <div class="section-title">📊 宣傳轉換漏斗 (歷史累計)</div>
         <div class="card" style="padding:15px;">
           <div class="funnel-item"><span>📄 派發傳單總數</span><span style="color:var(--t);">{{ promoStats.flyers }} 張</span></div>
           <div class="funnel-item"><span>📱 獲得電話數</span><span style="color:var(--b);">{{ promoStats.phones }} 個</span></div>
@@ -253,13 +237,15 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
         <div v-if="promotions.length===0" style="text-align:center;color:var(--t3);font-size:13px;padding:20px;">尚無宣傳紀錄</div>
         <div v-for="pr in promotions" :key="pr.id" class="item-card" style="align-items:flex-start;">
           <div style="flex:1;">
-            <div style="font-weight:800;font-size:15px;">{{ pr.location || '未填寫地點' }}</div>
-            <div style="font-size:12px;color:var(--t2);margin-top:4px;">📅 {{ new Date(pr.start_time).toLocaleDateString('zh-HK') }} · 歷時 {{ Math.round((new Date(pr.end_time) - new Date(pr.start_time))/60000) }} 分鐘</div>
+            <div style="font-weight:900;font-size:16px;color:var(--p);">📍 {{ pr.location || '未填寫地點' }}</div>
+            <div style="font-size:12px;color:var(--t2);margin-top:4px;font-weight:700;">📅 {{ new Date(pr.start_time).toLocaleDateString('zh-HK') }} · {{ getTimeStr(pr.start_time) }} 至 {{ getTimeStr(pr.end_time) }}</div>
+            <div style="font-size:12px;color:var(--t3);margin-top:2px;font-weight:700;">歷時 {{ Math.round((new Date(pr.end_time) - new Date(pr.start_time))/60000) }} 分鐘</div>
             <div style="display:flex;gap:8px;margin-top:8px;">
-              <span class="tag tag-blue" style="font-size:10px;">傳單: {{pr.flyers_count}}</span>
-              <span class="tag tag-orange" style="font-size:10px;">試堂: {{pr.trials_count}}</span>
+              <span class="tag tag-blue" style="font-size:11px;">傳單: {{pr.flyers_count}}</span>
+              <span class="tag tag-orange" style="font-size:11px;">試堂: {{pr.trials_count}}</span>
             </div>
           </div>
+          <button @click="confirmDelete('promotion', pr.id)" style="background:none;border:none;font-size:18px;color:var(--r);cursor:pointer;padding:10px;">🗑️</button>
         </div>
       </div>
 
@@ -319,7 +305,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
             <div v-if="showExClientDD" class="dropdown-list" style="position:relative; width:100%;">
               <div style="padding:10px;text-align:center;font-weight:800;color:var(--r);background:#f9f9f9;border-bottom:1px solid #eee;cursor:pointer;" @click="showExClientDD=false">✕ 關閉搜尋</div>
               <div v-for="c in exClientList" :key="c.id" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="exForm.clientId=c.id;exSearch=c.name;showExClientDD=false;">
-                <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" class="tag tag-orange">試堂客</span></div>
+                <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" style="color:#ea580c; font-size:11px; background:#fff7ed; padding:2px 6px; border-radius:6px;">試堂客</span></div>
                 <div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
               </div>
             </div>
@@ -388,10 +374,11 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
 
         <div style="margin-top:20px;">
           <input class="inp" v-model="productSearch" placeholder="🔍 即時搜尋商品 (例: s 或 蛋白)..." style="box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+          
           <div style="display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:5px; white-space: nowrap;">
             <button class="tag" :class="{active: filterCategory===''}" @click="filterCategory=''">全部分類</button>
             <button class="tag" :class="{active: filterCategory==='內在'}" @click="filterCategory='內在'">內在營養</button>
-            <button class="tag" :class="{active: filterCategory==='外在'}" @click="filterCategory='外外在保養'}" @click="filterCategory='外在'">外在保養</button>
+            <button class="tag" :class="{active: filterCategory==='外在'}" @click="filterCategory='外在'">外在保養</button>
           </div>
 
           <div class="product-list-h">
@@ -482,7 +469,9 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
         </div>
       </div>
 
-    </div><div class="nav">
+    </div>
+
+    <div class="nav">
       <div class="nav-item" :class="{active:view==='dashboard'}" @click="view='dashboard'"><span>📊</span><span>總覽</span></div>
       <div class="nav-item" :class="{active:view==='promo'}" @click="view='promo'"><span>📢</span><span>宣傳</span></div>
       <div class="nav-item" :class="{active:view==='clients'}" @click="view='clients'"><span>👥</span><span>客戶</span></div>
@@ -579,13 +568,21 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
 
   <div v-if="showPromoModal" class="modal-overlay" @click.self="showPromoModal=false">
     <div class="modal-sheet">
-      <div class="modal-header"><h3>🛑 宣傳打卡結算</h3><button class="close-btn" @click="showPromoModal=false">✕</button></div>
-      <div style="font-size:14px;color:var(--t2);margin-bottom:15px;">請輸入您這次派發的成果，沒有的填 0 即可。</div>
-      <div class="form-row"><label>📄 派發傳單數量 (張)</label><input class="inp" type="number" v-model.number="promoForm.flyers_count"></div>
+      <div class="modal-header"><h3>📢 新增宣傳紀錄</h3><button class="close-btn" @click="showPromoModal=false">✕</button></div>
+      
+      <div class="form-row"><label>📍 宣傳地點 / 備註</label><input class="inp" v-model="promoForm.location" placeholder="例如：觀塘地鐵站 A 出口..."></div>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
+        <div class="form-row"><label style="font-size:12px;color:var(--p);font-weight:800;">開始時間</label><input class="inp" type="datetime-local" v-model="promoForm.start_time" style="padding:8px;font-size:14px;border-color:var(--p);"></div>
+        <div class="form-row"><label style="font-size:12px;color:var(--pd);font-weight:800;">結束時間</label><input class="inp" type="datetime-local" v-model="promoForm.end_time" style="padding:8px;font-size:14px;border-color:var(--pd);"></div>
+      </div>
+
+      <div class="form-row" style="margin-top:15px;"><label>📄 派發傳單數量 (張)</label><input class="inp" type="number" v-model.number="promoForm.flyers_count"></div>
       <div class="form-row" style="margin-top:10px;"><label>📱 獲得電話數量</label><input class="inp" type="number" v-model.number="promoForm.phones_count"></div>
       <div class="form-row" style="margin-top:10px;"><label>💬 當下查詢數量</label><input class="inp" type="number" v-model.number="promoForm.inquiries_count"></div>
       <div class="form-row" style="margin-top:10px;"><label>👟 預約/成功試堂數量</label><input class="inp" type="number" v-model.number="promoForm.trials_count"></div>
-      <button class="btn btn-primary" style="margin-top:20px;width:100%;" @click="savePromo">💾 儲存本次宣傳成果</button>
+      
+      <button class="btn btn-primary" style="margin-top:20px;width:100%;" @click="savePromo">💾 儲存宣傳成果</button>
     </div>
   </div>
 
@@ -680,8 +677,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const { createApp } = Vue;
 
-const FW_STAFF_KEY = 'fwhk_v21_staff';
-const FW_SORT_KEY = 'fwhk_v21_sort'; 
+const FW_STAFF_KEY = 'fwhk_v22_staff';
+const FW_SORT_KEY = 'fwhk_v22_sort'; 
 
 createApp({
   data() {
@@ -696,8 +693,9 @@ createApp({
       rCart: [], rForm: { clientId: null }, rSearch: '', showRClientDD: false, savingR: false, showRetailCheckoutModal: false,
       showRestockModal: false, restockForm: { product: null, branch: '觀塘', qty: 1, isInitial: false },
       
-      activePromo: null, showPromoModal: false,
-      promoForm: { flyers_count:0, phones_count:0, inquiries_count:0, trials_count:0 },
+      // 手動宣傳打卡
+      showPromoModal: false,
+      promoForm: { location: '', start_time: '', end_time: '', flyers_count:0, phones_count:0, inquiries_count:0, trials_count:0 },
       
       staffList: ['股東'], newStaffName: '',
       incCategories: ['公司票', '其他收入'],
@@ -850,18 +848,21 @@ createApp({
     },
     forceSortUpdate() { this.sortData = Object.assign({}, this.sortData); },
 
-    startPromo() { this.activePromo = { start_time: new Date().toISOString(), location: '' }; },
-    getPromoDuration() { if(!this.activePromo) return 0; return Math.floor((new Date() - new Date(this.activePromo.start_time)) / 60000); },
-    openEndPromoModal() { this.promoForm = { flyers_count:0, phones_count:0, inquiries_count:0, trials_count:0 }; this.showPromoModal = true; },
+    // 手動宣傳打卡功能
+    openPromoModal() {
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60000);
+      const formatDT = (d) => { const tzOffset = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - tzOffset).toISOString().slice(0, 16); };
+      
+      this.promoForm = { location: '', start_time: formatDT(oneHourAgo), end_time: formatDT(now), flyers_count: 0, phones_count: 0, inquiries_count: 0, trials_count: 0 };
+      this.showPromoModal = true;
+    },
     async savePromo() {
-      const p = { user_id: this.session.user.id, start_time: this.activePromo.start_time, end_time: new Date().toISOString(), location: this.activePromo.location, ...this.promoForm };
+      if(!this.promoForm.location) return this.showToast('❌ 請輸入宣傳地點');
+      const p = { user_id: this.session.user.id, location: this.promoForm.location, start_time: new Date(this.promoForm.start_time).toISOString(), end_time: new Date(this.promoForm.end_time).toISOString(), flyers_count: this.promoForm.flyers_count, phones_count: this.promoForm.phones_count, inquiries_count: this.promoForm.inquiries_count, trials_count: this.promoForm.trials_count };
       const { error } = await sb.from('promotions').insert(p);
-      if(!error) {
-        this.showToast('✅ 宣傳成果已結算');
-        this.activePromo = null; this.showPromoModal = false; this.syncAll();
-      } else {
-        this.showToast('❌ 請確定資料庫 promotions 已經建立!');
-      }
+      if(!error) { this.showToast('✅ 宣傳紀錄已儲存'); this.showPromoModal = false; this.syncAll(); } 
+      else { this.showToast('❌ 儲存失敗: 請確認已執行宣傳資料表 SQL'); }
     },
 
     async authSubmit() {
@@ -871,9 +872,8 @@ createApp({
         const { error } = await sb.auth.signInWithPassword({ email: this.authEmail, password: this.authPwd });
         this.authLoading = false;
         if (error) {
-           if(error.message.includes('Email not confirmed')) {
-               this.showToast('⚠️ 帳號尚未驗證，請去信箱收取驗證碼！'); this.authState = 'verify_otp';
-           } else { this.showToast('❌ 登入失敗: ' + error.message); }
+           if(error.message.includes('Email not confirmed')) { this.showToast('⚠️ 帳號尚未驗證，請去信箱收取驗證碼！'); this.authState = 'verify_otp'; } 
+           else { this.showToast('❌ 登入失敗: ' + error.message); }
         } else location.reload();
       } else if (this.authState === 'signup') {
         if (this.authPwd !== this.authPwd2) { this.showToast('❌ 密碼不一致'); return; }
@@ -945,6 +945,7 @@ createApp({
       this.exForm.clientId = null; this.exSearch = ''; this.savingEx = false;
     },
 
+    getCartQty(id) { const i = this.rCart.find(x=>x.product.id===id); return i ? i.qty : 0; },
     addToCart(p) { const item = this.rCart.find(i=>i.product.id===p.id); if(item) item.qty++; else this.rCart.push({product:p, qty:1}); },
     removeFromCart(idx) { 
       this.rCart.splice(idx, 1); 
@@ -971,7 +972,7 @@ createApp({
     },
 
     downloadTemplate() {
-      const csv = "product_id,product_name,branch,quantity\n0141,營養蛋白素-雲呢拿,觀塘,50";
+      const csv = "product_id,product_name,branch(觀塘/中環),quantity\n0141,營養蛋白素-雲呢拿,觀塘,50";
       const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "Template.csv"; link.click();
     },
@@ -1016,7 +1017,6 @@ createApp({
     async confirmDelete(type, id) { if(confirm('確定要永久刪除這筆資料嗎？')) { await sb.from(type==='client'?'clients':'transactions').delete().eq('id', id); this.syncAll(); } },
 
     getClientGen(id) { let g=1, c=this.clients.find(x=>x.id===id); while(c?.referred_by_id){ g++; c=this.clients.find(x=>x.id===c.referred_by_id); if(g>15)break; } return g; },
-    
     openClientForm(c) { 
       this.clientForm = c ? {...c} : { id:null, name:'', phone:'', branch:'觀塘', source:'廣告', is_marathon:false, status:'active', referred_by_id: null, trial_date: '' }; 
       if (c && c.trial_date) {
@@ -1026,7 +1026,6 @@ createApp({
       }
       this.showClientModal=true; 
     },
-
     async saveClient() {
       if(!this.clientForm.name) return this.showToast('❌ 姓名必填');
       if(this.clientForm.source==='轉介紹' && !this.clientForm.referred_by_id) return this.showToast('❌ 轉介紹必須選擇介紹人');
