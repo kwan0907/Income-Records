@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FITWORK HK 旗艦管理系統 v28</title>
+<title>FITWORK HK 旗艦管理系統 v29</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -111,7 +111,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
     <div class="card" style="width:100%;max-width:400px;text-align:center;padding:40px 30px; border-radius: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
       <h1 style="font-size:36px;color:var(--p);font-weight:900;letter-spacing:-1px;">FITWORK</h1>
       <p style="color:var(--t2);margin-bottom:30px;font-weight:600;">
-        {{ authState==='recovery'?'重設密碼':(authState==='signup'?'建立新帳號':(authState==='verify_otp'?'輸入驗證碼':'旗艦業務管理系統 v28')) }}
+        {{ authState==='recovery'?'重設密碼':(authState==='signup'?'建立新帳號':(authState==='verify_otp'?'輸入驗證碼':'旗艦業務管理系統 v29')) }}
       </p>
       
       <template v-if="authState==='recovery'">
@@ -237,6 +237,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
             <span style="font-weight:700;color:var(--t2);">💰 廣告來源總收入</span>
             <span style="font-weight:900;color:var(--g);">+$ {{ adStats.income }}</span>
           </div>
+          
           <div class="divider" style="background:#fcd34d; margin:10px 0; height:1px;"></div>
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <span style="font-weight:900;color:var(--o);font-size:15px;">⚖️ 廣告實際利潤</span>
@@ -351,13 +352,13 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
             <input class="inp" v-model="exSearch" placeholder="🔍 搜尋客戶姓名或電話..." @focus="showExClientDD=true" style="margin-top:6px;">
             <div v-if="showExClientDD" class="dropdown-list" style="position:relative; width:100%;">
               <div style="padding:10px;text-align:center;font-weight:800;color:var(--r);background:#f9f9f9;border-bottom:1px solid #eee;cursor:pointer;" @click="showExClientDD=false">✕ 關閉搜尋</div>
-              <div v-for="c in exClientList" :key="c.id" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="exForm.clientId=c.id;exSearch=c.name;showExClientDD=false;">
+              <div v-for="c in exClientList" :key="c.id" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="selectExClient(c)">
                 <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" style="color:#ea580c; font-size:11px; background:#fff7ed; padding:2px 6px; border-radius:6px;">試堂客</span></div>
                 <div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
               </div>
             </div>
             <div v-if="exForm.clientId" style="margin-top:10px;padding:10px 14px;background:var(--ps);color:var(--p);border-radius:10px;font-size:14px;font-weight:800;">
-              ✓ 已選擇: {{ clients.find(c=>c.id===exForm.clientId)?.name }}
+              ✓ 已選擇: {{ getClientName(exForm.clientId) }}
             </div>
           </div>
         </div>
@@ -405,7 +406,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
               </div>
             </div>
             <div v-if="rForm.clientId" style="margin-top:10px;padding:10px 14px;background:var(--ps);color:var(--p);border-radius:10px;font-size:14px;font-weight:800;">
-              ✓ 已選擇: {{ clients.find(c=>c.id===rForm.clientId)?.name }}
+              ✓ 已選擇: {{ getClientName(rForm.clientId) }}
             </div>
           </div>
 
@@ -431,9 +432,9 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
           <input class="inp" v-model="productSearch" placeholder="🔍 即時搜尋商品 (例: s 或 蛋白)..." style="box-shadow:0 2px 8px rgba(0,0,0,0.05);">
           
           <div style="display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:5px; white-space: nowrap;">
-            <button class="tag" :class="{active: filterCategory===''}" @click="filterCategory=''">全部分類</button>
-            <button class="tag" :class="{active: filterCategory==='內在'}" @click="filterCategory='內在'">內在營養</button>
-            <button class="tag" :class="{active: filterCategory==='外在'}" @click="filterCategory='外在'">外在保養</button>
+            <button class="tag" :class="{active: filterCategory===''}" @click="setCategoryFilter('')">全部分類</button>
+            <button class="tag" :class="{active: filterCategory==='內在'}" @click="setCategoryFilter('內在')">內在營養</button>
+            <button class="tag" :class="{active: filterCategory==='外在'}" @click="setCategoryFilter('外在')">外在保養</button>
           </div>
 
           <div class="product-list-h">
@@ -486,9 +487,9 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
         
         <input class="inp" v-model="invSearch" placeholder="🔍 即時搜尋產品庫...">
         <div style="display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:5px; white-space: nowrap;">
-          <button class="tag" :class="{active: filterCategory===''}" @click="filterCategory=''">全部分類</button>
-          <button class="tag" :class="{active: filterCategory==='內在'}" @click="filterCategory='內在'">內在營養</button>
-          <button class="tag" :class="{active: filterCategory==='外在'}" @click="filterCategory='外在'">外在保養</button>
+          <button class="tag" :class="{active: filterCategory===''}" @click="setCategoryFilter('')">全部分類</button>
+          <button class="tag" :class="{active: filterCategory==='內在'}" @click="setCategoryFilter('內在')">內在營養</button>
+          <button class="tag" :class="{active: filterCategory==='外在'}" @click="setCategoryFilter('外在')">外在保養</button>
         </div>
         
         <div style="margin:20px 0;">
@@ -500,7 +501,7 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
               <div style="font-weight:800;font-size:16px;">{{ p.name }}</div>
               <div style="font-size:12px;color:var(--t2);margin-top:4px;">單價成本: ${{ p.price_50 }}</div>
               <div style="font-size:11px;color:var(--o);font-weight:700;margin-top:4px;" v-if="getExpiry(p.id, invBranch)">
-                到期日: {{ getExpiry(p.id, invBranch) }}
+                批次有效期: {{ getExpiry(p.id, invBranch) }}
               </div>
             </div>
             <div v-if="!isEditingSort" style="text-align:right;display:flex;align-items:center;gap:15px;">
@@ -653,8 +654,9 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
       <div class="form-row" style="margin-top:10px;">
         
         <div class="form-row" style="margin-bottom:15px;" v-if="!restockForm.isInitial">
-          <label>記錄到期日 (選填)</label>
-          <input class="inp" type="date" v-model="restockForm.expiry_date">
+          <label>記錄到期日 / 批次 (選填)</label>
+          <input class="inp" type="text" v-model="restockForm.expiry_date" placeholder="例如: 2026-10 (或自由打字)">
+          <div style="font-size:11px;color:var(--t3);margin-top:4px;">* 系統會自動找出文字內的日期，並提早3個月提醒你。</div>
         </div>
 
         <div style="display:flex;align-items:center;gap:20px;justify-content:center;background:#f2f2f7;padding:20px;border-radius:20px;">
@@ -695,10 +697,10 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
         <div v-for="(item, idx) in rCart" :key="idx" class="txn-item" style="padding:12px 0;">
           <div style="flex:1;">
             <div style="font-weight:800;font-size:15px;line-height:1.2;">{{ item.product.name }}</div>
-            <div style="font-size:12px;color:var(--t2);margin-top:4px;">單價 ${{ item.product[posDiscount] }}</div>
+            <div style="font-size:12px;color:var(--t2);margin-top:4px;">單價 ${{ item.product[posDiscount] || 0 }}</div>
           </div>
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="font-weight:900;color:var(--p);font-size:16px;">$ {{ (item.product[posDiscount]*item.qty).toLocaleString() }}</div>
+            <div style="font-weight:900;color:var(--p);font-size:16px;">$ {{ ((item.product[posDiscount] || 0)*item.qty).toLocaleString() }}</div>
             <div style="display:flex;align-items:center;background:#f3f4f6;border-radius:12px;overflow:hidden;">
               <button class="qty-btn" style="border-radius:12px 0 0 12px;" @click="updateCartQty(idx, -1)">-</button>
               <div style="width:28px;text-align:center;font-weight:800;font-size:14px;">{{ item.qty }}</div>
@@ -735,10 +737,10 @@ input[type="date"], input[type="datetime-local"] { -webkit-appearance: none; dis
       </div>
       <div style="display:flex;align-items:center;gap:16px;padding:20px;background:#f8fafc;border:1px solid var(--border);border-radius:var(--br2);margin-bottom:20px;">
         <div style="width:56px;height:56px;font-size:24px;background:linear-gradient(135deg,var(--p),var(--ps));color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;">
-          {{ session?.user?.email?.charAt(0)?.toUpperCase() }}
+          {{ getSessionInitial() }}
         </div>
         <div>
-          <div style="font-weight:800;font-size:16px;">{{ session?.user?.email }}</div>
+          <div style="font-weight:800;font-size:16px;">{{ getSessionEmail() }}</div>
           <div style="font-size:13px;color:var(--t2);margin-top:4px;">高級系統管理員</div>
         </div>
       </div>
@@ -823,6 +825,7 @@ createApp({
         .sort((a,b) => new Date(a.trial_date) - new Date(b.trial_date));
     },
 
+    // 💡 智慧抓取文字裡的日期進行臨期提醒
     expiringAlerts() {
       const now = new Date();
       const in3Months = new Date();
@@ -831,12 +834,24 @@ createApp({
       this.products.forEach(p => {
         ['觀塘', '中環'].forEach(b => {
           const qty = this.getStock(p.id, b);
-          const exp = this.stockExpiry[`${p.id}_${b}`];
-          if (qty > 0 && exp) {
-            const expDate = new Date(exp);
-            if (expDate <= in3Months) {
-              const days = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
-              alerts.push({ product: p, branch: b, qty, expiry_date: exp, days });
+          const expText = this.stockExpiry[`${p.id}_${b}`];
+          if (qty > 0 && expText) {
+            // 用正則表達式找出文字裡面符合 YYYY-MM-DD 或 YYYY/MM 的日期
+            const dates = expText.match(/\d{4}[-/]\d{2}([-/]\d{2})?/g) || [];
+            let minDays = null;
+            dates.forEach(dStr => {
+              const d = new Date(dStr);
+              if (!isNaN(d.getTime())) {
+                if (d <= in3Months && d >= now) {
+                  const days = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+                  if (minDays === null || days < minDays) minDays = days;
+                } else if (d < now) {
+                  minDays = 0; // 已過期
+                }
+              }
+            });
+            if (minDays !== null) {
+              alerts.push({ product: p, branch: b, qty, expiry_date: expText, days: minDays });
             }
           }
         });
@@ -898,7 +913,8 @@ createApp({
 
     filteredClients() {
       let l = this.clients;
-      if (this.clientSearch) { const q = this.clientSearch.toLowerCase(); l = l.filter(c => (c.name && c.name.toLowerCase().includes(q)) || (c.phone && c.phone.includes(q))); }
+      const q = (this.clientSearch || '').toLowerCase();
+      if (q) { l = l.filter(c => (c.name && c.name.toLowerCase().includes(q)) || (c.phone && c.phone.includes(q))); }
       if (this.filterBranch) l = l.filter(c => c.branch === this.filterBranch);
       if (this.filterStatus === 'active') l = l.filter(c => c.status !== 'prospect');
       if (this.filterStatus === 'prospect') l = l.filter(c => c.status === 'prospect');
@@ -924,17 +940,25 @@ createApp({
     filteredInventory() {
       let l = this.sortedProducts;
       if (this.filterCategory) l = l.filter(p => p.category && p.category.includes(this.filterCategory));
-      if (this.invSearch) { const q = this.invSearch.toLowerCase(); l = l.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.name_en && p.name_en.toLowerCase().includes(q))); }
+      const q = (this.invSearch || '').toLowerCase();
+      if (q) { l = l.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.name_en && p.name_en.toLowerCase().includes(q))); }
       return l;
     },
     filteredRetailProducts() {
       let l = this.sortedProducts;
       if (this.filterCategory) l = l.filter(p => p.category && p.category.includes(this.filterCategory));
-      if (this.productSearch) { const q = this.productSearch.toLowerCase(); l = l.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.name_en && p.name_en.toLowerCase().includes(q))); }
+      const q = (this.productSearch || '').toLowerCase();
+      if (q) { l = l.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.name_en && p.name_en.toLowerCase().includes(q))); }
       return l;
     },
-    exClientList() { const q = this.exSearch.toLowerCase(); return q ? this.clients.filter(c => (c.name&&c.name.toLowerCase().includes(q)) || (c.phone&&c.phone.includes(q))) : this.clients; },
-    rClientList() { const q = this.rSearch.toLowerCase(); return q ? this.clients.filter(c => (c.name&&c.name.toLowerCase().includes(q)) || (c.phone&&c.phone.includes(q))) : this.clients; },
+    exClientList() { 
+      const q = (this.exSearch || '').toLowerCase(); 
+      return q ? this.clients.filter(c => (c.name&&c.name.toLowerCase().includes(q)) || (c.phone&&c.phone.includes(q))) : this.clients; 
+    },
+    rClientList() { 
+      const q = (this.rSearch || '').toLowerCase(); 
+      return q ? this.clients.filter(c => (c.name&&c.name.toLowerCase().includes(q)) || (c.phone&&c.phone.includes(q))) : this.clients; 
+    },
     groupedTxns() {
       const g = {};
       this.transactions.forEach(t => {
@@ -948,6 +972,24 @@ createApp({
     showToast(msg) { this.toast = msg; setTimeout(()=>this.toast='', 3500); },
     openSettingsModal() { this.showSettings = true; },
     async logout() { await sb.auth.signOut(); location.reload(); },
+    
+    // 安全渲染方法，避免 mobile WebView 因 optional chaining 崩潰
+    getSessionInitial() {
+      if (this.session && this.session.user && this.session.user.email) {
+        return this.session.user.email.charAt(0).toUpperCase();
+      }
+      return '';
+    },
+    getSessionEmail() {
+      if (this.session && this.session.user && this.session.user.email) {
+        return this.session.user.email;
+      }
+      return '';
+    },
+    getClientName(id) {
+      const client = this.clients.find(c => c.id === id);
+      return client ? client.name : '';
+    },
 
     async changePassword() {
       if (!this.newPwd || this.newPwd.length < 6) { this.showToast('❌ 密碼至少6位'); return; }
@@ -1006,6 +1048,11 @@ createApp({
       this.isEditingSort = !this.isEditingSort;
     },
     forceSortUpdate() { this.sortData = Object.assign({}, this.sortData); },
+
+    // 🚀 安全過濾方法
+    setCategoryFilter(cat) {
+      this.filterCategory = cat;
+    },
 
     openPromoModal() {
       const now = new Date();
@@ -1120,7 +1167,6 @@ createApp({
       this.exForm.clientId = null; this.exSearch = ''; this.savingEx = false;
     },
 
-    // 折扣對照校正
     selectRetailClient(c) {
       if (!c) {
         this.rForm.clientId = null;
@@ -1129,10 +1175,10 @@ createApp({
       } else {
         this.rForm.clientId = c.id;
         this.rSearch = c.name;
-        if (c.vip_level === '金級') this.posDiscount = 'price_silver'; // 金級 = 65折 (之前對應到 price_silver 是 65 折)
-        else if (c.vip_level === '銀級') this.posDiscount = 'price_standard'; // 銀級 = 75折
+        if (c.vip_level === '金級') this.posDiscount = 'price_gold'; // 金級 = 65折
+        else if (c.vip_level === '銀級') this.posDiscount = 'price_silver'; // 銀級 = 75折
+        else if (c.vip_level === '銅級(PC)' || c.vip_level === '銅級') this.posDiscount = 'price_bronze'; // 銅級(PC)
         else if (c.vip_level === '領班') this.posDiscount = 'price_58'; // 領班 = 58折
-        else if (c.vip_level === '銅級(PC)' || c.vip_level === '銅級') this.posDiscount = 'retail_price'; // 銅級 = 無特別折扣 (用零售價)
         else this.posDiscount = 'price_standard';
       }
       this.showRClientDD = false;
@@ -1160,14 +1206,22 @@ createApp({
     
     cartTotal() {
       let revenue = 0, cost = 0;
-      this.rCart.forEach(i => { revenue += i.product[this.posDiscount] * i.qty; cost += (i.product.price_50 || 0) * i.qty; });
+      this.rCart.forEach(i => { 
+        // 安全獲取折扣價
+        const pPrice = i.product[this.posDiscount] || 0;
+        const pCost = i.product.price_50 || 0;
+        revenue += pPrice * i.qty; 
+        cost += pCost * i.qty; 
+      });
       return { revenue, cost, profit: revenue - cost };
     },
     async saveRetailPOS(staff) {
       this.savingR = true;
       for(const item of this.rCart) {
-        const amt = item.product[this.posDiscount] * item.qty;
-        const cst = (item.product.price_50 || 0) * item.qty;
+        const pPrice = item.product[this.posDiscount] || 0;
+        const pCost = item.product.price_50 || 0;
+        const amt = pPrice * item.qty;
+        const cst = pCost * item.qty;
         await sb.from('transactions').insert({ user_id: this.session.user.id, type: 'income', category: '零售', amount: amt, cost: cst, profit: amt-cst, product_id: item.product.id, branch: this.posBranch, quantity: item.qty, staff, client_id: this.rForm.clientId, created_at: new Date().toISOString() });
       }
       if (this.rForm.clientId) {
@@ -1222,7 +1276,6 @@ createApp({
       const amt = Number(this.expForm.amount);
       const data = { ...this.expForm, amount: amt, profit: this.expForm.type==='income' ? amt : -amt, user_id: this.session.user.id };
       
-      // 清理非廣告費用的附加數據
       if(data.category !== '廣告費用') { data.ad_inquiries = 0; data.ad_phones = 0; }
 
       if(this.editingTxn) await sb.from('transactions').update(data).eq('id', this.editingTxn); else await sb.from('transactions').insert({ ...data, created_at: new Date().toISOString() });
@@ -1230,7 +1283,7 @@ createApp({
     },
     async confirmDelete(type, id) { if(confirm('確定要永久刪除這筆資料嗎？')) { await sb.from(type==='client'?'clients':'transactions').delete().eq('id', id); this.syncAll(); } },
 
-    getClientGen(id) { let g=1, c=this.clients.find(x=>x.id===id); while(c?.referred_by_id){ g++; c=this.clients.find(x=>x.id===c.referred_by_id); if(g>15)break; } return g; },
+    getClientGen(id) { let g=1, c=this.clients.find(x=>x.id===id); let count=0; while(c && c.referred_by_id && count<15){ g++; c=this.clients.find(x=>x.id===c.referred_by_id); count++; } return g; },
     
     openClientForm(c) { 
       this.clientForm = c ? {...c} : { id:null, name:'', phone:'', branch:'觀塘', source:'廣告', is_marathon:false, status:'active', referred_by_id: null, trial_date: '', is_vip: false, vip_level: '銅級(PC)', joined_date: new Date().toISOString().split('T')[0] }; 
