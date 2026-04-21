@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FITWORK HK 旗艦管理系統 v11</title>
+<title>FITWORK HK 旗艦管理系統 v12</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* ==========================================================================
-   Apple 旗艦級明亮 UI (iOS 17 風格)
+   Apple 旗艦級明亮 UI (iOS 17 風格) - 支援自定義排序與升級功能
    ========================================================================== */
 :root {
   --p: #4f46e5; --pd: #4338ca; --ps: #eef2ff; --bg: #f2f2f7; --card: #ffffff;
@@ -50,6 +50,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 .btn:active { transform: scale(0.97); }
 .btn-primary { background: var(--p); color: #fff; box-shadow: 0 4px 12px rgba(79,70,229,0.25); }
 .btn-secondary { background: #ffffff; color: var(--t); border: 1px solid #d1d5db; }
+.btn-sm { padding: 8px 12px; font-size: 13px; border-radius: 10px; }
 
 /* 標籤與列表 */
 .tag { padding: 6px 14px; border-radius: 12px; font-size: 13px; font-weight: 800; display: inline-block; cursor: pointer; border: 1px solid var(--border); background: #fff; color: var(--t2); transition: 0.2s; white-space: nowrap; }
@@ -86,6 +87,13 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 .dropdown-list { background: #fff; border: 1px solid var(--border); border-radius: 12px; max-height: 200px; overflow-y: auto; margin-top: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: absolute; width: calc(100% - 44px); z-index: 50; }
 .dropdown-item { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
 .dropdown-item:hover { background: #f9fafb; }
+
+/* 新增大懸浮按鈕 */
+.fab-large { position: fixed; right: 20px; bottom: 100px; padding: 14px 20px; border-radius: 99px; background: linear-gradient(135deg, var(--p), var(--pd)); color: #fff; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(79,70,229,0.4); z-index: 100; cursor: pointer; transition: 0.2s; border: none; }
+.fab-large:active { transform: scale(0.95); }
+
+/* 排序輸入框 */
+.sort-inp { width: 50px; text-align: center; padding: 6px; border: 1px solid var(--p); border-radius: 8px; font-weight: 800; color: var(--p); font-size: 14px; }
 </style>
 </head>
 <body>
@@ -95,7 +103,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
   <div v-if="!session" style="height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f2f2f7;">
     <div class="card" style="width:100%;max-width:400px;text-align:center;padding:40px 30px; border-radius: 32px;">
       <h1 style="font-size:36px;color:var(--p);font-weight:900;letter-spacing:-1px;">FITWORK</h1>
-      <p style="color:var(--t2);margin-bottom:30px;font-weight:600;">旗艦業務管理系統</p>
+      <p style="color:var(--t2);margin-bottom:30px;font-weight:600;">旗艦業務管理系統 v12</p>
       <input class="inp" v-model="authEmail" placeholder="電子郵件">
       <input class="inp" type="password" v-model="authPwd" placeholder="密碼" style="margin-top:15px;" @keyup.enter="authSubmit">
       <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="authSubmit" :disabled="authLoading">
@@ -175,6 +183,98 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         </div>
       </div>
 
+      <div v-if="view==='clients'" class="page">
+        <h2 class="page-title">客戶管理系統</h2>
+        <div class="card" style="padding:15px;margin-bottom:15px;">
+          <input class="inp" v-model="clientSearch" placeholder="🔍 即時搜尋姓名、電話..." style="box-shadow:0 2px 4px rgba(0,0,0,0.03);">
+          <div style="display:flex;gap:8px;margin-top:12px;overflow-x:auto;padding-bottom:5px;white-space:nowrap;">
+            <button class="tag" :class="{active: filterStatus==='active'}" @click="filterStatus='active'">⭐️ 正式會員</button>
+            <button class="tag" :class="{active: filterStatus==='prospect'}" @click="filterStatus='prospect'">👀 試堂客</button>
+            <div style="width:1px;background:#ccc;margin:0 5px;"></div>
+            <button v-for="b in ['觀塘','中環','佐敦']" class="tag" :class="{active:filterBranch===b}" @click="filterBranch=filterBranch===b?'':b">{{b}}</button>
+          </div>
+        </div>
+
+        <div v-if="filteredClients.length === 0" style="text-align:center;padding:40px;color:var(--t3);font-weight:700;">查無資料</div>
+
+        <div v-for="c in filteredClients" :key="c.id" class="item-card" @click="openClientForm(c)">
+          <div class="client-avatar">{{ (c.name || '?').charAt(0) }}</div>
+          <div style="flex:1;">
+            <div style="font-weight:800;font-size:17px;">{{ c.name }} <span v-if="c.is_marathon" class="tag-blue tag" style="margin-left:5px;">🏃</span></div>
+            <div style="font-size:12px;color:var(--t2);margin-top:4px;">{{ c.phone || '未錄入電話' }} · {{ c.branch || '未設定' }}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;color:var(--p);font-weight:800;margin-bottom:4px;" v-if="c.status!=='prospect'">第 {{ getClientGen(c.id) }} 代</div>
+            <div :class="getExpiryClass(c)" style="font-size:11px;font-weight:800;">{{ c.status==='prospect' ? '試堂客' : (c.expiry_date || '無效期') }}</div>
+          </div>
+        </div>
+        
+        <button class="fab-large" @click="openClientForm(null)">
+          <span style="font-size:24px;">+</span> 新增客戶
+        </button>
+      </div>
+
+      <div v-if="view==='pos-exercise'" class="page">
+        <h2 class="page-title">運動套票收銀</h2>
+        <div class="card">
+          <div class="form-row"><label style="font-weight:800;">1. 選擇套票類型</label>
+            <select class="sel" v-model="exForm.pkg" style="font-weight:800;color:var(--p);">
+              <option value="trial">🧪 試堂 ($98)</option>
+              <option value="pkg_10">🎟️ 10點套票 ($850)</option>
+              <option value="pkg_35">👑 35點套票 ($2550)</option>
+            </select>
+          </div>
+          
+          <div class="form-row" v-if="exForm.pkg === 'trial'" style="margin-top:15px;">
+            <label style="font-weight:800;color:var(--o);">2. 廣告來源分類</label>
+            <select class="sel" v-model="exForm.adSource" style="border-color:var(--o);">
+              <option value="Fitwork廣告">Fitwork 廣告</option>
+              <option value="公號廣告">公眾號 廣告</option>
+              <option value="FZb廣告">FZb 廣告</option>
+              <option value="其他廣告">其他</option>
+            </select>
+          </div>
+
+          <div class="form-row" v-if="exForm.pkg !== 'trial'" style="margin-top:15px;">
+            <label style="font-weight:800;">2. 搜尋客戶 (必填)</label>
+            <input class="inp" v-model="exSearch" placeholder="🔍 搜尋客戶姓名或電話..." @focus="showExClientDD=true" style="margin-top:6px;">
+            <div v-if="showExClientDD" class="dropdown-list">
+              <div v-for="c in exClientList" :key="c.id" class="dropdown-item" @click="exForm.clientId=c.id;exSearch=c.name;showExClientDD=false;">
+                <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" class="tag tag-orange">試堂客</span></div>
+                <div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
+              </div>
+            </div>
+            <div v-if="exForm.clientId" style="margin-top:10px;padding:10px 14px;background:var(--ps);color:var(--p);border-radius:10px;font-size:14px;font-weight:800;">
+              ✓ 已選擇: {{ clients.find(c=>c.id===exForm.clientId)?.name }}
+            </div>
+          </div>
+        </div>
+        
+        <div class="card" v-if="exForm.pkg !== 'trial'" style="background:#f8fafc;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div><div style="font-weight:800;">🆕 新客首買優惠</div><div style="font-size:11px;color:var(--o);font-weight:700;">35點自動扣減 $98</div></div>
+            <div class="toggle" :class="{on:exForm.isNew}" @click="exForm.isNew=!exForm.isNew"></div>
+          </div>
+          <div class="divider"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="font-weight:800;">🤝 轉介紹優惠堂</div><div style="font-size:11px;color:var(--r);font-weight:700;">成本將增加 $52</div></div>
+            <div class="toggle" :class="{on:exForm.isReferral}" @click="exForm.isReferral=!exForm.isReferral"></div>
+          </div>
+        </div>
+
+        <div class="card" style="background:#f0efff;border:2px solid var(--p);text-align:center;padding:25px;">
+          <div style="font-size:14px;color:var(--t2);margin-bottom:8px;font-weight:700;">應收總額 (營業額)</div>
+          <div style="font-size:42px;font-weight:900;color:var(--p);">$ {{ calcEx().price }}</div>
+          <div style="margin-top:10px;font-size:13px;color:var(--t2);font-weight:700;">預估扣除成本後淨利潤: <span style="color:var(--g);font-size:15px;">$ {{ calcEx().profit }}</span></div>
+        </div>
+        
+        <div v-if="staffList.length > 0" class="dynamic-btn-grid" style="margin-top:20px;">
+          <button v-for="(staff, index) in staffList" :key="staff" class="btn btn-primary" :style="{background: getColor(index)}" @click="saveEx(staff)" :disabled="savingEx">
+            💰 {{ staff }} 結帳
+          </button>
+        </div>
+      </div>
+
       <div v-if="view==='pos-retail'" class="page">
         <h2 class="page-title">零售商品收銀</h2>
         
@@ -200,13 +300,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
             </div>
             <div><label style="font-size:12px;color:var(--t2);font-weight:800;display:block;margin-bottom:5px;">3. 客戶折扣</label>
               <select class="sel" v-model="posDiscount">
-                <option value="retail_price">零售價</option>
-                <option value="price_standard">標準價</option>
-                <option value="price_bronze">銅級</option>
-                <option value="price_silver">銀級 (65折)</option>
-                <option value="price_gold">金級</option>
-                <option value="price_58">58折</option>
-                <option value="price_50">半價 (50%)</option>
+                <option value="retail_price">零售價</option><option value="price_standard">標準價</option><option value="price_bronze">銅級</option><option value="price_silver">銀級 (65折)</option><option value="price_gold">金級</option><option value="price_58">58折</option><option value="price_50">半價 (50%)</option>
               </select>
             </div>
           </div>
@@ -236,7 +330,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         </div>
 
         <div v-if="rCart.length>0" class="card" style="position:fixed;bottom:90px;left:16px;right:16px;z-index:101;border:2.5px solid var(--p);box-shadow:0 10px 40px rgba(0,0,0,0.25); border-radius: 28px;">
-          <div style="max-height: 120px; overflow-y: auto; padding-right:10px;">
+          <div style="max-height: 120px; overflow-y: auto;">
             <div v-for="(item, idx) in rCart" :key="idx" class="txn-item" style="padding:10px 0;">
               <div style="flex:1;"><div style="font-weight:800;">{{ item.product.name }}</div><div style="font-size:12px;color:var(--t2);">單價 ${{ item.product[posDiscount] }} x {{ item.qty }}件</div></div>
               <div style="display:flex;align-items:center;gap:15px;">
@@ -245,8 +339,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
               </div>
             </div>
           </div>
-          
-          <div style="margin-top:15px; background: #f0efff; border: none; padding: 18px; border-radius: 16px;">
+          <div style="margin-top:15px; background: #f0efff; border: none; padding: 16px; border-radius: 16px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>總營業額</span><span style="font-weight:800;">$ {{ cartTotal().revenue }}</span></div>
             <div style="display:flex;justify-content:space-between;color:var(--r);font-size:13px;font-weight:600;"><span>總產品成本 (50%)</span><span>- $ {{ cartTotal().cost }}</span></div>
             <div class="divider" style="background:#c7d2fe;"></div>
@@ -261,98 +354,18 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
               💰 {{ staff }} 結帳
             </button>
           </div>
-          <div v-else style="text-align:center;color:var(--r);font-size:13px;margin-top:10px;font-weight:700;">請先到「資料」頁面設定收款人</div>
         </div>
-      </div>
-
-      <div v-if="view==='pos-exercise'" class="page">
-        <h2 class="page-title">運動套票收銀</h2>
-        <div class="card">
-          <div class="form-row"><label style="font-weight:800;">1. 選擇套票類型</label>
-            <select class="sel" v-model="exForm.pkg" style="font-weight:800;color:var(--p);">
-              <option value="trial">🧪 試堂 ($98)</option>
-              <option value="pkg_10">🎟️ 10點套票 ($850)</option>
-              <option value="pkg_35">👑 35點套票 ($2550)</option>
-            </select>
-          </div>
-          
-          <div class="form-row" v-if="exForm.pkg === 'trial'" style="margin-top:15px;">
-            <label style="font-weight:800;color:var(--o);">2. 廣告來源分類</label>
-            <select class="sel" v-model="exForm.adSource" style="border-color:var(--o);">
-              <option value="Fitwork廣告">Fitwork 廣告</option><option value="公號廣告">公眾號 廣告</option><option value="FZb廣告">FZb 廣告</option><option value="其他廣告">其他</option>
-            </select>
-          </div>
-
-          <div class="form-row" v-if="exForm.pkg !== 'trial'" style="margin-top:15px;">
-            <label style="font-weight:800;">2. 搜尋客戶 (必填)</label>
-            <input class="inp" v-model="exSearch" placeholder="🔍 搜尋客戶姓名或電話..." @focus="showExClientDD=true" style="margin-top:6px;">
-            <div v-if="showExClientDD" class="dropdown-list">
-              <div v-for="c in exClientList" :key="c.id" class="dropdown-item" @click="exForm.clientId=c.id;exSearch=c.name;showExClientDD=false;">
-                <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" class="tag tag-orange">試堂客</span></div>
-                <div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
-              </div>
-            </div>
-            <div v-if="exForm.clientId" style="margin-top:10px;padding:10px 14px;background:var(--ps);color:var(--p);border-radius:10px;font-size:14px;font-weight:800;">
-              ✓ 已選擇: {{ clients.find(c=>c.id===exForm.clientId)?.name }}
-            </div>
-          </div>
-        </div>
-        
-        <div class="card" v-if="exForm.pkg !== 'trial'" style="background:#f8fafc;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <div><div style="font-weight:800;">🆕 新客首買優惠</div><div style="font-size:11px;color:var(--o);font-weight:700;">自動扣減 $98</div></div>
-            <div class="toggle" :class="{on:exForm.isNew}" @click="exForm.isNew=!exForm.isNew"></div>
-          </div>
-          <div class="divider"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div><div style="font-weight:800;">🤝 轉介紹優惠堂</div><div style="font-size:11px;color:var(--r);font-weight:700;">成本將增加 $52</div></div>
-            <div class="toggle" :class="{on:exForm.isReferral}" @click="exForm.isReferral=!exForm.isReferral"></div>
-          </div>
-        </div>
-
-        <div class="card" style="background:#f0efff;border:2px solid var(--p);text-align:center;padding:25px;">
-          <div style="font-size:14px;color:var(--t2);margin-bottom:8px;font-weight:700;">應收總額 (營業額)</div>
-          <div style="font-size:42px;font-weight:900;color:var(--p);">$ {{ calcEx().price }}</div>
-          <div style="margin-top:10px;font-size:13px;color:var(--t2);font-weight:700;">預估淨利潤: <span style="color:var(--g);font-size:16px;">$ {{ calcEx().profit }}</span></div>
-        </div>
-        
-        <div v-if="staffList.length > 0" class="dynamic-btn-grid" style="margin-top:20px;">
-          <button v-for="(staff, index) in staffList" :key="staff" class="btn btn-primary" :style="{background: getColor(index)}" @click="saveEx(staff)" :disabled="savingEx">
-            💰 {{ staff }} 結帳
-          </button>
-        </div>
-      </div>
-
-      <div v-if="view==='clients'" class="page">
-        <h2 class="page-title">客戶管理系統</h2>
-        <input class="inp" v-model="clientSearch" placeholder="🔍 即時搜尋姓名或電話...">
-        <div style="display:flex;gap:8px;margin:15px 0;overflow-x:auto;padding-bottom:5px;white-space:nowrap;">
-          <button class="tag" :class="{active: filterStatus==='active'}" @click="filterStatus='active'">⭐️ 正式會員</button>
-          <button class="tag" :class="{active: filterStatus==='prospect'}" @click="filterStatus='prospect'">👀 試堂/單次</button>
-          <div style="width:1px;background:#ccc;margin:0 5px;"></div>
-          <button v-for="b in ['觀塘','中環','佐敦']" class="tag" :class="{active:filterBranch===b}" @click="filterBranch=filterBranch===b?'':b">{{b}}</button>
-        </div>
-
-        <div v-if="filteredClients.length === 0" style="text-align:center;padding:40px;color:var(--t3);font-weight:700;">查無資料</div>
-
-        <div v-for="c in filteredClients" :key="c.id" class="item-card" @click="openClientForm(c)">
-          <div class="client-avatar">{{ (c.name || '?').charAt(0) }}</div>
-          <div style="flex:1;">
-            <div style="font-weight:800;font-size:17px;">{{ c.name }} <span v-if="c.is_marathon" class="tag-blue tag" style="margin-left:5px;">🏃</span></div>
-            <div style="font-size:12px;color:var(--t2);margin-top:4px;">{{ c.phone || '未錄入電話' }} · {{ c.branch || '未設定' }}</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:12px;color:var(--p);font-weight:800;margin-bottom:4px;" v-if="c.status!=='prospect'">第 {{ getGeneration(c.id) }} 代</div>
-            <div :class="getExpiryClass(c)" style="font-size:11px;font-weight:800;">{{ c.status==='prospect' ? '試堂客' : (c.expiry_date || '無效期') }}</div>
-          </div>
-        </div>
-        <button class="fab" @click="openClientForm(null)">+</button>
       </div>
 
       <div v-if="view==='inventory'" class="page">
-        <h2 class="page-title">庫存與資料管理</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h2 class="page-title" style="margin:0;">庫存與資料管理</h2>
+          <button class="btn btn-sm" :style="isEditingSort?'background:var(--g);color:#fff':'background:var(--ps);color:var(--p)'" @click="toggleEditSort">
+            {{ isEditingSort ? '✅ 完成排序' : '✏️ 編輯排序' }}
+          </button>
+        </div>
         
-        <div style="display:flex;gap:10px;margin-bottom:15px;">
+        <div style="display:flex;gap:10px;margin:15px 0;">
           <button class="btn btn-secondary" style="flex:1;" :style="invBranch==='觀塘'?'background:var(--p);color:#fff':''" @click="invBranch='觀塘'">📍 觀塘總庫</button>
           <button class="btn btn-secondary" style="flex:1;" :style="invBranch==='中環'?'background:var(--p);color:#fff':''" @click="invBranch='中環'">📍 中環總庫</button>
         </div>
@@ -368,11 +381,17 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         
         <div style="margin:20px 0;">
           <div v-for="p in filteredInventory" :key="p.id" class="item-card">
+            
+            <div v-if="isEditingSort" style="margin-right:10px;">
+              <input type="number" class="sort-inp" v-model.number="sortData[p.id]">
+            </div>
+
             <div style="flex:1;">
               <div style="font-weight:800;font-size:16px;">{{ p.name }}</div>
               <div style="font-size:12px;color:var(--t2);margin-top:4px;">單價成本: ${{ p.price_50 }}</div>
             </div>
-            <div style="text-align:right;display:flex;align-items:center;gap:15px;">
+            
+            <div v-if="!isEditingSort" style="text-align:right;display:flex;align-items:center;gap:15px;">
               <div style="font-size:26px;font-weight:900;" :style="{color:getStock(p.id, invBranch)<=5?'var(--r)':'var(--g)'}">{{ getStock(p.id, invBranch) }}</div>
               <div style="display:flex;flex-direction:column;gap:5px;">
                 <button class="btn-secondary" style="width:40px;height:30px;border-radius:8px;font-size:12px;font-weight:800;color:var(--p);" @click="openRestock(p, invBranch)">入貨</button>
@@ -380,6 +399,13 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="card" style="margin-top:30px;background:#f8fafc;">
+          <div class="section-title">📦 批量更新庫存</div>
+          <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" @click="downloadTemplate">📄 下載 CSV 範本格式</button>
+          <input type="file" id="importFile" accept=".csv" style="display:none" @change="handleImport">
+          <button class="btn btn-primary" style="width:100%;" onclick="document.getElementById('importFile').click()">🚀 上傳並匯入資料</button>
         </div>
       </div>
 
@@ -398,13 +424,6 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
             <input class="inp" v-model="newStaffName" placeholder="新增收款人姓名..." style="padding:10px;font-size:14px;">
             <button class="btn btn-primary" style="width:auto;padding:10px 20px;" @click="addStaff">新增</button>
           </div>
-        </div>
-
-        <div class="card" style="margin-top:20px;background:#f8fafc;">
-          <div class="section-title">📦 批量更新庫存</div>
-          <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;" @click="downloadTemplate">📄 下載 CSV 範本格式</button>
-          <input type="file" id="importFile" accept=".csv" style="display:none" @change="handleImport">
-          <button class="btn btn-primary" style="width:100%;" onclick="document.getElementById('importFile').click()">🚀 上傳並匯入資料</button>
         </div>
 
         <div class="card" style="margin-top:10px;padding:15px;background:#f8fafc;">
@@ -434,9 +453,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         </div>
       </div>
 
-    </div>
-
-    <div class="nav">
+    </div><div class="nav">
       <div class="nav-item" :class="{active:view==='dashboard'}" @click="view='dashboard'"><span>📊</span><span>總覽</span></div>
       <div class="nav-item" :class="{active:view==='clients'}" @click="view='clients'"><span>👥</span><span>客戶</span></div>
       <div class="nav-item" :class="{active:view==='pos-exercise'}" @click="view='pos-exercise'"><span>🏋️</span><span>運動</span></div>
@@ -454,17 +471,28 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
       <div class="form-row" style="margin-bottom:20px;">
         <label style="font-weight:800;color:var(--p);">客戶狀態</label>
         <div style="display:flex;gap:10px;margin-top:8px;">
-          <button class="btn" :style="clientForm.status!=='prospect'?'background:var(--p);color:#fff':'background:#f2f2f7'" @click="clientForm.status='active'">⭐️ 正式會員</button>
-          <button class="btn" :style="clientForm.status==='prospect'?'background:var(--o);color:#fff':'background:#f2f2f7'" @click="clientForm.status='prospect'">👀 單次/試堂客</button>
+          <button class="btn" :style="clientForm.status!=='prospect'?'background:var(--p);color:#fff':'background:#f2f2f7;color:var(--t)'" @click="clientForm.status='active'">⭐️ 正式會員</button>
+          <button class="btn" :style="clientForm.status==='prospect'?'background:var(--o);color:#fff':'background:#f2f2f7;color:var(--t)'" @click="clientForm.status='prospect'">👀 試堂/單次</button>
         </div>
-        <div style="font-size:11px;color:var(--t3);margin-top:6px;">* 試堂客不會出現在正式名單，但購買套票後會自動升級為正式會員。</div>
       </div>
 
       <div class="form-row"><label>姓名</label><input class="inp" v-model="clientForm.name"></div>
       <div class="form-row" style="margin-top:15px;"><label>電話</label><input class="inp" v-model="clientForm.phone"></div>
       <div class="form-row" style="margin-top:15px;"><label>分店</label><select class="sel" v-model="clientForm.branch"><option value="觀塘">觀塘</option><option value="中環">中環</option><option value="佐敦">佐敦</option></select></div>
+      
       <div class="form-row" style="margin-top:15px;"><label>來源</label><select class="sel" v-model="clientForm.source"><option value="廣告">廣告</option><option value="轉介紹">轉介紹</option></select></div>
-      <div class="form-row" v-if="clientForm.source==='轉介紹'" style="margin-top:15px;"><label>介紹人</label><select class="sel" v-model="clientForm.referred_by_id"><option :value="null">-- 無 --</option><option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }}</option></select></div>
+      
+      <div class="form-row" v-if="clientForm.source==='轉介紹'" style="margin-top:15px;">
+        <label style="color:var(--p);font-weight:800;">請選擇介紹人 (必填)</label>
+        <select class="sel" v-model="clientForm.referred_by_id" style="border:2px solid var(--p);">
+          <option :value="null">-- 點擊選擇介紹人 --</option>
+          <option v-for="c in clients" :key="c.id" :value="c.id" v-show="c.id !== clientForm.id">{{ c.name }} ({{ c.phone }})</option>
+        </select>
+        <div v-if="clientForm.referred_by_id" style="margin-top:8px;font-size:13px;color:var(--p);font-weight:800;background:var(--ps);padding:8px;border-radius:8px;">
+          👉 經計算，此人為第 {{ getClientGen(clientForm.referred_by_id) + 1 }} 代客戶
+        </div>
+      </div>
+
       <div class="form-row" style="margin-top:15px;" v-if="clientForm.status!=='prospect'"><label>到期日 (購買套票會自動延長)</label><input class="inp" type="date" v-model="clientForm.expiry_date"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding:15px;background:#f8fafc;border-radius:15px;"><span style="font-weight:800;">🏃 馬拉松活躍成員</span><div class="toggle" :class="{on:clientForm.is_marathon}" @click="clientForm.is_marathon=!clientForm.is_marathon"></div></div>
       <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="saveClient" :disabled="savingClient">✅ 儲存資料</button>
@@ -475,7 +503,14 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
   <div v-if="showExpModal" class="modal-overlay" @click.self="showExpModal=false">
     <div class="modal-sheet">
       <div class="modal-header"><h3>{{ editingTxn?'✏️ 修改':'➕ 新增' }}記錄</h3><button class="close-btn" @click="showExpModal=false">✕</button></div>
-      <div class="form-row"><label>類型</label><div style="display:flex;gap:12px;"><button class="btn" :style="expForm.type==='income'?'background:var(--g);color:#fff':'background:#f2f2f7'" @click="expForm.type='income'">💰 收入</button><button class="btn" :style="expForm.type==='expense'?'background:var(--r);color:#fff':'background:#f2f2f7'" @click="expForm.type='expense'">💸 支出</button></div></div>
+      <div class="form-row"><label>類型</label><div style="display:flex;gap:12px;"><button class="btn" :style="expForm.type==='income'?'background:var(--g);color:#fff':'background:#f2f2f7'" @click="expForm.type='income';expForm.category='其他收入'">💰 收入</button><button class="btn" :style="expForm.type==='expense'?'background:var(--r);color:#fff':'background:#f2f2f7'" @click="expForm.type='expense';expForm.category='觀塘租金'">💸 支出</button></div></div>
+      
+      <div class="form-row" style="margin-top:15px;"><label>選擇分類</label>
+        <select class="sel" v-model="expForm.category">
+          <option v-for="cat in (expForm.type==='income' ? incCategories : expCategories)" :value="cat">{{ cat }}</option>
+        </select>
+      </div>
+
       <div class="form-row" style="margin-top:15px;"><label>金額</label><input class="inp" type="number" v-model="expForm.amount" style="font-size:24px;font-weight:900;color:var(--p);"></div>
       <div class="form-row" style="margin-top:15px;"><label>備註</label><input class="inp" v-model="expForm.note"></div>
       <div class="form-row" style="margin-top:15px;"><label>經手人</label>
@@ -508,7 +543,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const { createApp } = Vue;
 
-const FW_STAFF_KEY = 'fwhk_v11_staff';
+const FW_STAFF_KEY = 'fwhk_v12_staff';
+const FW_SORT_KEY = 'fwhk_v12_sort'; // 本地儲存排序權重
 
 createApp({
   data() {
@@ -517,13 +553,18 @@ createApp({
       authEmail: '', authPwd: '', authLoading: false, syncing: false,
       clients: [], transactions: [], products: [], stock: {},
       dashRange: 'month', clientSearch: '', filterBranch: '', filterCategory: '', filterStatus: 'active', invBranch: '觀塘', invSearch: '', posBranch: '觀塘', posDiscount: 'price_standard', productSearch: '',
-      showClientModal: false, clientForm: { id:null, name:'', phone:'', branch:'觀塘', source:'廣告', is_marathon:false, status:'active' }, savingClient:false,
-      showExpModal: false, expForm: { type: 'income', amount: '', note: '', staff: '', category:'其他' }, editingTxn: null,
+      showClientModal: false, clientForm: { id:null, name:'', phone:'', branch:'觀塘', source:'廣告', is_marathon:false, status:'active', referred_by_id: null }, savingClient:false,
+      showExpModal: false, expForm: { type: 'income', amount: '', note: '', staff: '', category:'其他收入' }, editingTxn: null,
       exForm: { pkg: 'pkg_10', clientId: null, isNew: false, isReferral: false, adSource: 'Fitwork廣告' }, exSearch: '', showExClientDD: false, savingEx: false,
       rCart: [], rForm: { clientId: null }, rSearch: '', showRClientDD: false, savingR: false,
       showRestockModal: false, restockForm: { product: null, branch: '觀塘', qty: 1, isInitial: false },
       
-      staffList: ['Kwan', 'Cat'], newStaffName: ''
+      staffList: ['Kwan', 'Cat'], newStaffName: '',
+      incCategories: ['公司票', '其他收入'],
+      expCategories: ['觀塘租金', '中環租金', '廣告費用', '馬拉松費用', '產品採購', '其他支出'],
+      
+      // 排序系統
+      isEditingSort: false, sortData: {}
     };
   },
   computed: {
@@ -560,14 +601,23 @@ createApp({
       if (this.filterStatus === 'prospect') l = l.filter(c => c.status === 'prospect');
       return l;
     },
+    // 套用自定義排序的產品清單
+    sortedProducts() {
+      return [...this.products].sort((a, b) => {
+        const wa = this.sortData[a.id] || 999;
+        const wb = this.sortData[b.id] || 999;
+        if(wa !== wb) return wa - wb;
+        return a.name.localeCompare(b.name);
+      });
+    },
     filteredInventory() {
-      let l = this.products;
+      let l = this.sortedProducts;
       if (this.filterCategory) l = l.filter(p => p.category && p.category.includes(this.filterCategory));
       if (this.invSearch) { const q = this.invSearch.toLowerCase(); l = l.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.name_en && p.name_en.toLowerCase().includes(q))); }
       return l;
     },
     filteredRetailProducts() {
-      let l = this.products;
+      let l = this.sortedProducts;
       if (this.filterCategory) l = l.filter(p => p.category && p.category.includes(this.filterCategory));
       if (this.productSearch) { const q = this.productSearch.toLowerCase(); l = l.filter(p => (p.name && p.name.toLowerCase().includes(q)) || (p.name_en && p.name_en.toLowerCase().includes(q))); }
       return l;
@@ -587,10 +637,10 @@ createApp({
   methods: {
     showToast(msg) { this.toast = msg; setTimeout(()=>this.toast='', 3000); },
     
-    loadStaff() {
-      const saved = localStorage.getItem(FW_STAFF_KEY);
-      if(saved) this.staffList = JSON.parse(saved);
+    loadConfig() {
+      const staff = localStorage.getItem(FW_STAFF_KEY); if(staff) this.staffList = JSON.parse(staff);
       if(this.staffList.length > 0) this.expForm.staff = this.staffList[0];
+      const sort = localStorage.getItem(FW_SORT_KEY); if(sort) this.sortData = JSON.parse(sort);
     },
     addStaff() {
       if(!this.newStaffName.trim()) return;
@@ -599,12 +649,35 @@ createApp({
         this.newStaffName = ''; this.showToast('✅ 已新增收款人');
       }
     },
-    removeStaff(idx) { if(confirm('確定要移除此收款人設定嗎？')) { this.staffList.splice(idx, 1); localStorage.setItem(FW_STAFF_KEY, JSON.stringify(this.staffList)); } },
+    removeStaff(idx) { if(confirm('確定移除此收款人？')) { this.staffList.splice(idx, 1); localStorage.setItem(FW_STAFF_KEY, JSON.stringify(this.staffList)); } },
     getColor(idx) { const colors = ['#3b82f6', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b']; return colors[idx % colors.length]; },
     getBgColor(idx) { const bgs = ['#eff6ff', '#fdf2f8', '#f5f3ff', '#ecfdf5', '#fffbeb']; return bgs[idx % bgs.length]; },
     getStaffIncome(s) { return this.dashStats._raw.filter(t => t.staff === s && t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0); },
     getStaffExpense(s) { return this.dashStats._raw.filter(t => t.staff === s && t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0); },
     getStaffNet(s) { return this.getStaffIncome(s) - this.getStaffExpense(s); },
+
+    // 排序系統邏輯
+    toggleEditSort() {
+      if(this.isEditingSort) {
+        localStorage.setItem(FW_SORT_KEY, JSON.stringify(this.sortData));
+        this.showToast('✅ 排序已儲存');
+      } else {
+        // 如果是第一次使用，自動幫主力產品設定預設權重
+        if(Object.keys(this.sortData).length === 0) {
+          this.products.forEach(p => {
+            let w = 999;
+            const n = p.name.toLowerCase();
+            if(n.includes('shake') || n.includes('蛋白素')) w = 1;
+            else if(n.includes('蘆薈汁')) w = 2;
+            else if(n.includes('佳能')) w = 3;
+            else if(n.includes('茶')) w = 4;
+            else if(n.includes('纖維粉')) w = 5;
+            this.sortData[p.id] = w;
+          });
+        }
+      }
+      this.isEditingSort = !this.isEditingSort;
+    },
 
     async authSubmit() {
       this.authLoading = true;
@@ -644,7 +717,7 @@ createApp({
         const updates = { user_id: this.session.user.id };
         const d = new Date(); d.setFullYear(d.getFullYear()+1);
         updates.expiry_date = d.toISOString().split('T')[0];
-        if (client && client.status === 'prospect') updates.status = 'active'; // 自動升級為正式會員
+        if (client && client.status === 'prospect') updates.status = 'active';
         await sb.from('clients').update(updates).eq('id', this.exForm.clientId);
       }
       this.syncAll(); this.showToast('✅ 結帳成功');
@@ -700,7 +773,6 @@ createApp({
     },
 
     getStock(id, b) { return this.stock[`${id}_${b}`] || 0; },
-    getStockClass(id, b) { const q = this.getStock(id,b); return q<=5?'text-r':'text-g'; },
     openRestock(p, b) { this.restockForm = { product:p, branch:b, qty:1, isInitial:false }; this.showRestockModal=true; },
     openStockCorrection(p, b) { this.restockForm = { product:p, branch:b, qty:this.getStock(p.id, b), isInitial:true }; this.showRestockModal=true; },
     async saveRestock() {
@@ -710,7 +782,7 @@ createApp({
       this.showRestockModal = false; this.syncAll();
     },
 
-    openExpForm() { this.editingTxn=null; this.expForm={type:'income',amount:'',note:'',staff:this.staffList[0]||'',category:'其他'}; this.showExpModal=true; },
+    openExpForm() { this.editingTxn=null; this.expForm={type:'income',amount:'',note:'',staff:this.staffList[0]||'',category:this.incCategories[0]}; this.showExpModal=true; },
     openEditTransaction(t) { this.editingTxn=t.id; this.expForm={type:t.type,amount:t.amount,note:t.note||'',staff:t.staff||'',category:t.category}; this.showExpModal=true; },
     async saveTransaction() {
       const amt = Number(this.expForm.amount);
@@ -720,9 +792,11 @@ createApp({
     },
     async confirmDelete(type, id) { if(confirm('確定要永久刪除這筆資料嗎？')) { await sb.from(type==='client'?'clients':'transactions').delete().eq('id', id); this.syncAll(); } },
 
-    getGeneration(id) { let g=1, c=this.clients.find(x=>x.id===id); while(c?.referred_by_id){ g++; c=this.clients.find(x=>x.id===c.referred_by_id); if(g>10)break; } return g; },
-    openClientForm(c) { this.clientForm = c ? {...c} : { id:null, name:'', phone:'', branch:'觀塘', source:'廣告', is_marathon:false, status:'active' }; this.showClientModal=true; },
+    getClientGen(id) { let g=1, c=this.clients.find(x=>x.id===id); while(c?.referred_by_id){ g++; c=this.clients.find(x=>x.id===c.referred_by_id); if(g>15)break; } return g; },
+    openClientForm(c) { this.clientForm = c ? {...c} : { id:null, name:'', phone:'', branch:'觀塘', source:'廣告', is_marathon:false, status:'active', referred_by_id: null }; this.showClientModal=true; },
     async saveClient() {
+      if(!this.clientForm.name) return this.showToast('❌ 姓名必填');
+      if(this.clientForm.source==='轉介紹' && !this.clientForm.referred_by_id) return this.showToast('❌ 轉介紹必須選擇介紹人');
       const p = { ...this.clientForm, user_id: this.session.user.id };
       if(p.id) await sb.from('clients').update(p).eq('id', p.id); else await sb.from('clients').insert(p);
       this.showClientModal = false; this.syncAll();
@@ -730,7 +804,7 @@ createApp({
     getExpiryClass(c) { if(!c.expiry_date) return ''; const d=(new Date(c.expiry_date)-new Date())/86400000; return d<0?'tag-red':(d<14?'tag-orange':'tag-green'); },
 
     async initApp() {
-      this.loadStaff();
+      this.loadConfig();
       const { data } = await sb.auth.getSession(); this.session = data.session;
       if(this.session) this.syncAll();
       this.appReady = true;
@@ -741,3 +815,4 @@ createApp({
 </script>
 </body>
 </html>
+
