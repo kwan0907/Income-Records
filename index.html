@@ -3,13 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FITWORK HK 旗艦管理系統 v15</title>
+<title>FITWORK HK 旗艦管理系統 v16</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-/* ==========================================================================
-   Apple 旗艦級明亮 UI (iOS 17 風格)
-   ========================================================================== */
 :root {
   --p: #4f46e5; --pd: #4338ca; --ps: #eef2ff; --bg: #f2f2f7; --card: #ffffff;
   --t: #1c1c1e; --t2: #3a3a3c; --t3: #8e8e93; --border: #e5e5ea;
@@ -75,9 +72,11 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 .sort-inp { width: 50px; text-align: center; padding: 8px; border: 2px solid var(--p); border-radius: 10px; font-weight: 900; color: var(--p); font-size: 16px; background: var(--ps); }
 
 /* 彈窗與雜項 */
-.modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,.4); display: flex; align-items: flex-end; z-index: 200; backdrop-filter: blur(4px); }
+/* 修復層級問題，將 z-index 提高到 1000 */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: flex-end; z-index: 1000; backdrop-filter: blur(4px); }
 .modal-sheet { background: #fff; border-radius: 24px 24px 0 0; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); }
-.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(17,24,39,0.95); backdrop-filter: blur(10px); color: #fff; padding: 12px 24px; border-radius: 99px; z-index: 2000; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-width: 90%; word-break: break-word; }
+/* 讓 Toast 層級最高 */
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(17,24,39,0.95); backdrop-filter: blur(10px); color: #fff; padding: 12px 24px; border-radius: 99px; z-index: 9999; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; max-width: 90%; word-break: break-word; }
 .toggle { width: 50px; height: 28px; background: #e5e5ea; border-radius: 14px; position: relative; cursor: pointer; transition: .3s; }
 .toggle.on { background: var(--g); }
 .toggle::after { content: ''; position: absolute; width: 24px; height: 24px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: .3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -85,6 +84,9 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 .fab-large { position: fixed; right: 20px; bottom: 100px; padding: 14px 20px; border-radius: 99px; background: linear-gradient(135deg, var(--p), var(--pd)); color: #fff; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(79,70,229,0.4); z-index: 100; cursor: pointer; transition: 0.2s; border: none; }
 .fab-large:active { transform: scale(0.95); }
 .dynamic-btn-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 15px; }
+
+/* 設定按鈕被擋住的修復 (提高層級) */
+.header-btn { position: relative; z-index: 105; }
 </style>
 </head>
 <body>
@@ -94,7 +96,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
   <div v-if="!session" style="height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f2f2f7;">
     <div class="card" style="width:100%;max-width:400px;text-align:center;padding:40px 30px; border-radius: 32px;">
       <h1 style="font-size:36px;color:var(--p);font-weight:900;letter-spacing:-1px;">FITWORK</h1>
-      <p style="color:var(--t2);margin-bottom:30px;font-weight:600;">旗艦業務管理系統 v15</p>
+      <p style="color:var(--t2);margin-bottom:30px;font-weight:600;">旗艦業務管理系統 v16</p>
       <input class="inp" v-model="authEmail" placeholder="電子郵件">
       <input class="inp" type="password" v-model="authPwd" placeholder="密碼" style="margin-top:15px;" @keyup.enter="authSubmit">
       <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="authSubmit" :disabled="authLoading">
@@ -109,8 +111,8 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         <span style="font-size:26px;">💪</span> <span>FITWORK <span style="color:var(--p);">PRO</span></span>
       </div>
       <div style="display:flex;gap:12px;">
-        <button class="btn-secondary" style="width:38px;height:38px;border-radius:50%;padding:0;" @click="syncAll">⟳</button>
-        <button class="btn-primary" style="width:38px;height:38px;border-radius:50%;padding:0;" @click="showSettings=true">{{ session.user.email.charAt(0).toUpperCase() }}</button>
+        <button class="btn-secondary header-btn" style="width:38px;height:38px;border-radius:50%;padding:0;" @click="syncAll">⟳</button>
+        <button class="btn-primary header-btn" style="width:38px;height:38px;border-radius:50%;padding:0;" @click.stop="openSettingsModal">{{ session.user.email.charAt(0).toUpperCase() }}</button>
       </div>
     </div>
 
@@ -147,7 +149,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
             <div style="text-align:right;"><span style="font-size:32px;">🏃</span></div>
           </div>
           <div class="progress-bar-bg"><div class="progress-bar-fill" :style="{width: marathonRate + '%'}"></div></div>
-          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;">
             <span>活躍: {{ marathonCount }} 人</span>
             <span>正式會員: {{ clients.filter(c=>c.status!=='prospect').length }} 人</span>
           </div>
@@ -277,15 +279,11 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
           <div class="form-row">
             <label style="font-size:13px;color:var(--t2);font-weight:800;">1. 搜尋紀錄對象 <span style="color:var(--r);">*</span></label>
             <input class="inp" v-model="rSearch" placeholder="🔍 搜尋客戶姓名或電話..." @focus="showRClientDD=true" style="margin-top:6px;">
-            <div v-if="showRClientDD" class="dropdown-list">
-              <div class="dropdown-item" @click="rForm.clientId=null; rSearch=''; showRClientDD=false;">-- 散客 / 非會員 --</div>
-              <div v-for="c in rClientList" :key="c.id" class="dropdown-item" @click="rForm.clientId=c.id; rSearch=c.name; showRClientDD=false;">
-                <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" class="tag tag-orange">試堂客</span></div>
-                <div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
+            <div v-if="showRClientDD" style="max-height: 200px; overflow-y: auto; background:#fff; border:1px solid #ddd; border-radius:10px; margin-top:5px; position:absolute; width: calc(100% - 70px); z-index: 50;">
+              <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="rForm.clientId=null; rSearch=''; showRClientDD=false;">-- 散客 / 非會員 --</div>
+              <div v-for="c in rClientList" :key="c.id" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="rForm.clientId=c.id; rSearch=c.name; showRClientDD=false;">
+                <div style="font-weight:700;">{{ c.name }}</div><div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
               </div>
-            </div>
-            <div v-if="rForm.clientId" style="margin-top:10px;padding:10px 14px;background:var(--ps);color:var(--p);border-radius:10px;font-size:14px;font-weight:800;">
-              ✓ 已選擇: {{ clients.find(c=>c.id===rForm.clientId)?.name }}
             </div>
           </div>
 
@@ -295,13 +293,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
             </div>
             <div><label style="font-size:12px;color:var(--t2);font-weight:800;display:block;margin-bottom:5px;">3. 客戶折扣</label>
               <select class="sel" v-model="posDiscount">
-                <option value="retail_price">零售價</option>
-                <option value="price_standard">標準價</option>
-                <option value="price_bronze">銅級</option>
-                <option value="price_silver">銀級 (65折)</option>
-                <option value="price_gold">金級</option>
-                <option value="price_58">58折</option>
-                <option value="price_50">半價 (50%)</option>
+                <option value="retail_price">零售價</option><option value="price_standard">標準價</option><option value="price_bronze">銅級</option><option value="price_silver">銀級 (65折)</option><option value="price_gold">金級</option><option value="price_58">58折</option><option value="price_50">半價 (50%)</option>
               </select>
             </div>
           </div>
@@ -478,7 +470,13 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
       <div class="form-row" style="margin-top:15px;"><label>電話</label><input class="inp" v-model="clientForm.phone" type="tel"></div>
       <div class="form-row" style="margin-top:15px;"><label>分店</label><select class="sel" v-model="clientForm.branch"><option value="觀塘">觀塘</option><option value="中環">中環</option><option value="佐敦">佐敦</option></select></div>
       
-      <div class="form-row" style="margin-top:15px;"><label>來源</label><select class="sel" v-model="clientForm.source"><option value="廣告">廣告</option><option value="轉介紹">轉介紹</option></select></div>
+      <div class="form-row" style="margin-top:15px;">
+        <label>來源</label>
+        <select class="sel" v-model="clientForm.source">
+          <option value="廣告">廣告</option>
+          <option value="轉介紹">轉介紹</option>
+        </select>
+      </div>
       
       <div class="form-row" v-if="clientForm.source==='轉介紹'" style="margin-top:15px;">
         <label style="color:var(--p);font-weight:800;">請選擇介紹人 (必填)</label>
@@ -538,6 +536,43 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
       <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="saveRestock">✅ 確認變更</button>
     </div>
   </div>
+
+  <div v-if="showSettings" class="modal-overlay" @click.self="showSettings=false">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>⚙️ 系統設定</h3>
+        <button class="close-btn" @click="showSettings=false">×</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;padding:20px;background:#f8fafc;border:1px solid var(--border);border-radius:var(--br2);margin-bottom:24px;">
+        <div style="width:56px;height:56px;font-size:24px;background:linear-gradient(135deg,var(--p),var(--ps));color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;">
+          {{ session?.user?.email?.charAt(0)?.toUpperCase() }}
+        </div>
+        <div>
+          <div style="font-weight:800;font-size:16px;">{{ session?.user?.email }}</div>
+          <div style="font-size:13px;color:var(--t2);margin-top:4px;">高級系統管理員</div>
+        </div>
+      </div>
+      <div class="section-title">安全設定</div>
+      <div class="form-row">
+        <label>修改密碼</label>
+        <input class="inp" type="password" v-model="newPwd" placeholder="輸入新密碼 (最少6位)">
+      </div>
+      <button class="btn btn-secondary" @click="changePassword" :disabled="changingPwd" style="margin-bottom:24px;">{{ changingPwd?'⟳ 更新中...':'🔒 確認修改密碼' }}</button>
+      
+      <div class="divider"></div>
+      <div class="section-title">資料管理</div>
+      <div style="display:flex;align-items:center;gap:16px;padding:16px 0;cursor:pointer;" @click="syncProductsToDb">
+        <div style="width:44px;height:44px;border-radius:12px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;">🔄</div>
+        <div style="flex:1;">
+          <div style="font-size:16px;font-weight:700;" :style="{color: syncingProducts ? 'var(--p)' : 'var(--t)'}">{{ syncingProducts?'產品同步中...':'強制同步雲端產品庫' }}</div>
+          <div style="font-size:13px;color:var(--t2);margin-top:4px;">找不到產品時可按此更新緩存</div>
+        </div>
+      </div>
+      
+      <div class="divider" style="margin-top:24px;"></div>
+      <button class="btn btn-danger" @click="logout" style="padding:16px;">🚪 登出系統</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -546,8 +581,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const { createApp } = Vue;
 
-const FW_STAFF_KEY = 'fwhk_v15_staff';
-const FW_SORT_KEY = 'fwhk_v15_sort'; 
+const FW_STAFF_KEY = 'fwhk_v16_staff';
+const FW_SORT_KEY = 'fwhk_v16_sort'; 
 
 createApp({
   data() {
@@ -566,7 +601,8 @@ createApp({
       incCategories: ['公司票', '其他收入'],
       expCategories: ['觀塘租金', '中環租金', '廣告費用', '馬拉松費用', '產品採購', '其他支出'],
       
-      isEditingSort: false, sortData: {}
+      isEditingSort: false, sortData: {},
+      showSettings: false, newPwd: '', changingPwd: false, syncingProducts: false
     };
   },
   computed: {
@@ -661,6 +697,26 @@ createApp({
   methods: {
     showToast(msg) { this.toast = msg; setTimeout(()=>this.toast='', 4000); },
     
+    openSettingsModal() { this.showSettings = true; },
+    
+    async logout() { await sb.auth.signOut(); location.reload(); },
+
+    async changePassword() {
+      if (!this.newPwd || this.newPwd.length < 6) { this.showToast('❌ 密碼至少6位'); return; }
+      this.changingPwd = true;
+      const { error } = await sb.auth.updateUser({ password: this.newPwd });
+      this.changingPwd = false;
+      if (error) this.showToast('❌ ' + error.message); else { this.newPwd = ''; this.showToast('✅ 密碼已更新'); }
+    },
+    
+    async syncProductsToDb() {
+      this.syncingProducts = true;
+      const { data } = await sb.from('products').select('*').order('name');
+      if (data) { this.products = data; }
+      this.syncingProducts = false;
+      this.showToast('✅ 產品庫同步完成');
+    },
+
     loadConfig() {
       const staff = localStorage.getItem(FW_STAFF_KEY); if(staff) this.staffList = JSON.parse(staff);
       if(this.staffList.length > 0) this.expForm.staff = this.staffList[0];
@@ -832,7 +888,6 @@ createApp({
           const res = await sb.from('clients').update(p).eq('id', p.id);
           error = res.error;
       } else {
-          // 移除空白 ID，讓 Supabase 自動生成 UUID，徹底修復報錯！
           delete p.id;
           const res = await sb.from('clients').insert(p);
           error = res.error;
