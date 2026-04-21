@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>FITWORK HK 旗艦管理系統 v17</title>
+<title>FITWORK HK 旗艦管理系統 v18</title>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -101,7 +101,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
     <div class="card" style="width:100%;max-width:400px;text-align:center;padding:40px 30px; border-radius: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
       <h1 style="font-size:36px;color:var(--p);font-weight:900;letter-spacing:-1px;">FITWORK</h1>
       <p style="color:var(--t2);margin-bottom:30px;font-weight:600;">
-        {{ authState==='recovery'?'重設密碼':authState==='signup'?'建立新帳號':'旗艦業務管理系統' }}
+        {{ authState==='recovery'?'重設密碼':(authState==='signup'?'建立新帳號':(authState==='verify_otp'?'輸入驗證碼':'旗艦業務管理系統')) }}
       </p>
       
       <template v-if="authState==='recovery'">
@@ -112,6 +112,18 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         </button>
         <div style="margin-top:20px; font-size:14px;">
           <span style="color:var(--p);font-weight:800;cursor:pointer;" @click="authState='login'">← 返回登入</span>
+        </div>
+      </template>
+
+      <template v-else-if="authState==='verify_otp'">
+        <div style="text-align:left;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--t2);">已發送驗證碼至 {{ authEmail }}</div>
+        <input class="inp" type="text" v-model="authOTP" placeholder="輸入 6 位數驗證碼" style="text-align:center;font-size:24px;font-weight:900;letter-spacing:4px;" autocomplete="one-time-code">
+        
+        <button class="btn btn-primary" style="margin-top:30px;width:100%;" @click="verifyOTP" :disabled="authLoading">
+          {{ authLoading ? '驗證中...' : '✅ 確認並登入' }}
+        </button>
+        <div style="margin-top:20px; font-size:14px;">
+          <span style="color:var(--p);font-weight:800;cursor:pointer;" @click="authState='login'">← 取消，返回登入</span>
         </div>
       </template>
 
@@ -264,16 +276,19 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
           <div class="form-row" v-if="exForm.pkg === 'trial'" style="margin-top:15px;">
             <label style="font-weight:800;color:var(--o);">2. 廣告來源分類</label>
             <select class="sel" v-model="exForm.adSource" style="border-color:var(--o);">
-              <option value="Fitwork廣告">Fitwork 廣告</option><option value="公號廣告">公眾號 廣告</option><option value="FZb廣告">FZb 廣告</option><option value="其他廣告">其他</option>
+              <option value="Fitwork廣告">Fitwork 廣告</option>
+              <option value="公號廣告">公眾號 廣告</option>
+              <option value="FZb廣告">FZb 廣告</option>
+              <option value="其他廣告">其他</option>
             </select>
           </div>
 
           <div class="form-row" v-if="exForm.pkg !== 'trial'" style="margin-top:15px;">
             <label style="font-weight:800;">2. 搜尋客戶 (必填)</label>
             <input class="inp" v-model="exSearch" placeholder="🔍 搜尋客戶姓名或電話..." @focus="showExClientDD=true" style="margin-top:6px;">
-            <div v-if="showExClientDD" class="dropdown-list" style="max-height: 200px; overflow-y: auto; background:#fff; border:1px solid #ddd; border-radius:10px; margin-top:5px;">
-              <div v-for="c in exClientList" :key="c.id" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="exForm.clientId=c.id;exSearch=c.name;showExClientDD=false;">
-                <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" style="color:#ea580c; font-size:11px; background:#fff7ed; padding:2px 6px; border-radius:6px;">試堂客</span></div>
+            <div v-if="showExClientDD" class="dropdown-list">
+              <div v-for="c in exClientList" :key="c.id" class="dropdown-item" @click="exForm.clientId=c.id;exSearch=c.name;showExClientDD=false;">
+                <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" class="tag tag-orange">試堂客</span></div>
                 <div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
               </div>
             </div>
@@ -315,9 +330,9 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
           <div class="form-row">
             <label style="font-size:13px;color:var(--t2);font-weight:800;">1. 搜尋紀錄對象 <span style="color:var(--r);">*</span></label>
             <input class="inp" v-model="rSearch" placeholder="🔍 搜尋客戶姓名或電話..." @focus="showRClientDD=true" style="margin-top:6px;">
-            <div v-if="showRClientDD" style="max-height: 200px; overflow-y: auto; background:#fff; border:1px solid #ddd; border-radius:10px; margin-top:5px; position:absolute; width: calc(100% - 70px); z-index: 50;">
-              <div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="rForm.clientId=null; rSearch=''; showRClientDD=false;">-- 散客 / 非會員 --</div>
-              <div v-for="c in rClientList" :key="c.id" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" @click="rForm.clientId=c.id; rSearch=c.name; showRClientDD=false;">
+            <div v-if="showRClientDD" class="dropdown-list">
+              <div class="dropdown-item" @click="rForm.clientId=null; rSearch=''; showRClientDD=false;">-- 散客 / 非會員 --</div>
+              <div v-for="c in rClientList" :key="c.id" class="dropdown-item" @click="rForm.clientId=c.id; rSearch=c.name; showRClientDD=false;">
                 <div style="font-weight:700;">{{ c.name }} <span v-if="c.status==='prospect'" class="tag tag-orange">試堂客</span></div>
                 <div style="font-size:11px;color:var(--t2);margin-top:4px;">{{ c.phone || '無電話' }} · {{ c.branch }}</div>
               </div>
@@ -469,9 +484,7 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
         </div>
       </div>
 
-    </div>
-
-    <div class="nav">
+    </div><div class="nav">
       <div class="nav-item" :class="{active:view==='dashboard'}" @click="view='dashboard'"><span>📊</span><span>總覽</span></div>
       <div class="nav-item" :class="{active:view==='clients'}" @click="view='clients'"><span>👥</span><span>客戶</span></div>
       <div class="nav-item" :class="{active:view==='pos-exercise'}" @click="view='pos-exercise'"><span>🏋️</span><span>運動</span></div>
@@ -609,14 +622,16 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const { createApp } = Vue;
 
-const FW_STAFF_KEY = 'fwhk_v17_staff';
-const FW_SORT_KEY = 'fwhk_v17_sort'; 
+const FW_STAFF_KEY = 'fwhk_v18_staff';
+const FW_SORT_KEY = 'fwhk_v18_sort'; 
 
 createApp({
   data() {
     return {
       appReady: false, session: null, view: 'dashboard', toast: '',
       authEmail: '', authPwd: '', authPwd2: '', authState: 'login', authLoading: false, syncing: false,
+      authOTP: '', // 新增 OTP 欄位
+      
       clients: [], transactions: [], products: [], stock: {},
       dashRange: 'month', clientSearch: '', filterBranch: '', filterCategory: '', filterStatus: 'active', invBranch: '觀塘', invSearch: '', posBranch: '觀塘', posDiscount: 'price_standard', productSearch: '',
       showClientModal: false, clientForm: { id:null, name:'', phone:'', branch:'觀塘', source:'廣告', is_marathon:false, status:'active', referred_by_id: null, trial_date: '' }, savingClient:false,
@@ -773,21 +788,51 @@ createApp({
     },
     forceSortUpdate() { this.sortData = Object.assign({}, this.sortData); },
 
+    // 驗證碼登入機制
     async authSubmit() {
       if (this.authState === 'login') {
         if (!this.authEmail || !this.authPwd) { this.showToast('❌ 請填寫所有欄位'); return; }
         this.authLoading = true;
         const { error } = await sb.auth.signInWithPassword({ email: this.authEmail, password: this.authPwd });
         this.authLoading = false;
-        if (error) this.showToast('❌ 電郵或密碼錯誤'); else location.reload();
+        if (error) {
+           if(error.message.includes('Email not confirmed')) {
+               this.showToast('⚠️ 帳號尚未驗證，請去信箱收取驗證碼！');
+               this.authState = 'verify_otp';
+           } else {
+               this.showToast('❌ 登入失敗: ' + error.message); 
+           }
+        } else {
+            location.reload();
+        }
       } else if (this.authState === 'signup') {
         if (this.authPwd !== this.authPwd2) { this.showToast('❌ 密碼不一致'); return; }
         this.authLoading = true;
         const { error } = await sb.auth.signUp({ email: this.authEmail, password: this.authPwd });
         this.authLoading = false;
-        if (error) this.showToast('❌ ' + error.message); else { this.showToast('✅ 註冊成功！請查看電郵確認'); this.authState = 'login'; }
+        if (error) {
+            this.showToast('❌ ' + error.message);
+        } else { 
+            this.showToast('✅ 註冊成功！請查看電郵獲取 6 位數驗證碼'); 
+            this.authState = 'verify_otp'; 
+        }
       }
     },
+
+    async verifyOTP() {
+      if (!this.authOTP || this.authOTP.length !== 6) { this.showToast('❌ 請輸入 6 位數驗證碼'); return; }
+      this.authLoading = true;
+      const { data, error } = await sb.auth.verifyOtp({ email: this.authEmail, token: this.authOTP, type: 'signup' });
+      this.authLoading = false;
+      
+      if (error) {
+         this.showToast('❌ 驗證失敗: ' + error.message);
+      } else {
+         this.showToast('✅ 驗證成功，正在登入...');
+         location.reload();
+      }
+    },
+
     async sendRecovery() {
       if (!this.authEmail) { this.showToast('❌ 請輸入電郵地址'); return; }
       this.authLoading = true;
